@@ -6,6 +6,25 @@ export type Article = {
 	keywords: string[];
 };
 
+export type FrequencyTerms = {
+	env: Record<string, number>;
+	tec: Record<string, number>;
+};
+
+const loadFrequencyTerms = async () => {
+	const pathFile = path.join(
+		process.cwd(),
+		"src",
+		"data",
+		"frequency_terms.json",
+	);
+
+	const content = await fs.readFile(pathFile, "utf-8");
+	const data = JSON.parse(content);
+
+	return data as Record<number, FrequencyTerms>;
+};
+
 export type ArticleOutputFormat = Record<number, Article>;
 
 const loadArticleData = async (): Promise<Record<number, Article>> => {
@@ -25,11 +44,10 @@ export class ArticleModel {
 		const articles = await this.getArticles();
 		return articles[articleId];
 	}
+
+	async getArticleFrequencyTerms(articleId: number) {
+		const articlesFt = await loadFrequencyTerms();
+
+		return articlesFt[articleId];
+	}
 }
-
-// (async () => {
-// 	const model = new ArticleModel();
-// 	const r = await model.getArticles();
-
-// 	console.log(r);
-// })();

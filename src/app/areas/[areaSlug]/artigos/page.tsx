@@ -34,9 +34,7 @@ export default async function AreaArticlesPage({ params }: PageProps) {
 	}
 
 	const stageName = formatStageTitle(stageKey);
-	const articles = (articlesByStage[stageKey] ?? []).filter((article) =>
-		Boolean(article),
-	);
+	const articles = articlesByStage[stageKey] ?? [];
 
 	return (
 		<div className="min-h-screen bg-[#f6f8f6] text-[#0f172a]">
@@ -99,6 +97,7 @@ export default async function AreaArticlesPage({ params }: PageProps) {
 						articles.map((article, index) => (
 							<ArticleCard
 								abstract={article.abstract}
+								href={`/areas/${areaSlug}/artigos/${article.id}`}
 								key={`${article.title}-${index}`}
 								keywords={article.keywords ?? []}
 								title={article.title}

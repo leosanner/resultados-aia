@@ -22,43 +22,43 @@ const CARD_STYLES: AreaCard[] = [
   {
     title: "",
     description: "",
-    badgeClass: "bg-[rgba(5,150,105,0.1)] text-[#059669]",
-    iconBgClass: "bg-[#f0fdf4]",
+    badgeClass: "bg-[#16a34a] text-white",
+    iconBgClass: "bg-[#dcfce7]",
     iconSrc: iconBio,
   },
   {
     title: "",
     description: "",
-    badgeClass: "bg-[rgba(14,165,233,0.1)] text-[#0ea5e9]",
-    iconBgClass: "bg-[#eff6ff]",
+    badgeClass: "bg-[#0284c7] text-white",
+    iconBgClass: "bg-[#dbeafe]",
     iconSrc: iconWater,
   },
   {
     title: "",
     description: "",
-    badgeClass: "bg-[rgba(5,150,105,0.1)] text-[#059669]",
-    iconBgClass: "bg-[#f0f9ff]",
+    badgeClass: "bg-[#0d9488] text-white",
+    iconBgClass: "bg-[#ccfbf1]",
     iconSrc: iconAir,
   },
   {
     title: "",
     description: "",
-    badgeClass: "bg-[#f3e8ff] text-[#9333ea]",
-    iconBgClass: "bg-[#faf5ff]",
+    badgeClass: "bg-[#9333ea] text-white",
+    iconBgClass: "bg-[#f3e8ff]",
     iconSrc: iconSocio,
   },
   {
     title: "",
     description: "",
-    badgeClass: "bg-[#fef3c7] text-[#b45309]",
-    iconBgClass: "bg-[#fffbeb]",
+    badgeClass: "bg-[#d97706] text-white",
+    iconBgClass: "bg-[#fef3c7]",
     iconSrc: iconSoil,
   },
   {
     title: "",
     description: "",
-    badgeClass: "bg-[#ffe4e6] text-[#e11d48]",
-    iconBgClass: "bg-[#fff1f2]",
+    badgeClass: "bg-[#e11d48] text-white",
+    iconBgClass: "bg-[#ffe4e6]",
     iconSrc: iconNoise,
   },
 ];
@@ -79,16 +79,16 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-[#0f172a]">
-      <header className="w-full px-6 py-6 sm:px-10 lg:px-20 lg:py-8">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#dcfce7_0%,_#dbeafe_45%,_#f8fafc_100%)] text-[#0f172a]">
+      <header className="w-full border-b border-[#bfdbfe] bg-white/70 px-6 py-6 backdrop-blur-sm sm:px-10 lg:px-20 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(5,150,105,0.1)]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#22c55e]/20 ring-1 ring-[#16a34a]/30">
               <img alt="" className="h-4 w-4" src={logoIcon} />
             </div>
             <div className="leading-tight">
               <p className="text-xl font-extrabold tracking-[-0.5px] text-[#1e293b]">Explorador AIA</p>
-              <p className="text-[10px] font-bold uppercase tracking-[1px] text-[#94a3b8]">Base de Pesquisa</p>
+              <p className="text-[10px] font-bold uppercase tracking-[1px] text-[#2563eb]">Base de Pesquisa</p>
             </div>
           </div>
 
@@ -101,7 +101,7 @@ export default async function Home() {
             </a>
             <button
               aria-label="Entrar na plataforma"
-              className="rounded-full bg-[#0f172a] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1e293b]"
+              className="rounded-full bg-[#2563eb] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
               type="button"
             >
               Entrar
@@ -131,27 +131,40 @@ export default async function Home() {
               const style = CARD_STYLES[index % CARD_STYLES.length];
               const stageTitle = formatStageTitle(stageKey);
               const description = `Artigos relacionados à etapa "${stageTitle}" no processo de AIA.`;
+              const stageSlug = stageKeyToSlug(stageKey);
 
               return (
-                <Link
-                  aria-label={`Abrir artigos da área ${stageTitle}`}
-                  className="block rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0f172a]"
-                  href={`/areas/${stageKeyToSlug(stageKey)}/artigos`}
+                <article
+                  className="flex min-h-[292px] flex-col rounded-3xl border border-[#bfdbfe] bg-white p-[33px] shadow-[0px_10px_25px_-18px_rgba(15,23,42,0.45)] transition-all hover:-translate-y-1 hover:border-[#60a5fa] hover:shadow-[0px_18px_34px_-22px_rgba(37,99,235,0.6)]"
                   key={stageKey}
                 >
-                  <article className="flex min-h-[292px] flex-col rounded-3xl border border-[#f1f5f9] bg-white p-[33px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] transition-colors hover:border-[#cbd5e1]">
-                    <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${style.iconBgClass}`}>
-                      <img alt="" className="h-7 w-7 object-contain" src={style.iconSrc} />
-                    </div>
-                    <h2 className="mt-6 text-[36px]/8 font-bold text-[#1e293b] sm:text-4xl lg:text-3xl">{stageTitle}</h2>
-                    <p className="mt-2 line-clamp-2 text-sm leading-[22.75px] text-[#64748b]">{description}</p>
-                    <div className="mt-6">
-                      <span className={`inline-flex rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-[0.6px] ${style.badgeClass}`}>
-                        {formatTotal(total)} artigos
-                      </span>
-                    </div>
-                  </article>
-                </Link>
+                  <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${style.iconBgClass}`}>
+                    <img alt="" className="h-7 w-7 object-contain" src={style.iconSrc} />
+                  </div>
+                  <h2 className="mt-6 text-[36px]/8 font-bold text-[#1e293b] sm:text-4xl lg:text-3xl">{stageTitle}</h2>
+                  <p className="mt-2 line-clamp-2 text-sm leading-[22.75px] text-[#64748b]">{description}</p>
+                  <div className="mt-6">
+                    <span className={`inline-flex rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-[0.6px] ${style.badgeClass}`}>
+                      {formatTotal(total)} artigos
+                    </span>
+                  </div>
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <Link
+                      aria-label={`Abrir artigos da área ${stageTitle}`}
+                      className="inline-flex rounded-full bg-[#2563eb] px-4 py-2 text-xs font-bold uppercase tracking-[0.6px] text-white hover:bg-[#1d4ed8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563eb]"
+                      href={`/areas/${stageSlug}/artigos`}
+                    >
+                      Ver artigos
+                    </Link>
+                    <Link
+                      aria-label={`Abrir estatísticas da área ${stageTitle}`}
+                      className="inline-flex rounded-full border border-[#60a5fa] bg-[#eff6ff] px-4 py-2 text-xs font-bold uppercase tracking-[0.6px] text-[#1d4ed8] hover:bg-[#dbeafe] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563eb]"
+                      href={`/areas/${stageSlug}/estatisticas`}
+                    >
+                      Ver estatísticas
+                    </Link>
+                  </div>
+                </article>
               );
             })}
           </section>
@@ -167,7 +180,7 @@ export default async function Home() {
         ) : null}
       </main>
 
-      <footer className="border-t border-[#f1f5f9] bg-white px-6 py-12 sm:px-10 lg:px-20">
+      <footer className="border-t border-[#bfdbfe] bg-white/80 px-6 py-12 sm:px-10 lg:px-20">
         <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 text-sm text-[#94a3b8] md:flex-row md:items-center md:justify-between">
           <p>© 2026 Projeto Base de Pesquisa AIA. Acesso simplificado à pesquisa.</p>
           <nav aria-label="Links do rodapé" className="flex flex-wrap items-center gap-8">
