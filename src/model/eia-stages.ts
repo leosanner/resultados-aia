@@ -45,8 +45,9 @@ export class EiaModel {
 	}
 
 	async getArticlesSummary(): Promise<Record<string, number>> {
-		const eiaStagesWithArticles = await loadEiaStages();
-		return Object.entries(eiaStagesWithArticles).reduce<Record<string, number>>(
+		const articlesByStage = await this.getArticlesByStage();
+
+		return Object.entries(articlesByStage).reduce<Record<string, number>>(
 			(currentDict, [key, value]) => {
 				currentDict[key] = value.length;
 				return currentDict;
