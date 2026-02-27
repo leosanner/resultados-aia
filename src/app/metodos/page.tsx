@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { VennDiagram } from "@/components/charts/venn-diagram";
 
 const FUNNEL_STEPS = [
 	{ label: "Busca total nas bases", value: "> 16.000", width: "100%", tone: "bg-[#2563eb]" },
@@ -79,6 +80,28 @@ export default function MethodsPage() {
 							</div>
 						</div>
 					</article>
+				</section>
+
+				<section className="rounded-2xl border border-[#cbd5e1] bg-white p-6">
+					<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
+						Sobreposição entre bases
+					</h3>
+					<p className="mt-2 text-sm leading-7 text-[#475569]">
+						A etapa inicial cruza os resultados das duas fontes bibliográficas para reduzir
+						duplicidades e preservar os estudos compartilhados.
+					</p>
+					<div className="mt-5">
+						<VennDiagram
+							intersection={5880}
+							leftColor="#0ea5e9"
+							leftLabel="OpenAlex"
+							leftOnly={6393}
+							rightColor="#16a34a"
+							rightLabel="Scopus"
+							rightOnly={4384}
+							total={16657}
+						/>
+					</div>
 				</section>
 
 				<section className="rounded-2xl border border-[#cbd5e1] bg-white p-6">
