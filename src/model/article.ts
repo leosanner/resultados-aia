@@ -11,6 +11,52 @@ export type FrequencyTerms = {
 	tec: Record<string, number>;
 };
 
+export const tecTerms = [
+	"Technological Innovation",
+	"Natural Language Processing",
+	"Geoprocessing",
+	"Internet of Things",
+	"Remote Sensing",
+	"Data Science",
+	"Machine Learning",
+	"Digital Technologies",
+	"Reinforcement Learning",
+	"Data Visualization",
+	"Prediction Analytics",
+	"Augmented Reality",
+	"Artificial Intelligence",
+	"Deep Learning",
+	"Digital Transformation",
+	"Digital Twins",
+] as const;
+
+export const envTerms = [
+	"environmental monitoring",
+	"cumulative effects assessment",
+	"environmental permit",
+	"sustainability assessment",
+	"environmental consent",
+	"cumulative effect assessment",
+	"impact assessment",
+	"environmental clearance",
+	"impact assessment report",
+	"environmental assessment",
+	"environmental license",
+	"environmental consents",
+	"environmental authorization",
+	"environmental impact report",
+	"environmental statement",
+	"environmental approval",
+	"environmental licensing",
+	"environmental permitting",
+	"impact statement",
+	"environmental licence",
+] as const;
+
+export type TecTerm = (typeof tecTerms)[number];
+export type EnvTerm = (typeof envTerms)[number];
+export type Term = TecTerm | EnvTerm;
+
 const loadFrequencyTerms = async () => {
 	const pathFile = path.join(
 		process.cwd(),

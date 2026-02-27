@@ -1,6 +1,15 @@
 import fs from "fs/promises";
 import path from "path";
-import { Article, ArticleModel, FrequencyTerms } from "./article";
+import {
+	Article,
+	ArticleModel,
+	EnvTerm,
+	FrequencyTerms,
+	Term,
+	TecTerm,
+	envTerms,
+	tecTerms,
+} from "./article";
 
 type FileOutputFormat = Record<string, number[]>;
 export type StageArticle = Article & { id: number };
@@ -64,6 +73,56 @@ export class EiaModel {
 			return;
 		}
 
+		return await this.filterTermsFrequency(articlesStage);
+	}
+
+	async filterArticlesByTerms(
+		articles: StageArticle[],
+		terms: { envTerm: EnvTerm[]; tecTerm: TecTerm[] },
+	) {
+		if (!terms.envTerm && !terms.tecTerm) {
+			return articles;
+		}
+
+		if (terms.envTerm.length === 0) {
+			terms.envTerm = [...envTerms];
+		}
+
+		if (terms.tecTerm.length === 0) {
+			terms.tecTerm = [...tecTerms];
+		}
+
+		const matchByArticle = await Promise.all(
+			articles.map(async (article) => {
+				const articleFt = await this.articleModel.getArticleFrequencyTerms(
+					article.id,
+				);
+
+				if (!articleFt) {
+					return false;
+				}
+
+				const envFrequencyTerms = Object.keys(
+					verifyOcurrencies(articleFt.env),
+				) as EnvTerm[];
+				const tecFrequencyTerms = Object.keys(
+					verifyOcurrencies(articleFt.tec),
+				) as TecTerm[];
+
+				if (
+					envFrequencyTerms.some((val) => terms.envTerm.includes(val)) &&
+					tecFrequencyTerms.some((val) => terms.tecTerm.includes(val))
+				) {
+					return true;
+				}
+				return false;
+			}),
+		);
+
+		return articles.filter((_, index) => matchByArticle[index]);
+	}
+
+	async filterTermsFrequency(articlesStage: StageArticle[]) {
 		const ft: FrequencyTerms = { env: {}, tec: {} };
 
 		for (const article of articlesStage) {

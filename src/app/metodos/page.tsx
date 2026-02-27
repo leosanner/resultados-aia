@@ -66,7 +66,7 @@ export default function MethodsPage() {
 									Tecnologia
 								</p>
 								<p className="mt-1 text-sm text-[#334155]">
-									machine learning, deep learning e correlatos.
+									machine learning | deep learning | correlatos.
 								</p>
 							</div>
 							<div className="rounded-lg border border-[#bbf7d0] bg-white p-3">
@@ -74,7 +74,7 @@ export default function MethodsPage() {
 									Ambiental/AIA
 								</p>
 								<p className="mt-1 text-sm text-[#334155]">
-									environmental impact assessment, risk analysis e correlatos.
+									environmental impact assessment | risk analysis | correlatos.
 								</p>
 							</div>
 						</div>

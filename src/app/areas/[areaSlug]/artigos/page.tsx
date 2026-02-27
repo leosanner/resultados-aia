@@ -1,5 +1,6 @@
 import { ArticleCard } from "@/components/articles/article-card";
 import { formatStageTitle, slugToStageKey } from "@/lib/area-utils";
+import { EnvTerm, TecTerm, Term } from "@/model/article";
 import { EiaModel } from "@/model/eia-stages";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,6 +8,9 @@ import { notFound } from "next/navigation";
 type PageProps = {
 	params: Promise<{
 		areaSlug: string;
+	}>;
+	searchParams: Promise<{
+		term?: string | string[];
 	}>;
 };
 
@@ -17,13 +21,25 @@ const searchIcon =
 const areaIcon =
 	"https://www.figma.com/api/mcp/asset/278f0d50-2b33-4c45-b884-a09c58a8f5bc";
 
-export default async function AreaArticlesPage({ params }: PageProps) {
+function formatTermLabel(text: string) {
+	return text
+		.split(" ")
+		.filter(Boolean)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(" ");
+}
+
+export default async function AreaArticlesPage({
+	params,
+	searchParams,
+}: PageProps) {
 	const { areaSlug } = await params;
+	const { term } = await searchParams;
 	const stageKey = slugToStageKey(areaSlug);
+	const eiaModel = new EiaModel();
 
 	let articlesByStage: Awaited<ReturnType<EiaModel["getArticlesByStage"]>>;
 	try {
-		const eiaModel = new EiaModel();
 		articlesByStage = await eiaModel.getArticlesByStage();
 	} catch {
 		throw new Error("Falha ao carregar os artigos.");
@@ -34,7 +50,39 @@ export default async function AreaArticlesPage({ params }: PageProps) {
 	}
 
 	const stageName = formatStageTitle(stageKey);
-	const articles = articlesByStage[stageKey] ?? [];
+	const allArticles = articlesByStage[stageKey] ?? [];
+	const termsByStage = await eiaModel.filterTermsFrequency(allArticles);
+	const availableTechnologyTerms = Object.entries(termsByStage.tec).sort(
+		(a, b) => b[1] - a[1],
+	);
+	const availableEnvironmentalTerms = Object.entries(termsByStage.env).sort(
+		(a, b) => b[1] - a[1],
+	);
+	const availableTechnologyTermsSet = new Set(
+		availableTechnologyTerms.map(([termKey]) => termKey),
+	);
+	const availableEnvironmentalTermsSet = new Set(
+		availableEnvironmentalTerms.map(([termKey]) => termKey),
+	);
+	const selectedTermsRaw = Array.isArray(term)
+		? term
+		: term
+			? [term]
+			: [];
+	const selectedTechnologyTerms = selectedTermsRaw.filter(
+		(value): value is TecTerm => availableTechnologyTermsSet.has(value),
+	);
+	const selectedEnvironmentalTerms = selectedTermsRaw.filter(
+		(value): value is EnvTerm => availableEnvironmentalTermsSet.has(value),
+	);
+	const selectedTerms: Term[] = [
+		...selectedTechnologyTerms,
+		...selectedEnvironmentalTerms,
+	];
+	const articles = await eiaModel.filterArticlesByTerms(allArticles, {
+		envTerm: selectedEnvironmentalTerms,
+		tecTerm: selectedTechnologyTerms,
+	});
 
 	return (
 		<div className="min-h-screen bg-[#f6f8f6] text-[#0f172a]">
@@ -85,9 +133,99 @@ export default async function AreaArticlesPage({ params }: PageProps) {
 						</h1>
 					</div>
 					<p className="mt-2 text-base font-medium text-[#64748b]">
-						Exibindo {articles.length} artigos e pesquisas acadêmicas
+						Exibindo {articles.length} artigos e pesquisas acadêmicas{" "}
+						{selectedTerms.length > 0
+							? "(com filtros de termos aplicados)"
+							: ""}
 					</p>
 				</div>
+
+				<section className="mt-6 rounded-[12px] border border-[#dbeafe] bg-[#f8fbff] p-5">
+					<form className="space-y-5" method="GET">
+						<div className="flex items-center justify-between gap-3">
+							<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#1e3a8a]">
+								Filtrar por termos
+							</h2>
+							<Link
+								className="text-xs font-bold uppercase tracking-[1px] text-[#1d4ed8] hover:text-[#1e40af]"
+								href={`/areas/${areaSlug}/artigos`}
+							>
+								Limpar filtros
+							</Link>
+						</div>
+
+						<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+							<article className="rounded-[10px] border border-[#bfdbfe] bg-white p-4">
+								<h3 className="text-xs font-bold uppercase tracking-[0.9px] text-[#1d4ed8]">
+									Termos de tecnologia
+								</h3>
+								<div className="mt-3 flex max-h-48 flex-wrap gap-2 overflow-y-auto pr-1">
+									{availableTechnologyTerms.length > 0 ? (
+										availableTechnologyTerms.map(([termLabel]) => (
+											<label
+												className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-2.5 py-1 text-[11px] font-semibold text-[#1e3a8a]"
+												key={termLabel}
+											>
+												<input
+													className="h-3.5 w-3.5 accent-[#2563eb]"
+													defaultChecked={selectedTerms.includes(
+														termLabel as Term,
+													)}
+													name="term"
+													type="checkbox"
+													value={termLabel}
+												/>
+												<span>{formatTermLabel(termLabel)}</span>
+											</label>
+										))
+									) : (
+										<p className="text-xs text-[#64748b]">
+											Não há termos de tecnologia nesta área.
+										</p>
+									)}
+								</div>
+							</article>
+
+							<article className="rounded-[10px] border border-[#bbf7d0] bg-white p-4">
+								<h3 className="text-xs font-bold uppercase tracking-[0.9px] text-[#15803d]">
+									Termos ambientais
+								</h3>
+								<div className="mt-3 flex max-h-48 flex-wrap gap-2 overflow-y-auto pr-1">
+									{availableEnvironmentalTerms.length > 0 ? (
+										availableEnvironmentalTerms.map(([termLabel]) => (
+											<label
+												className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-2.5 py-1 text-[11px] font-semibold text-[#166534]"
+												key={termLabel}
+											>
+												<input
+													className="h-3.5 w-3.5 accent-[#16a34a]"
+													defaultChecked={selectedTerms.includes(
+														termLabel as Term,
+													)}
+													name="term"
+													type="checkbox"
+													value={termLabel}
+												/>
+												<span>{formatTermLabel(termLabel)}</span>
+											</label>
+										))
+									) : (
+										<p className="text-xs text-[#64748b]">
+											Não há termos ambientais nesta área.
+										</p>
+									)}
+								</div>
+							</article>
+						</div>
+
+						<button
+							className="inline-flex rounded-full bg-[#2563eb] px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white hover:bg-[#1d4ed8]"
+							type="submit"
+						>
+							Aplicar filtros
+						</button>
+					</form>
+				</section>
 
 				<section
 					aria-label={`Lista de artigos da área ${stageName}`}

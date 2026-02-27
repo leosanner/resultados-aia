@@ -136,8 +136,7 @@ export default async function Home() {
 						Visão Geral das Etapas da AIA
 					</h1>
 					<p className="mt-4 text-lg leading-[1.6] text-[#64748b]">
-						Explore pesquisas em Avaliação de Impacto Ambiental organizadas por
-						etapas reais do processo.
+						Explore pesquisas em Avaliação de Impacto Ambiental:
 					</p>
 				</section>
 
