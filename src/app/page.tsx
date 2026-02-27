@@ -115,7 +115,7 @@ export default async function Home() {
 						</Link>
 						<Link
 							className="text-sm font-medium text-[#64748b] transition-colors hover:text-[#1e293b]"
-							href="/metodos"
+							href="/metodologia"
 						>
 							Métodos
 						</Link>

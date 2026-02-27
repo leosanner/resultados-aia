@@ -5,7 +5,6 @@ import {
 	ArticleModel,
 	EnvTerm,
 	FrequencyTerms,
-	Term,
 	TecTerm,
 	envTerms,
 	tecTerms,
