@@ -3,6 +3,15 @@ import { randomChoice } from "@/utils/random-choices";
 import fs from "fs/promises";
 import path from "path";
 
+const X_MAX: number = 500;
+const Y_MAX: number = 500;
+
+const getRandomPosition = (axis: "x" | "y") => {
+	const axisLimit = axis === "x" ? X_MAX : Y_MAX;
+
+	return randomChoice(-axisLimit, axisLimit);
+};
+
 const frequenciesPath = path.join(
 	process.cwd(),
 	"src",
@@ -46,7 +55,10 @@ const buildTermsNode = (termType: "env" | "tec") => {
 		const node: Node = {
 			id: `${termType}-${idx}`,
 			data: { label: term.toLowerCase() },
-			position: { x: randomChoice(-50, 50), y: randomChoice(-50, 50) },
+			position: {
+				x: getRandomPosition("x"),
+				y: getRandomPosition("y"),
+			},
 		};
 
 		++idx;
@@ -54,6 +66,24 @@ const buildTermsNode = (termType: "env" | "tec") => {
 	}
 
 	return nodes;
+};
+
+const buildArticleNodes = (articleData: Record<number, object>) => {
+	const articleNodes: Node[] = [];
+	let idx = 0;
+
+	for (const [key, value] of Object.entries(articleData)) {
+		const node: Node = {
+			id: `art-${idx}`,
+			position: { x: getRandomPosition("x"), y: getRandomPosition("y") },
+			data: { label: key },
+		};
+
+		++idx;
+		articleNodes.push(node);
+	}
+
+	return articleNodes;
 };
 
 const buildGraphFiles = async () => {
