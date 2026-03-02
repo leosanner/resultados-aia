@@ -20,8 +20,6 @@ const frequenciesPath = path.join(
 	"frequency_terms.json",
 );
 
-const stagesPath = path.join(process.cwd(), "src", "data", "eia_stages.json");
-
 const loadFile = async (filePath: string) => {
 	const file = await fs.readFile(filePath, "utf-8");
 
