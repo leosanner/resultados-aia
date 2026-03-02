@@ -1,4 +1,5 @@
 import { envTerms, tecTerms } from "@/model/article";
+import { verifyOcurrencies } from "@/utils/ocurrencies";
 import { randomChoice } from "@/utils/random-choices";
 import fs from "fs/promises";
 import path from "path";
@@ -42,13 +43,22 @@ export type Edge = {
 	lable?: string;
 };
 
-// nós dos artigos
-// nóes de termos de busca (ambientais e tecnologias)
-// artigo -> termos de tecnologia e ambientais
+type TermsNode = Record<string, Node>;
 
-const buildTermsNode = (termType: "env" | "tec") => {
+export type GraphNodes = {
+	envNode: TermsNode;
+	tecNode: TermsNode;
+	articlesNode: Node[];
+};
+
+export type GraphContent = {
+	nodes: GraphNodes;
+	edges: Edge[];
+};
+
+const buildTermsNode = (termType: "env" | "tec"): TermsNode => {
 	const terms = termType === "env" ? envTerms : tecTerms;
-	const nodes: Node[] = [];
+	const nodes: Record<string, Node> = {};
 	let idx = 0;
 
 	for (const term of terms) {
@@ -62,7 +72,7 @@ const buildTermsNode = (termType: "env" | "tec") => {
 		};
 
 		++idx;
-		nodes.push(node);
+		nodes[term.toLowerCase()] = node;
 	}
 
 	return nodes;
@@ -70,27 +80,78 @@ const buildTermsNode = (termType: "env" | "tec") => {
 
 const buildArticleNodes = (articleData: Record<number, object>) => {
 	const articleNodes: Node[] = [];
-	let idx = 0;
 
-	for (const [key, value] of Object.entries(articleData)) {
+	for (const key of Object.keys(articleData)) {
 		const node: Node = {
-			id: `art-${idx}`,
+			id: `art-${key}`,
 			position: { x: getRandomPosition("x"), y: getRandomPosition("y") },
 			data: { label: key },
 		};
 
-		++idx;
 		articleNodes.push(node);
 	}
 
 	return articleNodes;
 };
 
-const buildGraphFiles = async () => {
-	const [stageObject, frequenciesObject] = await Promise.all([
-		loadFile(stagesPath),
-		loadFile(frequenciesPath),
-	]);
+const buildEdges = (
+	articleData: Record<number, object>,
+	tecNodes: TermsNode,
+	envNodes: TermsNode,
+) => {
+	const edges: Edge[] = [];
+
+	for (const [key, value] of Object.entries(articleData) as [
+		string,
+		Record<string, Record<string, number>>,
+	][]) {
+		const tecOcurrencies = verifyOcurrencies(value["tec"]);
+		const envOcurrencies = verifyOcurrencies(value["env"]);
+
+		const _tecTerms = Object.keys(tecOcurrencies) as string[];
+		const _envTerms = Object.keys(envOcurrencies);
+
+		let idxTec = 0;
+		let idxEnv = 0;
+		for (const term of _tecTerms) {
+			const tecNodeInfo = tecNodes[term.toLowerCase()];
+			if (!tecNodeInfo) continue;
+			edges.push({
+				id: `edge-tec-${key}-${idxTec}`,
+				source: `art-${key}`,
+				target: tecNodeInfo.id,
+			});
+			++idxTec;
+		}
+
+		for (const term of _envTerms) {
+			const envNodeInfo = envNodes[term.toLowerCase()];
+			if (!envNodeInfo) continue;
+			edges.push({
+				id: `edge-env-${key}-${idxEnv}`,
+				source: `art-${key}`,
+				target: envNodeInfo.id,
+			});
+			++idxEnv;
+		}
+	}
+
+	return edges;
 };
 
-console.log(buildTermsNode("tec"));
+export const graphContent = async (): Promise<GraphContent> => {
+	const articleData = await loadFile(frequenciesPath);
+	const tecNode = buildTermsNode("tec");
+	const envNode = buildTermsNode("env");
+	const articlesNode = buildArticleNodes(articleData);
+	const edges = buildEdges(articleData, tecNode, envNode);
+
+	return {
+		nodes: {
+			envNode,
+			tecNode,
+			articlesNode,
+		},
+		edges,
+	};
+};

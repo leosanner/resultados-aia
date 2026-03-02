@@ -1,3 +1,5 @@
+import { LandingTermsGraph } from "@/components/home/landing-terms-graph";
+import { graphContent } from "@/infra/build-graphs";
 import { EiaModel } from "@/model/eia-stages";
 import { formatStageTitle, stageKeyToSlug } from "@/lib/area-utils";
 import Link from "next/link";
@@ -76,6 +78,7 @@ function formatTotal(count: number) {
 
 export default async function Home() {
 	let summary: Record<string, number> | null = null;
+	let graphData: Awaited<ReturnType<typeof graphContent>> | null = null;
 	let loadError = false;
 
 	try {
@@ -83,6 +86,12 @@ export default async function Home() {
 		summary = await eiaModel.getArticlesSummary();
 	} catch {
 		loadError = true;
+	}
+
+	try {
+		graphData = await graphContent();
+	} catch {
+		graphData = null;
 	}
 
 	return (
@@ -220,6 +229,20 @@ export default async function Home() {
 						<p className="mt-2 text-sm text-[#64748b]">
 							Ainda não há artigos classificados para estas áreas.
 						</p>
+					</section>
+				) : null}
+
+				{graphData ? (
+					<section className="rounded-3xl border border-[#bfdbfe] bg-white/80 p-6 sm:p-8">
+						<h2 className="text-2xl font-extrabold tracking-[-0.4px] text-[#1e293b]">
+							Grafo de Artigos e Termos
+						</h2>
+						<p className="mt-2 text-sm text-[#64748b]">
+							Azul: termos tecnológicos, verde: termos ambientais, roxo escuro: artigos.
+						</p>
+						<div className="mt-6">
+							<LandingTermsGraph graph={graphData} />
+						</div>
 					</section>
 				) : null}
 			</main>
