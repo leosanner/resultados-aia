@@ -6,7 +6,6 @@ import {
 	Controls,
 	MarkerType,
 	ReactFlow,
-	type NodeDragHandler,
 	type Edge,
 	type Node,
 } from "@xyflow/react";
@@ -272,7 +271,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 
 	const clearFilters = () => setSelectedTopicIds([]);
 
-	const onNodeDragStop: NodeDragHandler = (_, node) => {
+	const onNodeDragStop = (_: unknown, node: Node) => {
 		setManualPositions((current) => ({
 			...current,
 			[node.id]: { x: node.position.x, y: node.position.y },
