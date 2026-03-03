@@ -1,0 +1,381 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import {
+	Background,
+	Controls,
+	MarkerType,
+	ReactFlow,
+	type NodeDragHandler,
+	type Edge,
+	type Node,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+
+type BaseGraphNode = {
+	id: string;
+	position: { x: number; y: number };
+	data: { label?: string };
+};
+
+type BaseGraphEdge = {
+	id: string;
+	source: string;
+	target: string;
+	type?: string;
+};
+
+type LandingTermsGraphProps = {
+	graph: {
+		nodes: {
+			envNode: Record<string, BaseGraphNode>;
+			tecNode: Record<string, BaseGraphNode>;
+			articlesNode: BaseGraphNode[];
+		};
+		edges: BaseGraphEdge[];
+	};
+};
+
+const nodeBaseStyle = {
+	background: "#ffffff",
+	borderRadius: 12,
+	padding: "8px 10px",
+	color: "#0f172a",
+	fontSize: 12,
+	fontWeight: 600,
+	boxShadow: "0 10px 18px -14px rgba(15, 23, 42, 0.55)",
+};
+
+const COLUMN_X = {
+	tec: 80,
+	articles: 520,
+	env: 960,
+} as const;
+
+const TOP_OFFSET = 24;
+const MAX_VIEWPORT_HEIGHT = 560;
+const MIN_ROW_GAP = 26;
+const MAX_ROW_GAP = 46;
+const MIN_ARTICLE_ROW_GAP = 18;
+const MAX_ARTICLE_ROW_GAP = 34;
+const MAX_ARTICLE_ROWS = 18;
+const ARTICLE_COLUMN_GAP = 110;
+
+const sortByLabel = (a: BaseGraphNode, b: BaseGraphNode) => {
+	const labelA = (a.data.label ?? a.id).toString();
+	const labelB = (b.data.label ?? b.id).toString();
+
+	return labelA.localeCompare(labelB, "pt-BR", { numeric: true });
+};
+
+const buildSemanticColumn = (
+	nodes: BaseGraphNode[],
+	columnX: number,
+	borderColor: string,
+	maxColumnLength: number,
+	rowGap: number,
+): Node[] => {
+	const sortedNodes = [...nodes].sort(sortByLabel);
+	const columnOffset = ((maxColumnLength - sortedNodes.length) * rowGap) / 2;
+
+	return sortedNodes.map((node, index) => ({
+		id: node.id,
+		position: {
+			x: columnX,
+			y: TOP_OFFSET + columnOffset + index * rowGap,
+		},
+		data: { label: node.data.label ?? node.id },
+		style: {
+			...nodeBaseStyle,
+			border: `2px solid ${borderColor}`,
+		},
+	}));
+};
+
+const getRowGap = (itemsCount: number, minGap = MIN_ROW_GAP, maxGap = MAX_ROW_GAP) => {
+	if (itemsCount <= 1) return maxGap;
+
+	const estimatedGap = Math.floor((MAX_VIEWPORT_HEIGHT - TOP_OFFSET) / (itemsCount - 1));
+
+	return Math.max(minGap, Math.min(maxGap, estimatedGap));
+};
+
+const buildClusteredArticleColumn = (nodes: BaseGraphNode[]): Node[] => {
+	const sortedNodes = [...nodes].sort(sortByLabel);
+
+	if (sortedNodes.length === 0) return [];
+
+	const columnCount = Math.min(
+		5,
+		Math.max(1, Math.ceil(sortedNodes.length / MAX_ARTICLE_ROWS)),
+	);
+	const rowCount = Math.ceil(sortedNodes.length / columnCount);
+	const rowGap = getRowGap(rowCount, MIN_ARTICLE_ROW_GAP, MAX_ARTICLE_ROW_GAP);
+	const usedHeight = (rowCount - 1) * rowGap;
+	const verticalOffset = (MAX_VIEWPORT_HEIGHT - TOP_OFFSET - usedHeight) / 2;
+	const startX = COLUMN_X.articles - ((columnCount - 1) * ARTICLE_COLUMN_GAP) / 2;
+
+	return sortedNodes.map((node, index) => {
+		const row = index % rowCount;
+		const column = Math.floor(index / rowCount);
+
+		return {
+			id: node.id,
+			position: {
+				x: startX + column * ARTICLE_COLUMN_GAP,
+				y: TOP_OFFSET + verticalOffset + row * rowGap,
+			},
+			data: { label: node.data.label ?? node.id },
+			style: {
+				...nodeBaseStyle,
+				border: "2px solid #4c1d95",
+			},
+		};
+	});
+};
+
+export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
+	const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([]);
+	const [searchTerm, setSearchTerm] = useState("");
+	const [manualPositions, setManualPositions] = useState<
+		Record<string, { x: number; y: number }>
+	>({});
+
+	const tecBaseNodes = useMemo(() => Object.values(graph.nodes.tecNode), [graph]);
+	const envBaseNodes = useMemo(() => Object.values(graph.nodes.envNode), [graph]);
+	const articleBaseNodes = graph.nodes.articlesNode;
+	const normalizedSearch = searchTerm.trim().toLowerCase();
+	const showAllTopics = normalizedSearch.length === 0;
+	const connectedTopicIds = useMemo(
+		() => new Set(graph.edges.map((edge) => edge.target)),
+		[graph.edges],
+	);
+	const connectedTecNodes = useMemo(
+		() => tecBaseNodes.filter((node) => connectedTopicIds.has(node.id)),
+		[tecBaseNodes, connectedTopicIds],
+	);
+	const connectedEnvNodes = useMemo(
+		() => envBaseNodes.filter((node) => connectedTopicIds.has(node.id)),
+		[envBaseNodes, connectedTopicIds],
+	);
+
+	const filteredTecTopics = useMemo(() => {
+		if (showAllTopics) return connectedTecNodes;
+
+		return connectedTecNodes.filter((node) =>
+			(node.data.label ?? node.id).toLowerCase().includes(normalizedSearch),
+		);
+	}, [showAllTopics, connectedTecNodes, normalizedSearch]);
+
+	const filteredEnvTopics = useMemo(() => {
+		if (showAllTopics) return connectedEnvNodes;
+
+		return connectedEnvNodes.filter((node) =>
+			(node.data.label ?? node.id).toLowerCase().includes(normalizedSearch),
+		);
+	}, [showAllTopics, connectedEnvNodes, normalizedSearch]);
+
+	const topicNodeIds = useMemo(
+		() =>
+			new Set(
+				[...connectedTecNodes, ...connectedEnvNodes].map((node) => node.id),
+			),
+		[connectedTecNodes, connectedEnvNodes],
+	);
+
+	const selectedTopicSet = useMemo(
+		() => new Set(selectedTopicIds.filter((id) => topicNodeIds.has(id))),
+		[selectedTopicIds, topicNodeIds],
+	);
+
+	const hasActiveFilter = selectedTopicSet.size > 0;
+
+	const visibleEdgesBase = useMemo(() => {
+		if (!hasActiveFilter) return graph.edges;
+
+		return graph.edges.filter((edge) => selectedTopicSet.has(edge.target));
+	}, [graph.edges, hasActiveFilter, selectedTopicSet]);
+
+	const visibleArticleIds = useMemo(() => {
+		if (!hasActiveFilter) return new Set(articleBaseNodes.map((node) => node.id));
+
+		return new Set(visibleEdgesBase.map((edge) => edge.source));
+	}, [hasActiveFilter, visibleEdgesBase, articleBaseNodes]);
+
+	const visibleTecNodesBase = useMemo(() => {
+		if (!hasActiveFilter) return tecBaseNodes;
+
+		return tecBaseNodes.filter((node) => selectedTopicSet.has(node.id));
+	}, [hasActiveFilter, tecBaseNodes, selectedTopicSet]);
+
+	const visibleEnvNodesBase = useMemo(() => {
+		if (!hasActiveFilter) return envBaseNodes;
+
+		return envBaseNodes.filter((node) => selectedTopicSet.has(node.id));
+	}, [hasActiveFilter, envBaseNodes, selectedTopicSet]);
+
+	const visibleArticleNodesBase = useMemo(() => {
+		if (!hasActiveFilter) return articleBaseNodes;
+
+		return articleBaseNodes.filter((node) => visibleArticleIds.has(node.id));
+	}, [hasActiveFilter, articleBaseNodes, visibleArticleIds]);
+
+	const semanticMaxColumnLength = Math.max(
+		visibleTecNodesBase.length,
+		visibleEnvNodesBase.length,
+		1,
+	);
+	const semanticRowGap = getRowGap(semanticMaxColumnLength);
+
+	const tecNodes: Node[] = buildSemanticColumn(
+		visibleTecNodesBase,
+		COLUMN_X.tec,
+		"#2563eb",
+		semanticMaxColumnLength,
+		semanticRowGap,
+	);
+	const articleNodes: Node[] = buildClusteredArticleColumn(visibleArticleNodesBase);
+	const envNodes: Node[] = buildSemanticColumn(
+		visibleEnvNodesBase,
+		COLUMN_X.env,
+		"#16a34a",
+		semanticMaxColumnLength,
+		semanticRowGap,
+	);
+
+	const visibleNodeIds = new Set(nodesToIds(tecNodes, articleNodes, envNodes));
+	const nodes: Node[] = [...tecNodes, ...articleNodes, ...envNodes].map((node) => {
+		const manualPosition = manualPositions[node.id];
+
+		return manualPosition ? { ...node, position: manualPosition } : node;
+	});
+	const edges: Edge[] = visibleEdgesBase
+		.filter(
+			(edge) => visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target),
+		)
+		.map((edge) => ({
+			id: edge.id,
+			source: edge.source,
+			target: edge.target,
+			type: edge.type ?? "smoothstep",
+			style: { stroke: "#64748b", strokeWidth: 1.2 },
+			markerEnd: { type: MarkerType.ArrowClosed, color: "#64748b" },
+		}));
+
+	const toggleTopic = (topicId: string) => {
+		setSelectedTopicIds((current) =>
+			current.includes(topicId)
+				? current.filter((id) => id !== topicId)
+				: [...current, topicId],
+		);
+	};
+
+	const clearFilters = () => setSelectedTopicIds([]);
+
+	const onNodeDragStop: NodeDragHandler = (_, node) => {
+		setManualPositions((current) => ({
+			...current,
+			[node.id]: { x: node.position.x, y: node.position.y },
+		}));
+	};
+
+	return (
+		<div className="space-y-4">
+			<div className="rounded-2xl border border-[#dbeafe] bg-[#f8fbff] p-4">
+				<div className="flex flex-wrap items-center justify-between gap-3">
+					<label className="text-sm font-semibold text-[#1e3a8a]" htmlFor="topic-filter">
+						Filtrar por tópicos
+					</label>
+					<button
+						className="rounded-full border border-[#93c5fd] bg-white px-3 py-1 text-xs font-semibold text-[#1d4ed8] transition-colors hover:bg-[#eff6ff]"
+						onClick={clearFilters}
+						type="button"
+					>
+						Limpar filtros
+					</button>
+				</div>
+				<input
+					className="mt-3 w-full rounded-xl border border-[#bfdbfe] bg-white px-3 py-2 text-sm text-[#0f172a] outline-none ring-[#3b82f6] transition focus:ring-2"
+					id="topic-filter"
+					onChange={(event) => setSearchTerm(event.target.value)}
+					placeholder="Buscar tópico..."
+					type="text"
+					value={searchTerm}
+				/>
+				<div className="mt-3 max-h-44 overflow-y-auto pr-1">
+					<p className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#1d4ed8]">
+						Tecnológicos
+					</p>
+					<div className="mt-2 flex flex-wrap gap-2">
+						{filteredTecTopics.map((topic) => (
+							<button
+								aria-pressed={selectedTopicSet.has(topic.id)}
+								className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+									selectedTopicSet.has(topic.id)
+										? "border-[#2563eb] bg-[#2563eb] text-white"
+										: "border-[#93c5fd] bg-white text-[#1d4ed8] hover:bg-[#eff6ff]"
+								}`}
+								key={topic.id}
+								onClick={() => toggleTopic(topic.id)}
+								type="button"
+							>
+								{topic.data.label ?? topic.id}
+							</button>
+						))}
+					</div>
+					<p className="mt-4 text-[11px] font-bold uppercase tracking-[0.4px] text-[#166534]">
+						Ambientais
+					</p>
+					<div className="mt-2 flex flex-wrap gap-2">
+						{filteredEnvTopics.map((topic) => (
+							<button
+								aria-pressed={selectedTopicSet.has(topic.id)}
+								className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+									selectedTopicSet.has(topic.id)
+										? "border-[#16a34a] bg-[#16a34a] text-white"
+										: "border-[#86efac] bg-white text-[#166534] hover:bg-[#f0fdf4]"
+								}`}
+								key={topic.id}
+								onClick={() => toggleTopic(topic.id)}
+								type="button"
+							>
+								{topic.data.label ?? topic.id}
+							</button>
+						))}
+					</div>
+				</div>
+			</div>
+			<div className="h-[620px] w-full overflow-hidden rounded-3xl border border-[#cbd5e1] bg-white">
+				<ReactFlow
+					edges={edges}
+					fitView
+					fitViewOptions={{ padding: 0.15 }}
+					maxZoom={1.4}
+					minZoom={0.3}
+					nodes={nodes}
+					nodesConnectable={false}
+					nodesDraggable
+					onNodeDragStop={onNodeDragStop}
+					panOnDrag
+					proOptions={{ hideAttribution: true }}
+					selectNodesOnDrag={false}
+				>
+					<Background color="#e2e8f0" gap={16} size={1} />
+					<Controls className="rounded-lg border border-[#cbd5e1] bg-white shadow-lg" />
+				</ReactFlow>
+			</div>
+		</div>
+	);
+}
+
+const nodesToIds = (...nodeGroups: Node[][]) => {
+	const ids: string[] = [];
+
+	for (const group of nodeGroups) {
+		for (const node of group) {
+			ids.push(node.id);
+		}
+	}
+
+	return ids;
+};

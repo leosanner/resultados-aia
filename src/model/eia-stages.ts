@@ -9,6 +9,7 @@ import {
 	envTerms,
 	tecTerms,
 } from "./article";
+import { verifyOcurrencies } from "@/utils/ocurrencies";
 
 type FileOutputFormat = Record<string, number[]>;
 export type StageArticle = Article & { id: number };
@@ -146,10 +147,4 @@ export class EiaModel {
 		}
 		return ft;
 	}
-}
-
-function verifyOcurrencies(obj: Record<string, number>) {
-	return Object.fromEntries(
-		Object.entries(obj).filter(([, value]) => value > 0),
-	);
 }
