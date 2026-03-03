@@ -31,43 +31,43 @@ const CARD_STYLES: AreaCard[] = [
 	{
 		title: "",
 		description: "",
-		badgeClass: "bg-[#16a34a] text-white",
-		iconBgClass: "bg-[#dcfce7]",
+		badgeClass: "bg-[#28a745] text-white",
+		iconBgClass: "bg-[#e7f6ed]",
 		iconSrc: iconBio,
 	},
 	{
 		title: "",
 		description: "",
-		badgeClass: "bg-[#0284c7] text-white",
-		iconBgClass: "bg-[#dbeafe]",
+		badgeClass: "bg-[#1f9d5a] text-white",
+		iconBgClass: "bg-[#ebf7f0]",
 		iconSrc: iconWater,
 	},
 	{
 		title: "",
 		description: "",
-		badgeClass: "bg-[#0d9488] text-white",
-		iconBgClass: "bg-[#ccfbf1]",
+		badgeClass: "bg-[#168f52] text-white",
+		iconBgClass: "bg-[#edf8f2]",
 		iconSrc: iconAir,
 	},
 	{
 		title: "",
 		description: "",
-		badgeClass: "bg-[#9333ea] text-white",
-		iconBgClass: "bg-[#f3e8ff]",
+		badgeClass: "bg-[#2ca768] text-white",
+		iconBgClass: "bg-[#e8f6ee]",
 		iconSrc: iconSocio,
 	},
 	{
 		title: "",
 		description: "",
-		badgeClass: "bg-[#d97706] text-white",
-		iconBgClass: "bg-[#fef3c7]",
+		badgeClass: "bg-[#218a4f] text-white",
+		iconBgClass: "bg-[#eef8f3]",
 		iconSrc: iconSoil,
 	},
 	{
 		title: "",
 		description: "",
-		badgeClass: "bg-[#e11d48] text-white",
-		iconBgClass: "bg-[#ffe4e6]",
+		badgeClass: "bg-[#247f49] text-white",
+		iconBgClass: "bg-[#edf6f0]",
 		iconSrc: iconNoise,
 	},
 ];
@@ -95,18 +95,18 @@ export default async function Home() {
 	}
 
 	return (
-		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#dcfce7_0%,_#dbeafe_45%,_#f8fafc_100%)] text-[#0f172a]">
-			<header className="w-full border-b border-[#bfdbfe] bg-white/70 px-6 py-6 backdrop-blur-sm sm:px-10 lg:px-20 lg:py-8">
+		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#edf8f2_0%,_#f4f8f6_40%,_#ffffff_100%)] text-[#111111]">
+			<header className="w-full border-b border-[#173f2f] bg-[#0f1f19]/95 px-6 py-6 backdrop-blur-sm sm:px-10 lg:px-20 lg:py-8">
 				<div className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-4">
 					<div className="flex items-center gap-3">
-						<div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#22c55e]/20 ring-1 ring-[#16a34a]/30">
+						<div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2ecc71]/20 ring-1 ring-[#28a745]/30">
 							<img alt="" className="h-4 w-4" src={logoIcon} />
 						</div>
 						<div className="leading-tight">
-							<p className="text-xl font-extrabold tracking-[-0.5px] text-[#1e293b]">
+							<p className="text-xl font-extrabold tracking-[-0.5px] text-white">
 								Explorador AIA
 							</p>
-							<p className="text-[10px] font-bold uppercase tracking-[1px] text-[#2563eb]">
+							<p className="text-[10px] font-bold uppercase tracking-[1px] text-[#7dd3a8]">
 								Base de Pesquisa
 							</p>
 						</div>
@@ -117,20 +117,20 @@ export default async function Home() {
 						className="hidden items-center gap-8 md:flex"
 					>
 						<Link
-							className="text-sm font-medium text-[#64748b] transition-colors hover:text-[#1e293b]"
+							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"
 							href="/"
 						>
 							Biblioteca
 						</Link>
 						<Link
-							className="text-sm font-medium text-[#64748b] transition-colors hover:text-[#1e293b]"
+							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"
 							href="/metodologia"
 						>
 							Métodos
 						</Link>
 						<button
 							aria-label="Entrar na plataforma"
-							className="rounded-full bg-[#2563eb] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+							className="rounded-full bg-[#2ecc71] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#28a745]"
 							type="button"
 						>
 							Entrar
@@ -141,20 +141,20 @@ export default async function Home() {
 
 			<main className="mx-auto flex w-full max-w-[1280px] flex-col gap-12 px-6 pb-14 pt-6 sm:px-10 lg:gap-16 lg:px-20 lg:pt-12">
 				<section className="max-w-[672px]">
-					<h1 className="text-4xl font-black leading-[1.05] tracking-[-1.2px] text-[#0f172a] md:text-5xl">
+					<h1 className="text-4xl font-black leading-[1.05] tracking-[-1.2px] text-[#111111] md:text-5xl">
 						Visão Geral das Etapas da AIA
 					</h1>
-					<p className="mt-4 text-lg leading-[1.6] text-[#64748b]">
+					<p className="mt-4 text-lg leading-[1.6] text-[#4a5568]">
 						Explore pesquisas em Avaliação de Impacto Ambiental:
 					</p>
 				</section>
 
 				{loadError ? (
-					<section className="rounded-3xl border border-[#f1f5f9] bg-white p-8">
-						<h2 className="text-xl font-bold text-[#1e293b]">
+					<section className="rounded-3xl border border-[#e7ece9] bg-white p-8">
+						<h2 className="text-xl font-bold text-[#111111]">
 							Não foi possível carregar os dados
 						</h2>
-						<p className="mt-2 text-sm text-[#64748b]">
+						<p className="mt-2 text-sm text-[#4a5568]">
 							Ocorreu um erro ao buscar os artigos. Tente novamente em
 							instantes.
 						</p>
@@ -172,7 +172,7 @@ export default async function Home() {
 
 							return (
 								<article
-									className="flex min-h-[292px] flex-col rounded-3xl border border-[#bfdbfe] bg-white p-[33px] shadow-[0px_10px_25px_-18px_rgba(15,23,42,0.45)] transition-all hover:-translate-y-1 hover:border-[#60a5fa] hover:shadow-[0px_18px_34px_-22px_rgba(37,99,235,0.6)]"
+									className="flex min-h-[292px] flex-col rounded-3xl border border-[#dbe6df] bg-white p-[33px] shadow-[0px_10px_25px_-18px_rgba(17,17,17,0.25)] transition-all hover:-translate-y-1 hover:border-[#9ac7ad] hover:shadow-[0px_18px_34px_-22px_rgba(40,167,69,0.38)]"
 									key={stageKey}
 								>
 									<div
@@ -184,10 +184,10 @@ export default async function Home() {
 											src={style.iconSrc}
 										/>
 									</div>
-									<h2 className="mt-6 text-[36px]/8 font-bold text-[#1e293b] sm:text-4xl lg:text-3xl">
+									<h2 className="mt-6 text-[36px]/8 font-bold text-[#111111] sm:text-4xl lg:text-3xl">
 										{stageTitle}
 									</h2>
-									<p className="mt-2 line-clamp-2 text-sm leading-[22.75px] text-[#64748b]">
+									<p className="mt-2 line-clamp-2 text-sm leading-[22.75px] text-[#4a5568]">
 										{description}
 									</p>
 									<div className="mt-6">
@@ -200,14 +200,14 @@ export default async function Home() {
 									<div className="mt-6 flex flex-wrap gap-3">
 										<Link
 											aria-label={`Abrir artigos da área ${stageTitle}`}
-											className="inline-flex rounded-full bg-[#2563eb] px-4 py-2 text-xs font-bold uppercase tracking-[0.6px] text-white hover:bg-[#1d4ed8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563eb]"
+											className="inline-flex rounded-full bg-[#2ecc71] px-4 py-2 text-xs font-bold uppercase tracking-[0.6px] text-white hover:bg-[#28a745] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2ecc71]"
 											href={`/areas/${stageSlug}/artigos`}
 										>
 											Ver artigos
 										</Link>
 										<Link
 											aria-label={`Abrir estatísticas da área ${stageTitle}`}
-											className="inline-flex rounded-full border border-[#60a5fa] bg-[#eff6ff] px-4 py-2 text-xs font-bold uppercase tracking-[0.6px] text-[#1d4ed8] hover:bg-[#dbeafe] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563eb]"
+											className="inline-flex rounded-full border border-[#9bb8a9] bg-[#f3f5f4] px-4 py-2 text-xs font-bold uppercase tracking-[0.6px] text-[#1f5136] hover:bg-[#e8eeea] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2ecc71]"
 											href={`/areas/${stageSlug}/estatisticas`}
 										>
 											Ver estatísticas
@@ -222,23 +222,23 @@ export default async function Home() {
 				{!loadError &&
 				summary &&
 				Object.values(summary).every((count) => count === 0) ? (
-					<section className="rounded-3xl border border-[#f1f5f9] bg-white p-8">
-						<h2 className="text-xl font-bold text-[#1e293b]">
+					<section className="rounded-3xl border border-[#e7ece9] bg-white p-8">
+						<h2 className="text-xl font-bold text-[#111111]">
 							Nenhum resultado encontrado
 						</h2>
-						<p className="mt-2 text-sm text-[#64748b]">
+						<p className="mt-2 text-sm text-[#4a5568]">
 							Ainda não há artigos classificados para estas áreas.
 						</p>
 					</section>
 				) : null}
 
 				{graphData ? (
-					<section className="rounded-3xl border border-[#bfdbfe] bg-white/80 p-6 sm:p-8">
-						<h2 className="text-2xl font-extrabold tracking-[-0.4px] text-[#1e293b]">
+					<section className="rounded-3xl border border-[#dbe6df] bg-white/90 p-6 sm:p-8">
+						<h2 className="text-2xl font-extrabold tracking-[-0.4px] text-[#111111]">
 							Grafo de Artigos e Termos
 						</h2>
-						<p className="mt-2 text-sm text-[#64748b]">
-							Azul: termos tecnológicos, verde: termos ambientais, roxo escuro: artigos.
+						<p className="mt-2 text-sm text-[#4a5568]">
+							Verde petróleo: termos tecnológicos, verde folha: termos ambientais, verde escuro: artigos.
 						</p>
 						<div className="mt-6">
 							<LandingTermsGraph graph={graphData} />
@@ -247,8 +247,8 @@ export default async function Home() {
 				) : null}
 			</main>
 
-			<footer className="border-t border-[#bfdbfe] bg-white/80 px-6 py-12 sm:px-10 lg:px-20">
-				<div className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 text-sm text-[#94a3b8] md:flex-row md:items-center md:justify-between">
+			<footer className="border-t border-[#123629] bg-[#0b281f] px-6 py-12 sm:px-10 lg:px-20">
+				<div className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 text-sm text-[#d4e3da] md:flex-row md:items-center md:justify-between">
 					<p>
 						© 2026 Projeto Base de Pesquisa AIA. Acesso simplificado à pesquisa.
 					</p>
@@ -256,13 +256,13 @@ export default async function Home() {
 						aria-label="Links do rodapé"
 						className="flex flex-wrap items-center gap-8"
 					>
-						<a className="transition-colors hover:text-[#64748b]" href="#">
+						<a className="transition-colors hover:text-white" href="#">
 							Documentação
 						</a>
-						<a className="transition-colors hover:text-[#64748b]" href="#">
+						<a className="transition-colors hover:text-white" href="#">
 							Acesso à API
 						</a>
-						<a className="transition-colors hover:text-[#64748b]" href="#">
+						<a className="transition-colors hover:text-white" href="#">
 							Privacidade
 						</a>
 					</nav>

@@ -39,10 +39,10 @@ const nodeBaseStyle = {
 	background: "#ffffff",
 	borderRadius: 12,
 	padding: "8px 10px",
-	color: "#0f172a",
+	color: "#111111",
 	fontSize: 12,
 	fontWeight: 600,
-	boxShadow: "0 10px 18px -14px rgba(15, 23, 42, 0.55)",
+	boxShadow: "0 12px 22px -14px rgba(17, 17, 17, 0.42)",
 };
 
 const COLUMN_X = {
@@ -127,7 +127,8 @@ const buildClusteredArticleColumn = (nodes: BaseGraphNode[]): Node[] => {
 			data: { label: node.data.label ?? node.id },
 			style: {
 				...nodeBaseStyle,
-				border: "2px solid #4c1d95",
+				border: "2px solid #7c3aed",
+				background: "#f8f3ff",
 			},
 		};
 	});
@@ -229,7 +230,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 	const tecNodes: Node[] = buildSemanticColumn(
 		visibleTecNodesBase,
 		COLUMN_X.tec,
-		"#2563eb",
+		"#0ea5e9",
 		semanticMaxColumnLength,
 		semanticRowGap,
 	);
@@ -237,7 +238,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 	const envNodes: Node[] = buildSemanticColumn(
 		visibleEnvNodesBase,
 		COLUMN_X.env,
-		"#16a34a",
+		"#22c55e",
 		semanticMaxColumnLength,
 		semanticRowGap,
 	);
@@ -257,7 +258,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 			source: edge.source,
 			target: edge.target,
 			type: edge.type ?? "smoothstep",
-			style: { stroke: "#64748b", strokeWidth: 1.2 },
+			style: { stroke: "#64748b", strokeWidth: 1.35 },
 			markerEnd: { type: MarkerType.ArrowClosed, color: "#64748b" },
 		}));
 
@@ -278,15 +279,15 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 		}));
 	};
 
-	return (
+		return (
 		<div className="space-y-4">
-			<div className="rounded-2xl border border-[#dbeafe] bg-[#f8fbff] p-4">
+			<div className="rounded-2xl border border-[#bfdcff] bg-[#eef6ff] p-4">
 				<div className="flex flex-wrap items-center justify-between gap-3">
-					<label className="text-sm font-semibold text-[#1e3a8a]" htmlFor="topic-filter">
+					<label className="text-sm font-semibold text-[#0f172a]" htmlFor="topic-filter">
 						Filtrar por tópicos
 					</label>
 					<button
-						className="rounded-full border border-[#93c5fd] bg-white px-3 py-1 text-xs font-semibold text-[#1d4ed8] transition-colors hover:bg-[#eff6ff]"
+						className="rounded-full border border-[#a5b4fc] bg-white px-3 py-1 text-xs font-semibold text-[#4338ca] transition-colors hover:bg-[#eef2ff]"
 						onClick={clearFilters}
 						type="button"
 					>
@@ -294,7 +295,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 					</button>
 				</div>
 				<input
-					className="mt-3 w-full rounded-xl border border-[#bfdbfe] bg-white px-3 py-2 text-sm text-[#0f172a] outline-none ring-[#3b82f6] transition focus:ring-2"
+					className="mt-3 w-full rounded-xl border border-[#bfdbfe] bg-white px-3 py-2 text-sm text-[#111111] outline-none ring-[#3b82f6] transition focus:ring-2"
 					id="topic-filter"
 					onChange={(event) => setSearchTerm(event.target.value)}
 					placeholder="Buscar tópico..."
@@ -302,7 +303,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 					value={searchTerm}
 				/>
 				<div className="mt-3 max-h-44 overflow-y-auto pr-1">
-					<p className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#1d4ed8]">
+					<p className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#0369a1]">
 						Tecnológicos
 					</p>
 					<div className="mt-2 flex flex-wrap gap-2">
@@ -311,8 +312,8 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 								aria-pressed={selectedTopicSet.has(topic.id)}
 								className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
 									selectedTopicSet.has(topic.id)
-										? "border-[#2563eb] bg-[#2563eb] text-white"
-										: "border-[#93c5fd] bg-white text-[#1d4ed8] hover:bg-[#eff6ff]"
+										? "border-[#0284c7] bg-[#0284c7] text-white"
+										: "border-[#7dd3fc] bg-white text-[#0369a1] hover:bg-[#e0f2fe]"
 								}`}
 								key={topic.id}
 								onClick={() => toggleTopic(topic.id)}
@@ -322,7 +323,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 							</button>
 						))}
 					</div>
-					<p className="mt-4 text-[11px] font-bold uppercase tracking-[0.4px] text-[#166534]">
+					<p className="mt-4 text-[11px] font-bold uppercase tracking-[0.4px] text-[#15803d]">
 						Ambientais
 					</p>
 					<div className="mt-2 flex flex-wrap gap-2">
@@ -344,7 +345,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 					</div>
 				</div>
 			</div>
-			<div className="h-[620px] w-full overflow-hidden rounded-3xl border border-[#cbd5e1] bg-white">
+			<div className="h-[620px] w-full overflow-hidden rounded-3xl border border-[#cbd5e1] bg-[#f8fafc]">
 				<ReactFlow
 					edges={edges}
 					fitView
@@ -359,8 +360,8 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 					proOptions={{ hideAttribution: true }}
 					selectNodesOnDrag={false}
 				>
-					<Background color="#e2e8f0" gap={16} size={1} />
-					<Controls className="rounded-lg border border-[#cbd5e1] bg-white shadow-lg" />
+					<Background color="#dbe6f5" gap={16} size={1} />
+					<Controls className="rounded-lg border border-[#bfdbfe] bg-white shadow-lg" />
 				</ReactFlow>
 			</div>
 		</div>
