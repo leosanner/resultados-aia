@@ -1,0 +1,296 @@
+import { ArticleCard } from "@/components/articles/article-card";
+import { getToneColorByIndex } from "@/components/charts/chart-palettes";
+import { TermsBarChart } from "@/components/charts/terms-bar-chart";
+import { formatStageTitle, stageKeyToSlug } from "@/lib/area-utils";
+import {
+	ArticleModel,
+	type Article,
+	type EnvTerm,
+	type TecTerm,
+} from "@/model/article";
+import { EiaModel, type StageArticle } from "@/model/eia-stages";
+import Link from "next/link";
+
+type PageProps = {
+	searchParams: Promise<{
+		term?: string | string[];
+		type?: string | string[];
+		tec?: string | string[];
+		env?: string | string[];
+	}>;
+};
+
+function formatTermLabel(text: string) {
+	return text
+		.split(" ")
+		.filter(Boolean)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(" ");
+}
+
+function toArray(value: string | string[] | undefined) {
+	if (!value) return [];
+	return Array.isArray(value) ? value : [value];
+}
+
+function normalizeTerms(values: string[]) {
+	return Array.from(
+		new Set(values.map((value) => value.trim().toLowerCase()).filter(Boolean)),
+	);
+}
+
+function buildArticleFingerprint(article: Article) {
+	return JSON.stringify({
+		title: article.title,
+		abstract: article.abstract,
+		keywords: article.keywords,
+	});
+}
+
+type BarChartItem = {
+	label: string;
+	value: number;
+};
+
+function hexToRgba(hex: string, alpha: number) {
+	const normalized = hex.replace("#", "");
+	const parsed = Number.parseInt(normalized, 16);
+	const r = (parsed >> 16) & 255;
+	const g = (parsed >> 8) & 255;
+	const b = parsed & 255;
+	return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export default async function TermArticlesPage({ searchParams }: PageProps) {
+	const currentSearchParams = await searchParams;
+	const selectedTecTerms = normalizeTerms(toArray(currentSearchParams.tec));
+	const selectedEnvTerms = normalizeTerms(toArray(currentSearchParams.env));
+	let totalResults = 0;
+
+	// Backward compatibility with /termos?term=...&type=...
+	if (selectedTecTerms.length === 0 && selectedEnvTerms.length === 0) {
+		const legacyTerm = toArray(currentSearchParams.term)[0]
+			?.trim()
+			.toLowerCase();
+		const legacyType = toArray(currentSearchParams.type)[0];
+		if (legacyTerm) {
+			if (legacyType === "env") {
+				selectedEnvTerms.push(legacyTerm);
+			} else {
+				selectedTecTerms.push(legacyTerm);
+			}
+		}
+	}
+
+	const hasSelectedTerms =
+		selectedTecTerms.length > 0 || selectedEnvTerms.length > 0;
+	const eiaModel = new EiaModel();
+	const articleModel = new ArticleModel();
+	const articlesByStage = await eiaModel.getArticlesByStage();
+	const matchingArticleIds = new Set<number>();
+
+	if (hasSelectedTerms) {
+		const filteredArticles = await articleModel.filterArticlesByTerms({
+			env: selectedEnvTerms as EnvTerm[],
+			tec: selectedTecTerms as TecTerm[],
+		});
+		totalResults = filteredArticles.length;
+		const filteredByFingerprint = filteredArticles.reduce<
+			Record<string, number>
+		>((current, article) => {
+			const fingerprint = buildArticleFingerprint(article);
+			current[fingerprint] = (current[fingerprint] ?? 0) + 1;
+			return current;
+		}, {});
+		const allArticles = await articleModel.getArticles();
+
+		for (const [articleId, article] of Object.entries(allArticles)) {
+			const fingerprint = buildArticleFingerprint(article);
+			if ((filteredByFingerprint[fingerprint] ?? 0) > 0) {
+				matchingArticleIds.add(Number(articleId));
+				filteredByFingerprint[fingerprint] -= 1;
+			}
+		}
+	}
+
+	const groupedResults = Object.entries(articlesByStage).map(
+		([stageKey, articles]) => {
+			const stageArticles = hasSelectedTerms
+				? articles.filter((article) => matchingArticleIds.has(article.id))
+				: ([] as StageArticle[]);
+
+			return {
+				stageKey,
+				articles: stageArticles,
+			};
+		},
+	);
+	const groupsWithResults = groupedResults
+		.filter((group) => group.articles.length > 0)
+		.sort((a, b) => b.articles.length - a.articles.length);
+	const tone = "blue" as const;
+	const groupsWithColors = groupsWithResults.map((group, index) => ({
+		...group,
+		color: getToneColorByIndex(tone, index),
+	}));
+	const chartItems: BarChartItem[] = groupsWithResults.map((group) => ({
+		label: formatStageTitle(group.stageKey),
+		value: group.articles.length,
+	}));
+
+	return (
+		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e8f5ee_0%,_#f5f8f6_42%,_#ffffff_100%)] text-[#0f172a]">
+			<main className="mx-auto w-full max-w-[992px] px-6 py-8 md:px-12">
+				<Link
+					className="text-xs font-bold uppercase tracking-[1.2px] text-[#94a3b8] hover:text-[#64748b]"
+					href="/"
+				>
+					Voltar para o grafo
+				</Link>
+
+				<section className="mt-6 rounded-[18px] border border-[#dbe7df] bg-white/90 p-6 shadow-[0px_18px_34px_-28px_rgba(15,23,42,0.45)] backdrop-blur-sm">
+					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#7a8a9d]">
+						Filtro por termos
+					</p>
+					<h1 className="mt-2 text-3xl font-black tracking-[-0.8px] text-[#0f172a] md:text-4xl">
+						{hasSelectedTerms
+							? "Resultados por termos selecionados"
+							: "Selecione termos no grafo"}
+					</h1>
+					<p className="mt-2 text-base text-[#64748b]">
+						{hasSelectedTerms
+							? `${totalResults} artigos encontrados.`
+							: "Selecione termos no painel do grafo e use o botão para ver os artigos encontrados."}
+					</p>
+					{hasSelectedTerms ? (
+						<div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+							<div className="rounded-xl border border-[#bfdbfe] bg-[#eff6ff] px-4 py-3">
+								<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#1d4ed8]">
+									Total
+								</p>
+								<p className="mt-1 text-2xl font-black text-[#1e3a8a]">
+									{totalResults}
+								</p>
+							</div>
+							<div className="rounded-xl border border-[#bae6fd] bg-[#ecfeff] px-4 py-3">
+								<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#0369a1]">
+									Termos Tec
+								</p>
+								<p className="mt-1 text-2xl font-black text-[#0c4a6e]">
+									{selectedTecTerms.length}
+								</p>
+							</div>
+							<div className="rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-3">
+								<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#15803d]">
+									Termos Env
+								</p>
+								<p className="mt-1 text-2xl font-black text-[#14532d]">
+									{selectedEnvTerms.length}
+								</p>
+							</div>
+						</div>
+					) : null}
+				</section>
+
+				{selectedTecTerms.length > 0 ? (
+					<div className="mt-4 flex flex-wrap gap-2">
+						{selectedTecTerms.map((term) => (
+							<span
+								className="inline-flex rounded-full border border-[#bfdbfe] bg-white px-3 py-1 text-xs font-semibold text-[#1e3a8a]"
+								key={`tec-${term}`}
+							>
+								Tec: {formatTermLabel(term)}
+							</span>
+						))}
+					</div>
+				) : null}
+
+				{selectedEnvTerms.length > 0 ? (
+					<div className="mt-2 flex flex-wrap gap-2">
+						{selectedEnvTerms.map((term) => (
+							<span
+								className="inline-flex rounded-full border border-[#bbf7d0] bg-white px-3 py-1 text-xs font-semibold text-[#166534]"
+								key={`env-${term}`}
+							>
+								Env: {formatTermLabel(term)}
+							</span>
+						))}
+					</div>
+				) : null}
+
+				{hasSelectedTerms && chartItems.length > 0 ? (
+					<section className="mt-8 rounded-[16px] border border-[#dce9e1] bg-white p-5">
+						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
+							Distribuição por etapa
+						</h2>
+						<p className="mt-1 text-sm text-[#64748b]">
+							Quantidade de artigos encontrados em cada etapa da AIA.
+						</p>
+						<div className="mt-4">
+							<TermsBarChart items={chartItems} tone={tone} />
+						</div>
+					</section>
+				) : null}
+
+				{hasSelectedTerms ? (
+					<section className="mt-8 space-y-5">
+						{groupsWithColors.map((group) => {
+								const areaSlug = stageKeyToSlug(group.stageKey);
+								const stageTitle = formatStageTitle(group.stageKey);
+								const subtleBackground = hexToRgba(group.color, 0.09);
+
+								return (
+									<section key={group.stageKey}>
+										<details
+											className="group rounded-[14px] bg-white shadow-[0px_14px_26px_-24px_rgba(15,23,42,0.35)]"
+											style={{ border: `1px solid ${hexToRgba(group.color, 0.4)}` }}
+										>
+											<summary
+												className="cursor-pointer list-none px-4 py-3.5 text-lg font-bold text-[#0f172a] marker:content-none"
+												style={{ backgroundColor: subtleBackground }}
+											>
+												<span className="inline-flex items-center gap-2.5">
+													<span
+														aria-hidden
+														className="inline-flex h-6 w-6 items-center justify-center rounded-full text-sm text-white transition-transform group-open:rotate-90"
+														style={{ backgroundColor: group.color }}
+													>
+														▸
+													</span>
+													<span>
+														{stageTitle} ({group.articles.length})
+													</span>
+												</span>
+											</summary>
+											<div className="space-y-4 px-4 pb-4">
+												{group.articles.map((article) => (
+													<ArticleCard
+														abstract={article.abstract}
+														href={`/areas/${areaSlug}/artigos/${article.id}`}
+														key={`${group.stageKey}-${article.id}`}
+														keywords={article.keywords ?? []}
+														title={article.title}
+													/>
+												))}
+											</div>
+										</details>
+									</section>
+								);
+							})}
+					</section>
+				) : null}
+
+				{hasSelectedTerms && totalResults === 0 ? (
+					<section className="mt-8 rounded-[12px] border border-[#e2e8f0] bg-white p-6">
+						<h2 className="text-lg font-bold text-[#0f172a]">
+							Nenhum artigo encontrado
+						</h2>
+						<p className="mt-2 text-sm text-[#64748b]">
+							Não encontramos artigos para a combinação de termos selecionada.
+						</p>
+					</section>
+				) : null}
+			</main>
+		</div>
+	);
+}

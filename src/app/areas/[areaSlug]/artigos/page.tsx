@@ -29,6 +29,13 @@ function formatTermLabel(text: string) {
 		.join(" ");
 }
 
+function buildTermHref(areaSlug: string, termLabel: string) {
+	return {
+		pathname: `/areas/${areaSlug}/artigos`,
+		query: { term: termLabel },
+	};
+}
+
 export default async function AreaArticlesPage({
 	params,
 	searchParams,
@@ -162,21 +169,29 @@ export default async function AreaArticlesPage({
 								<div className="mt-3 flex max-h-48 flex-wrap gap-2 overflow-y-auto pr-1">
 									{availableTechnologyTerms.length > 0 ? (
 										availableTechnologyTerms.map(([termLabel]) => (
-											<label
-												className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-2.5 py-1 text-[11px] font-semibold text-[#1e3a8a]"
+											<div
+												className="inline-flex items-center gap-2 rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-2.5 py-1 text-[11px] font-semibold text-[#1e3a8a]"
 												key={termLabel}
 											>
-												<input
-													className="h-3.5 w-3.5 accent-[#2563eb]"
-													defaultChecked={selectedTerms.includes(
-														termLabel as Term,
-													)}
-													name="term"
-													type="checkbox"
-													value={termLabel}
-												/>
-												<span>{formatTermLabel(termLabel)}</span>
-											</label>
+												<label className="inline-flex cursor-pointer items-center gap-1.5">
+													<input
+														className="h-3.5 w-3.5 accent-[#2563eb]"
+														defaultChecked={selectedTerms.includes(
+															termLabel as Term,
+														)}
+														name="term"
+														type="checkbox"
+														value={termLabel}
+													/>
+													<span>{formatTermLabel(termLabel)}</span>
+												</label>
+												<Link
+													className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.6px] text-[#1d4ed8] hover:bg-[#dbeafe]"
+													href={buildTermHref(areaSlug, termLabel)}
+												>
+													Ver artigos
+												</Link>
+											</div>
 										))
 									) : (
 										<p className="text-xs text-[#64748b]">
@@ -193,21 +208,29 @@ export default async function AreaArticlesPage({
 								<div className="mt-3 flex max-h-48 flex-wrap gap-2 overflow-y-auto pr-1">
 									{availableEnvironmentalTerms.length > 0 ? (
 										availableEnvironmentalTerms.map(([termLabel]) => (
-											<label
-												className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-2.5 py-1 text-[11px] font-semibold text-[#166534]"
+											<div
+												className="inline-flex items-center gap-2 rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-2.5 py-1 text-[11px] font-semibold text-[#166534]"
 												key={termLabel}
 											>
-												<input
-													className="h-3.5 w-3.5 accent-[#16a34a]"
-													defaultChecked={selectedTerms.includes(
-														termLabel as Term,
-													)}
-													name="term"
-													type="checkbox"
-													value={termLabel}
-												/>
-												<span>{formatTermLabel(termLabel)}</span>
-											</label>
+												<label className="inline-flex cursor-pointer items-center gap-1.5">
+													<input
+														className="h-3.5 w-3.5 accent-[#16a34a]"
+														defaultChecked={selectedTerms.includes(
+															termLabel as Term,
+														)}
+														name="term"
+														type="checkbox"
+														value={termLabel}
+													/>
+													<span>{formatTermLabel(termLabel)}</span>
+												</label>
+												<Link
+													className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.6px] text-[#15803d] hover:bg-[#dcfce7]"
+													href={buildTermHref(areaSlug, termLabel)}
+												>
+													Ver artigos
+												</Link>
+											</div>
 										))
 									) : (
 										<p className="text-xs text-[#64748b]">

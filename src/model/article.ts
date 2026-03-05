@@ -1,3 +1,4 @@
+import { filterOcurrencies } from "@/utils/ocurrencies";
 import fs from "fs/promises";
 import path from "path";
 export type Article = {
@@ -82,6 +83,10 @@ const loadArticleData = async (): Promise<Record<number, Article>> => {
 };
 
 export class ArticleModel {
+	async loadFrequencyTerms(): Promise<Record<number, FrequencyTerms>> {
+		return await loadFrequencyTerms();
+	}
+
 	async getArticles(): Promise<Record<number, Article>> {
 		return await loadArticleData();
 	}
@@ -92,8 +97,41 @@ export class ArticleModel {
 	}
 
 	async getArticleFrequencyTerms(articleId: number) {
-		const articlesFt = await loadFrequencyTerms();
+		const articlesFt = await this.loadFrequencyTerms();
 
 		return articlesFt[articleId];
 	}
+
+	async filterArticlesByTerms(terms: { env: EnvTerm[]; tec: TecTerm[] }) {
+		const articlesFt = await this.loadFrequencyTerms();
+		const filteredArticles: Article[] = [];
+
+		for (const [key, value] of Object.entries(articlesFt)) {
+			const environmentTerms = Object.keys(filterOcurrencies(value.env));
+			const technologicalTerms = Object.keys(filterOcurrencies(value.tec));
+
+			if (
+				verifyTermsInsideOptions(environmentTerms, terms.env) ||
+				verifyTermsInsideOptions(technologicalTerms, terms.tec)
+			) {
+				filteredArticles.push(await this.getArticleById(Number(key)));
+			}
+		}
+
+		console.log(filteredArticles.length);
+		return filteredArticles;
+	}
 }
+
+const verifyTermsInsideOptions = (terms: string[], options: string[]) => {
+	if (terms.length === 0) {
+		return false;
+	}
+
+	for (const term of terms) {
+		if (options.includes(term.toLowerCase())) {
+			return true;
+		}
+	}
+	return false;
+};
