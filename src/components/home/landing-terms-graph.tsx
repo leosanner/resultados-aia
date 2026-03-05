@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
 	Background,
 	Controls,
@@ -135,6 +136,7 @@ const buildClusteredArticleColumn = (nodes: BaseGraphNode[]): Node[] => {
 };
 
 export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
+	const router = useRouter();
 	const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([]);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [manualPositions, setManualPositions] = useState<
@@ -187,6 +189,32 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 		() => new Set(selectedTopicIds.filter((id) => topicNodeIds.has(id))),
 		[selectedTopicIds, topicNodeIds],
 	);
+	const topicLookup = useMemo(() => {
+		const lookup = new Map<string, { label: string; kind: "tec" | "env" }>();
+
+		for (const node of tecBaseNodes) {
+			lookup.set(node.id, { label: node.data.label ?? node.id, kind: "tec" });
+		}
+		for (const node of envBaseNodes) {
+			lookup.set(node.id, { label: node.data.label ?? node.id, kind: "env" });
+		}
+
+		return lookup;
+	}, [tecBaseNodes, envBaseNodes]);
+	const selectedTermsByType = useMemo(() => {
+		const tec: string[] = [];
+		const env: string[] = [];
+
+		for (const topicId of selectedTopicSet) {
+			const topic = topicLookup.get(topicId);
+			if (!topic) continue;
+
+			if (topic.kind === "tec") tec.push(topic.label);
+			else env.push(topic.label);
+		}
+
+		return { tec, env };
+	}, [selectedTopicSet, topicLookup]);
 
 	const hasActiveFilter = selectedTopicSet.size > 0;
 
@@ -271,6 +299,17 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 	};
 
 	const clearFilters = () => setSelectedTopicIds([]);
+	const showFoundArticles = () => {
+		if (selectedTermsByType.tec.length === 0 && selectedTermsByType.env.length === 0) {
+			return;
+		}
+
+		const query = new URLSearchParams();
+		for (const term of selectedTermsByType.tec) query.append("tec", term);
+		for (const term of selectedTermsByType.env) query.append("env", term);
+
+		router.push(`/termos?${query.toString()}`);
+	};
 
 	const onNodeDragStop = (_: unknown, node: Node) => {
 		setManualPositions((current) => ({
@@ -344,6 +383,19 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 						))}
 					</div>
 				</div>
+			</div>
+			<div className="flex justify-end">
+				<button
+					className="rounded-full bg-[#16a34a] px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors enabled:hover:bg-[#15803d] disabled:cursor-not-allowed disabled:bg-[#86efac]"
+					disabled={
+						selectedTermsByType.tec.length === 0 &&
+						selectedTermsByType.env.length === 0
+					}
+					onClick={showFoundArticles}
+					type="button"
+				>
+					Mostrar artigos encontrados
+				</button>
 			</div>
 			<div className="h-[620px] w-full overflow-hidden rounded-3xl border border-[#cbd5e1] bg-[#f8fafc]">
 				<ReactFlow

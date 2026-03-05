@@ -1,4 +1,4 @@
-export function verifyOcurrencies(
+export function filterOcurrencies(
 	obj: Record<string, number>,
 	valueToCut: number = 0,
 ) {

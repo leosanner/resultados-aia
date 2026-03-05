@@ -1,5 +1,6 @@
 "use client";
 
+import { type ChartTone, getTonePalette } from "@/components/charts/chart-palettes";
 import { BarChart } from "@mui/x-charts/BarChart";
 
 type BarChartItem = {
@@ -9,7 +10,7 @@ type BarChartItem = {
 
 type TermsBarChartProps = {
 	items: BarChartItem[];
-	tone: "green" | "blue";
+	tone: ChartTone;
 };
 
 export function TermsBarChart({ items, tone }: TermsBarChartProps) {
@@ -21,28 +22,7 @@ export function TermsBarChart({ items, tone }: TermsBarChartProps) {
 		);
 	}
 
-	const palette =
-		tone === "green"
-			? [
-					"#22c55e",
-					"#10b981",
-					"#84cc16",
-					"#14b8a6",
-					"#f59e0b",
-					"#f97316",
-					"#ef4444",
-					"#8b5cf6",
-				]
-			: [
-					"#0ea5e9",
-					"#3b82f6",
-					"#6366f1",
-					"#8b5cf6",
-					"#ec4899",
-					"#f43f5e",
-					"#f97316",
-					"#22c55e",
-				];
+	const palette = getTonePalette(tone);
 
 	const barPaletteStyles = palette.reduce<Record<string, { fill: string }>>(
 		(currentStyles, color, index) => {

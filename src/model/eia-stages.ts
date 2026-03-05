@@ -9,7 +9,7 @@ import {
 	envTerms,
 	tecTerms,
 } from "./article";
-import { verifyOcurrencies } from "@/utils/ocurrencies";
+import { filterOcurrencies } from "@/utils/ocurrencies";
 
 type FileOutputFormat = Record<string, number[]>;
 export type StageArticle = Article & { id: number };
@@ -103,10 +103,10 @@ export class EiaModel {
 				}
 
 				const envFrequencyTerms = Object.keys(
-					verifyOcurrencies(articleFt.env),
+					filterOcurrencies(articleFt.env),
 				) as EnvTerm[];
 				const tecFrequencyTerms = Object.keys(
-					verifyOcurrencies(articleFt.tec),
+					filterOcurrencies(articleFt.tec),
 				) as TecTerm[];
 
 				if (
@@ -129,8 +129,8 @@ export class EiaModel {
 			const articleFt = await this.articleModel.getArticleFrequencyTerms(
 				article.id,
 			);
-			const envFreq = verifyOcurrencies(articleFt.env);
-			const tecFreq = verifyOcurrencies(articleFt.tec);
+			const envFreq = filterOcurrencies(articleFt.env);
+			const tecFreq = filterOcurrencies(articleFt.tec);
 
 			for (const [key] of Object.entries(envFreq)) {
 				if (!(key in ft.env)) {

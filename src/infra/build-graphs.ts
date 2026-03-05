@@ -1,5 +1,5 @@
 import { envTerms, tecTerms } from "@/model/article";
-import { verifyOcurrencies } from "@/utils/ocurrencies";
+import { filterOcurrencies } from "@/utils/ocurrencies";
 import { randomChoice } from "@/utils/random-choices";
 import fs from "fs/promises";
 import path from "path";
@@ -103,8 +103,8 @@ const buildEdges = (
 		string,
 		Record<string, Record<string, number>>,
 	][]) {
-		const tecOcurrencies = verifyOcurrencies(value["tec"]);
-		const envOcurrencies = verifyOcurrencies(value["env"]);
+		const tecOcurrencies = filterOcurrencies(value["tec"]);
+		const envOcurrencies = filterOcurrencies(value["env"]);
 
 		const _tecTerms = Object.keys(tecOcurrencies) as string[];
 		const _envTerms = Object.keys(envOcurrencies);
