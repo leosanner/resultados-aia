@@ -52,6 +52,9 @@ type BarChartItem = {
 	value: number;
 };
 
+const logoIcon =
+	"https://www.figma.com/api/mcp/asset/5991a927-15ee-4ad4-a626-237193d1b42d";
+
 function hexToRgba(hex: string, alpha: number) {
 	const normalized = hex.replace("#", "");
 	const parsed = Number.parseInt(normalized, 16);
@@ -140,13 +143,45 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e8f5ee_0%,_#f5f8f6_42%,_#ffffff_100%)] text-[#0f172a]">
+			<header className="w-full border-b border-[#173f2f] bg-[#0f1f19]/95 px-6 py-6 backdrop-blur-sm sm:px-10 lg:px-20 lg:py-8">
+				<div className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-4">
+					<div className="flex items-center gap-3">
+						<div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2ecc71]/20 ring-1 ring-[#28a745]/30">
+							<img alt="" className="h-4 w-4" src={logoIcon} />
+						</div>
+						<div className="leading-tight">
+							<p className="text-xl font-extrabold tracking-[-0.5px] text-white">
+								Explorador AIA
+							</p>
+							<p className="text-[10px] font-bold uppercase tracking-[1px] text-[#7dd3a8]">
+								Base de Pesquisa
+							</p>
+						</div>
+					</div>
+					<nav
+						aria-label="Navegação principal"
+						className="hidden items-center gap-8 md:flex"
+					>
+						<Link
+							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"
+							href="/"
+						>
+							Biblioteca
+						</Link>
+						<Link
+							className="text-sm font-medium text-white"
+							href="/metodologia"
+						>
+							Métodos
+						</Link>
+						<span className="rounded-full bg-[#2ecc71] px-5 py-2 text-sm font-semibold text-white">
+							Resultados
+						</span>
+					</nav>
+				</div>
+			</header>
+
 			<main className="mx-auto w-full max-w-[992px] px-6 py-8 md:px-12">
-				<Link
-					className="text-xs font-bold uppercase tracking-[1.2px] text-[#94a3b8] hover:text-[#64748b]"
-					href="/"
-				>
-					Voltar para o grafo
-				</Link>
 
 				<section className="mt-6 rounded-[18px] border border-[#dbe7df] bg-white/90 p-6 shadow-[0px_18px_34px_-28px_rgba(15,23,42,0.45)] backdrop-blur-sm">
 					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#7a8a9d]">
@@ -235,48 +270,48 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				{hasSelectedTerms ? (
 					<section className="mt-8 space-y-5">
 						{groupsWithColors.map((group) => {
-								const areaSlug = stageKeyToSlug(group.stageKey);
-								const stageTitle = formatStageTitle(group.stageKey);
-								const subtleBackground = hexToRgba(group.color, 0.09);
+							const areaSlug = stageKeyToSlug(group.stageKey);
+							const stageTitle = formatStageTitle(group.stageKey);
+							const subtleBackground = hexToRgba(group.color, 0.09);
 
-								return (
-									<section key={group.stageKey}>
-										<details
-											className="group rounded-[14px] bg-white shadow-[0px_14px_26px_-24px_rgba(15,23,42,0.35)]"
-											style={{ border: `1px solid ${hexToRgba(group.color, 0.4)}` }}
+							return (
+								<section key={group.stageKey}>
+									<details
+										className="group rounded-[14px] bg-white shadow-[0px_14px_26px_-24px_rgba(15,23,42,0.35)]"
+										style={{ border: `1px solid ${hexToRgba(group.color, 0.4)}` }}
+									>
+										<summary
+											className="cursor-pointer list-none px-4 py-3.5 text-lg font-bold text-[#0f172a] marker:content-none"
+											style={{ backgroundColor: subtleBackground }}
 										>
-											<summary
-												className="cursor-pointer list-none px-4 py-3.5 text-lg font-bold text-[#0f172a] marker:content-none"
-												style={{ backgroundColor: subtleBackground }}
-											>
-												<span className="inline-flex items-center gap-2.5">
-													<span
-														aria-hidden
-														className="inline-flex h-6 w-6 items-center justify-center rounded-full text-sm text-white transition-transform group-open:rotate-90"
-														style={{ backgroundColor: group.color }}
-													>
-														▸
-													</span>
-													<span>
-														{stageTitle} ({group.articles.length})
-													</span>
+											<span className="inline-flex items-center gap-2.5">
+												<span
+													aria-hidden
+													className="inline-flex h-6 w-6 items-center justify-center rounded-full text-sm text-white transition-transform group-open:rotate-90"
+													style={{ backgroundColor: group.color }}
+												>
+													▸
 												</span>
-											</summary>
-											<div className="space-y-4 px-4 pb-4">
-												{group.articles.map((article) => (
-													<ArticleCard
-														abstract={article.abstract}
-														href={`/areas/${areaSlug}/artigos/${article.id}`}
-														key={`${group.stageKey}-${article.id}`}
-														keywords={article.keywords ?? []}
-														title={article.title}
-													/>
-												))}
-											</div>
-										</details>
-									</section>
-								);
-							})}
+												<span>
+													{stageTitle} ({group.articles.length})
+												</span>
+											</span>
+										</summary>
+										<div className="space-y-4 px-4 pb-4">
+											{group.articles.map((article) => (
+												<ArticleCard
+													abstract={article.abstract}
+													href={`/areas/${areaSlug}/artigos/${article.id}`}
+													key={`${group.stageKey}-${article.id}`}
+													keywords={article.keywords ?? []}
+													title={article.title}
+												/>
+											))}
+										</div>
+									</details>
+								</section>
+							);
+						})}
 					</section>
 				) : null}
 
