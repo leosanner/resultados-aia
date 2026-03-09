@@ -72,7 +72,9 @@ export function VisualDiagrams() {
 						</h3>
 						<p className="mb-6 text-sm leading-relaxed text-[#475569]">
 							Representação visual completa do fluxo metodológico, desde a busca
-							inicial até a filtragem final por termos específicos de AIA.
+							inicial, passando pelo fluxo de agentes com três LLMs e pela
+							separação entre estudos relacionados e não relacionados, até a
+							filtragem final por termos específicos de AIA.
 						</p>
 						<FlowchartDiagram />
 						<div className="mt-4 rounded-lg border border-[#fde68a] bg-[#fffbeb] p-4">

@@ -46,12 +46,14 @@ type TermsNode = Record<string, Node>;
 export type GraphNodes = {
 	envNode: TermsNode;
 	tecNode: TermsNode;
-	articlesNode: Node[];
+	articlesNode: Node;
 };
 
 export type GraphContent = {
 	nodes: GraphNodes;
 	edges: Edge[];
+	totalArticles: number;
+	articleIdsByTopicId: Record<string, string[]>;
 };
 
 const buildTermsNode = (termType: "env" | "tec"): TermsNode => {
@@ -76,30 +78,23 @@ const buildTermsNode = (termType: "env" | "tec"): TermsNode => {
 	return nodes;
 };
 
-const buildArticleNodes = (articleData: Record<number, object>) => {
-	const articleNodes: Node[] = [];
+const buildArticleNode = (articleData: Record<number, object>): Node => ({
+	id: "art-total",
+	position: { x: getRandomPosition("x"), y: getRandomPosition("y") },
+	data: { label: `${Object.keys(articleData).length} artigos` },
+});
 
-	for (const key of Object.keys(articleData)) {
-		const node: Node = {
-			id: `art-${key}`,
-			position: { x: getRandomPosition("x"), y: getRandomPosition("y") },
-			data: { label: key },
-		};
-
-		articleNodes.push(node);
-	}
-
-	return articleNodes;
-};
-
-const buildEdges = (
+const buildEdgesAndArticleIndex = (
 	articleData: Record<number, object>,
 	tecNodes: TermsNode,
 	envNodes: TermsNode,
 ) => {
 	const edges: Edge[] = [];
+	const tecTargets = new Set<string>();
+	const envTargets = new Set<string>();
+	const articleIdsByTopicId = new Map<string, Set<string>>();
 
-	for (const [key, value] of Object.entries(articleData) as [
+	for (const [articleId, value] of Object.entries(articleData) as [
 		string,
 		Record<string, Record<string, number>>,
 	][]) {
@@ -109,40 +104,69 @@ const buildEdges = (
 		const _tecTerms = Object.keys(tecOcurrencies) as string[];
 		const _envTerms = Object.keys(envOcurrencies);
 
-		let idxTec = 0;
-		let idxEnv = 0;
 		for (const term of _tecTerms) {
 			const tecNodeInfo = tecNodes[term.toLowerCase()];
 			if (!tecNodeInfo) continue;
-			edges.push({
-				id: `edge-tec-${key}-${idxTec}`,
-				source: `art-${key}`,
-				target: tecNodeInfo.id,
-			});
-			++idxTec;
+			tecTargets.add(tecNodeInfo.id);
+			if (!articleIdsByTopicId.has(tecNodeInfo.id)) {
+				articleIdsByTopicId.set(tecNodeInfo.id, new Set());
+			}
+			articleIdsByTopicId.get(tecNodeInfo.id)?.add(articleId);
 		}
 
 		for (const term of _envTerms) {
 			const envNodeInfo = envNodes[term.toLowerCase()];
 			if (!envNodeInfo) continue;
-			edges.push({
-				id: `edge-env-${key}-${idxEnv}`,
-				source: `art-${key}`,
-				target: envNodeInfo.id,
-			});
-			++idxEnv;
+			envTargets.add(envNodeInfo.id);
+			if (!articleIdsByTopicId.has(envNodeInfo.id)) {
+				articleIdsByTopicId.set(envNodeInfo.id, new Set());
+			}
+			articleIdsByTopicId.get(envNodeInfo.id)?.add(articleId);
 		}
 	}
 
-	return edges;
+	let idxTec = 0;
+	for (const target of tecTargets) {
+		edges.push({
+			id: `edge-tec-total-${idxTec}`,
+			source: "art-total",
+			target,
+		});
+		++idxTec;
+	}
+
+	let idxEnv = 0;
+	for (const target of envTargets) {
+		edges.push({
+			id: `edge-env-total-${idxEnv}`,
+			source: "art-total",
+			target,
+		});
+		++idxEnv;
+	}
+
+	return {
+		edges,
+		articleIdsByTopicId: Object.fromEntries(
+			Array.from(articleIdsByTopicId.entries()).map(([topicId, articleIds]) => [
+				topicId,
+				Array.from(articleIds),
+			]),
+		),
+	};
 };
 
 export const graphContent = async (): Promise<GraphContent> => {
 	const articleData = await loadFile(frequenciesPath);
+	const totalArticles = Object.keys(articleData).length;
 	const tecNode = buildTermsNode("tec");
 	const envNode = buildTermsNode("env");
-	const articlesNode = buildArticleNodes(articleData);
-	const edges = buildEdges(articleData, tecNode, envNode);
+	const articlesNode = buildArticleNode(articleData);
+	const { edges, articleIdsByTopicId } = buildEdgesAndArticleIndex(
+		articleData,
+		tecNode,
+		envNode,
+	);
 
 	return {
 		nodes: {
@@ -151,5 +175,7 @@ export const graphContent = async (): Promise<GraphContent> => {
 			articlesNode,
 		},
 		edges,
+		totalArticles,
+		articleIdsByTopicId,
 	};
 };

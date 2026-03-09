@@ -30,9 +30,11 @@ type LandingTermsGraphProps = {
 		nodes: {
 			envNode: Record<string, BaseGraphNode>;
 			tecNode: Record<string, BaseGraphNode>;
-			articlesNode: BaseGraphNode[];
+			articlesNode: BaseGraphNode;
 		};
 		edges: BaseGraphEdge[];
+		totalArticles: number;
+		articleIdsByTopicId: Record<string, string[]>;
 	};
 };
 
@@ -56,11 +58,6 @@ const TOP_OFFSET = 24;
 const MAX_VIEWPORT_HEIGHT = 560;
 const MIN_ROW_GAP = 26;
 const MAX_ROW_GAP = 46;
-const MIN_ARTICLE_ROW_GAP = 18;
-const MAX_ARTICLE_ROW_GAP = 34;
-const MAX_ARTICLE_ROWS = 18;
-const ARTICLE_COLUMN_GAP = 110;
-
 const sortByLabel = (a: BaseGraphNode, b: BaseGraphNode) => {
 	const labelA = (a.data.label ?? a.id).toString();
 	const labelB = (b.data.label ?? b.id).toString();
@@ -92,48 +89,39 @@ const buildSemanticColumn = (
 	}));
 };
 
-const getRowGap = (itemsCount: number, minGap = MIN_ROW_GAP, maxGap = MAX_ROW_GAP) => {
+const getRowGap = (
+	itemsCount: number,
+	minGap = MIN_ROW_GAP,
+	maxGap = MAX_ROW_GAP,
+) => {
 	if (itemsCount <= 1) return maxGap;
 
-	const estimatedGap = Math.floor((MAX_VIEWPORT_HEIGHT - TOP_OFFSET) / (itemsCount - 1));
+	const estimatedGap = Math.floor(
+		(MAX_VIEWPORT_HEIGHT - TOP_OFFSET) / (itemsCount - 1),
+	);
 
 	return Math.max(minGap, Math.min(maxGap, estimatedGap));
 };
 
-const buildClusteredArticleColumn = (nodes: BaseGraphNode[]): Node[] => {
-	const sortedNodes = [...nodes].sort(sortByLabel);
-
-	if (sortedNodes.length === 0) return [];
-
-	const columnCount = Math.min(
-		5,
-		Math.max(1, Math.ceil(sortedNodes.length / MAX_ARTICLE_ROWS)),
-	);
-	const rowCount = Math.ceil(sortedNodes.length / columnCount);
-	const rowGap = getRowGap(rowCount, MIN_ARTICLE_ROW_GAP, MAX_ARTICLE_ROW_GAP);
-	const usedHeight = (rowCount - 1) * rowGap;
-	const verticalOffset = (MAX_VIEWPORT_HEIGHT - TOP_OFFSET - usedHeight) / 2;
-	const startX = COLUMN_X.articles - ((columnCount - 1) * ARTICLE_COLUMN_GAP) / 2;
-
-	return sortedNodes.map((node, index) => {
-		const row = index % rowCount;
-		const column = Math.floor(index / rowCount);
-
-		return {
-			id: node.id,
-			position: {
-				x: startX + column * ARTICLE_COLUMN_GAP,
-				y: TOP_OFFSET + verticalOffset + row * rowGap,
-			},
-			data: { label: node.data.label ?? node.id },
-			style: {
-				...nodeBaseStyle,
-				border: "2px solid #7c3aed",
-				background: "#f8f3ff",
-			},
-		};
-	});
-};
+const buildArticleNode = (
+	node: BaseGraphNode,
+	totalArticles: number,
+): Node => ({
+	id: node.id,
+	position: {
+		x: COLUMN_X.articles,
+		y: TOP_OFFSET + (MAX_VIEWPORT_HEIGHT - TOP_OFFSET) / 2,
+	},
+	data: { label: `${totalArticles} artigos` },
+	style: {
+		...nodeBaseStyle,
+		border: "2px solid #7c3aed",
+		background: "#f3e8ff",
+		color: "#3b0764",
+		fontSize: 14,
+		padding: "12px 16px",
+	},
+});
 
 export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 	const router = useRouter();
@@ -143,9 +131,15 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 		Record<string, { x: number; y: number }>
 	>({});
 
-	const tecBaseNodes = useMemo(() => Object.values(graph.nodes.tecNode), [graph]);
-	const envBaseNodes = useMemo(() => Object.values(graph.nodes.envNode), [graph]);
-	const articleBaseNodes = graph.nodes.articlesNode;
+	const tecBaseNodes = useMemo(
+		() => Object.values(graph.nodes.tecNode),
+		[graph],
+	);
+	const envBaseNodes = useMemo(
+		() => Object.values(graph.nodes.envNode),
+		[graph],
+	);
+	const articleBaseNode = graph.nodes.articlesNode;
 	const normalizedSearch = searchTerm.trim().toLowerCase();
 	const showAllTopics = normalizedSearch.length === 0;
 	const connectedTopicIds = useMemo(
@@ -217,6 +211,24 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 	}, [selectedTopicSet, topicLookup]);
 
 	const hasActiveFilter = selectedTopicSet.size > 0;
+	const filteredArticleCount = useMemo(() => {
+		if (!hasActiveFilter) return graph.totalArticles;
+
+		const matchedArticles = new Set<string>();
+		for (const topicId of selectedTopicSet) {
+			const articleIds = graph.articleIdsByTopicId[topicId] ?? [];
+			for (const articleId of articleIds) {
+				matchedArticles.add(articleId);
+			}
+		}
+
+		return matchedArticles.size;
+	}, [
+		hasActiveFilter,
+		graph.totalArticles,
+		graph.articleIdsByTopicId,
+		selectedTopicSet,
+	]);
 
 	const visibleEdgesBase = useMemo(() => {
 		if (!hasActiveFilter) return graph.edges;
@@ -225,10 +237,10 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 	}, [graph.edges, hasActiveFilter, selectedTopicSet]);
 
 	const visibleArticleIds = useMemo(() => {
-		if (!hasActiveFilter) return new Set(articleBaseNodes.map((node) => node.id));
+		if (!hasActiveFilter) return new Set([articleBaseNode.id]);
 
 		return new Set(visibleEdgesBase.map((edge) => edge.source));
-	}, [hasActiveFilter, visibleEdgesBase, articleBaseNodes]);
+	}, [hasActiveFilter, visibleEdgesBase, articleBaseNode]);
 
 	const visibleTecNodesBase = useMemo(() => {
 		if (!hasActiveFilter) return tecBaseNodes;
@@ -242,11 +254,13 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 		return envBaseNodes.filter((node) => selectedTopicSet.has(node.id));
 	}, [hasActiveFilter, envBaseNodes, selectedTopicSet]);
 
-	const visibleArticleNodesBase = useMemo(() => {
-		if (!hasActiveFilter) return articleBaseNodes;
-
-		return articleBaseNodes.filter((node) => visibleArticleIds.has(node.id));
-	}, [hasActiveFilter, articleBaseNodes, visibleArticleIds]);
+	const visibleArticleNodeBase = useMemo(
+		() =>
+			filteredArticleCount > 0 && visibleArticleIds.has(articleBaseNode.id)
+				? articleBaseNode
+				: null,
+		[filteredArticleCount, visibleArticleIds, articleBaseNode],
+	);
 
 	const semanticMaxColumnLength = Math.max(
 		visibleTecNodesBase.length,
@@ -262,7 +276,9 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 		semanticMaxColumnLength,
 		semanticRowGap,
 	);
-	const articleNodes: Node[] = buildClusteredArticleColumn(visibleArticleNodesBase);
+	const articleNodes: Node[] = visibleArticleNodeBase
+		? [buildArticleNode(visibleArticleNodeBase, filteredArticleCount)]
+		: [];
 	const envNodes: Node[] = buildSemanticColumn(
 		visibleEnvNodesBase,
 		COLUMN_X.env,
@@ -272,14 +288,17 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 	);
 
 	const visibleNodeIds = new Set(nodesToIds(tecNodes, articleNodes, envNodes));
-	const nodes: Node[] = [...tecNodes, ...articleNodes, ...envNodes].map((node) => {
-		const manualPosition = manualPositions[node.id];
+	const nodes: Node[] = [...tecNodes, ...articleNodes, ...envNodes].map(
+		(node) => {
+			const manualPosition = manualPositions[node.id];
 
-		return manualPosition ? { ...node, position: manualPosition } : node;
-	});
+			return manualPosition ? { ...node, position: manualPosition } : node;
+		},
+	);
 	const edges: Edge[] = visibleEdgesBase
 		.filter(
-			(edge) => visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target),
+			(edge) =>
+				visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target),
 		)
 		.map((edge) => ({
 			id: edge.id,
@@ -300,7 +319,10 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 
 	const clearFilters = () => setSelectedTopicIds([]);
 	const showFoundArticles = () => {
-		if (selectedTermsByType.tec.length === 0 && selectedTermsByType.env.length === 0) {
+		if (
+			selectedTermsByType.tec.length === 0 &&
+			selectedTermsByType.env.length === 0
+		) {
 			return;
 		}
 
@@ -318,11 +340,14 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 		}));
 	};
 
-		return (
+	return (
 		<div className="space-y-4">
 			<div className="rounded-2xl border border-[#bfdcff] bg-[#eef6ff] p-4">
 				<div className="flex flex-wrap items-center justify-between gap-3">
-					<label className="text-sm font-semibold text-[#0f172a]" htmlFor="topic-filter">
+					<label
+						className="text-sm font-semibold text-[#0f172a]"
+						htmlFor="topic-filter"
+					>
 						Filtrar por tópicos
 					</label>
 					<button
@@ -396,6 +421,20 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 				>
 					Mostrar artigos encontrados
 				</button>
+			</div>
+			<div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#dbe6df] bg-white px-3 py-2 text-xs font-semibold text-[#334155]">
+				<span className="inline-flex items-center gap-2">
+					<span className="h-3 w-3 rounded-full bg-[#0ea5e9]" />
+					Termos de tecnologia
+				</span>
+				<span className="inline-flex items-center gap-2">
+					<span className="h-3 w-3 rounded-full bg-[#22c55e]" />
+					Termos ambientais
+				</span>
+				<span className="inline-flex items-center gap-2">
+					<span className="h-3 w-3 rounded-full bg-[#a855f7]" />
+					Número total de artigos
+				</span>
 			</div>
 			<div className="h-[620px] w-full overflow-hidden rounded-3xl border border-[#cbd5e1] bg-[#f8fafc]">
 				<ReactFlow

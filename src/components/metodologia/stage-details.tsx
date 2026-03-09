@@ -14,6 +14,8 @@ function stageIcon(id: number) {
 			return "FW";
 		case 4:
 			return "ML";
+		case 5:
+			return "AG";
 		default:
 			return "OK";
 	}

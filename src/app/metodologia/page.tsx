@@ -5,6 +5,7 @@ import { PipelineFlow } from "@/components/metodologia/pipeline-flow";
 import { VisualDiagrams } from "@/components/metodologia/visual-diagrams";
 import { StageDetails } from "@/components/metodologia/stage-details";
 import { StatsCards } from "@/components/metodologia/stats-cards";
+import { AgentRefinementSection } from "@/components/metodologia/agent-refinement-section";
 
 export default function MetodologiaPage() {
 	return (
@@ -35,6 +36,7 @@ export default function MetodologiaPage() {
 				<VisualDiagrams />
 				<StageDetails />
 				<StatsCards />
+				<AgentRefinementSection />
 			</main>
 		</div>
 	);

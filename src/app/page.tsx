@@ -8,67 +8,40 @@ type AreaCard = {
 	title: string;
 	description: string;
 	badgeClass: string;
-	iconBgClass: string;
-	iconSrc: string;
 };
 
 const logoIcon =
 	"https://www.figma.com/api/mcp/asset/5991a927-15ee-4ad4-a626-237193d1b42d";
-const iconBio =
-	"https://www.figma.com/api/mcp/asset/a3509103-a2b1-4f73-812b-97cfac5d0a1a";
-const iconWater =
-	"https://www.figma.com/api/mcp/asset/a7a57faf-0b63-4d58-b9cd-0fe66ec7b7c0";
-const iconAir =
-	"https://www.figma.com/api/mcp/asset/1e1911ad-8bee-42e0-86b0-84ae16b21f97";
-const iconSocio =
-	"https://www.figma.com/api/mcp/asset/04d40bcb-6910-4016-9cba-b3be379390db";
-const iconSoil =
-	"https://www.figma.com/api/mcp/asset/10893607-8353-4a76-8311-fb2cc881c849";
-const iconNoise =
-	"https://www.figma.com/api/mcp/asset/060d7210-9823-45a1-8aaa-7e14ffdf1e93";
-
 const CARD_STYLES: AreaCard[] = [
 	{
 		title: "",
 		description: "",
 		badgeClass: "bg-[#28a745] text-white",
-		iconBgClass: "bg-[#e7f6ed]",
-		iconSrc: iconBio,
 	},
 	{
 		title: "",
 		description: "",
 		badgeClass: "bg-[#1f9d5a] text-white",
-		iconBgClass: "bg-[#ebf7f0]",
-		iconSrc: iconWater,
 	},
 	{
 		title: "",
 		description: "",
 		badgeClass: "bg-[#168f52] text-white",
-		iconBgClass: "bg-[#edf8f2]",
-		iconSrc: iconAir,
 	},
 	{
 		title: "",
 		description: "",
 		badgeClass: "bg-[#2ca768] text-white",
-		iconBgClass: "bg-[#e8f6ee]",
-		iconSrc: iconSocio,
 	},
 	{
 		title: "",
 		description: "",
 		badgeClass: "bg-[#218a4f] text-white",
-		iconBgClass: "bg-[#eef8f3]",
-		iconSrc: iconSoil,
 	},
 	{
 		title: "",
 		description: "",
 		badgeClass: "bg-[#247f49] text-white",
-		iconBgClass: "bg-[#edf6f0]",
-		iconSrc: iconNoise,
 	},
 ];
 
@@ -126,11 +99,11 @@ export default async function Home() {
 							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"
 							href="/metodologia"
 						>
-							Métodos
+							Metodologia
 						</Link>
 						<button
 							aria-label="Entrar na plataforma"
-							className="rounded-full bg-[#2ecc71] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#28a745]"
+							className="hidden rounded-full bg-[#2ecc71] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#28a745]"
 							type="button"
 						>
 							Entrar
@@ -175,16 +148,7 @@ export default async function Home() {
 									className="flex min-h-[292px] flex-col rounded-3xl border border-[#dbe6df] bg-white p-[33px] shadow-[0px_10px_25px_-18px_rgba(17,17,17,0.25)] transition-all hover:-translate-y-1 hover:border-[#9ac7ad] hover:shadow-[0px_18px_34px_-22px_rgba(40,167,69,0.38)]"
 									key={stageKey}
 								>
-									<div
-										className={`flex h-16 w-16 items-center justify-center rounded-2xl ${style.iconBgClass}`}
-									>
-										<img
-											alt=""
-											className="h-7 w-7 object-contain"
-											src={style.iconSrc}
-										/>
-									</div>
-									<h2 className="mt-6 text-[36px]/8 font-bold text-[#111111] sm:text-4xl lg:text-3xl">
+									<h2 className="text-[36px]/8 font-bold text-[#111111] sm:text-4xl lg:text-3xl">
 										{stageTitle}
 									</h2>
 									<p className="mt-2 line-clamp-2 text-sm leading-[22.75px] text-[#4a5568]">
@@ -238,7 +202,7 @@ export default async function Home() {
 							Grafo de Artigos e Termos
 						</h2>
 						<p className="mt-2 text-sm text-[#4a5568]">
-							Verde petróleo: termos tecnológicos, verde folha: termos ambientais, verde escuro: artigos.
+							Use a legenda abaixo do filtro para identificar as cores dos nós.
 						</p>
 						<div className="mt-6">
 							<LandingTermsGraph graph={graphData} />
