@@ -14,6 +14,8 @@ function iconLabel(id: number) {
 			return "FW";
 		case 4:
 			return "ML";
+		case 5:
+			return "AG";
 		default:
 			return "OK";
 	}
@@ -48,6 +50,7 @@ export function PipelineFlow() {
 					<div className="flex items-center justify-center gap-4">
 						{PIPELINE_STAGES.map((stage, index) => {
 							const isActive = activeStage === stage.id;
+							const stageValue = stage.id === 5 ? "483 rel / 122 nao rel" : stage.output.split(" ")[0];
 
 							return (
 								<div className="flex items-center" key={stage.id}>
@@ -72,7 +75,7 @@ export function PipelineFlow() {
 										<div
 											className={`bg-gradient-to-r ${stage.colorClass} bg-clip-text font-mono text-3xl tracking-[-0.6px] text-transparent`}
 										>
-											{stage.output.split(" ")[0]}
+											{stageValue}
 										</div>
 									</motion.button>
 
@@ -87,7 +90,10 @@ export function PipelineFlow() {
 
 				<div className="md:hidden">
 					<div className="mx-auto flex max-w-sm flex-col items-center gap-4">
-						{PIPELINE_STAGES.map((stage, index) => (
+						{PIPELINE_STAGES.map((stage, index) => {
+							const stageValue = stage.id === 5 ? "483 rel / 122 nao rel" : stage.output.split(" ")[0];
+
+							return (
 							<div className="flex w-full flex-col items-center" key={stage.id}>
 								<motion.div
 									className={`flex w-full flex-col items-center rounded-xl border-2 ${stage.borderClass} ${stage.bgClass} p-6 shadow-[0_10px_25px_-18px_rgba(15,23,42,0.55)]`}
@@ -107,14 +113,15 @@ export function PipelineFlow() {
 									<div
 										className={`bg-gradient-to-r ${stage.colorClass} bg-clip-text font-mono text-3xl tracking-[-0.6px] text-transparent`}
 									>
-										{stage.output.split(" ")[0]}
+										{stageValue}
 									</div>
 								</motion.div>
 								{index < PIPELINE_STAGES.length - 1 ? (
 									<div className="my-2 rotate-90 text-xl text-[#94a3b8]">→</div>
 								) : null}
 							</div>
-						))}
+							);
+						})}
 					</div>
 				</div>
 			</div>

@@ -94,7 +94,7 @@ const initialNodes: Node[] = [
 	{
 		id: "classifier",
 		position: { x: 600, y: 400 },
-		data: { label: "Classificador" },
+		data: { label: "Classificação (605)" },
 		style: {
 			background: "#fbcfe8",
 			border: "2px solid #ec4899",
@@ -105,14 +105,61 @@ const initialNodes: Node[] = [
 		},
 	},
 	{
-		id: "final",
-		position: { x: 350, y: 480 },
+		id: "agents",
+		position: { x: 860, y: 400 },
 		data: {
 			label: (
 				<div className="text-center text-sm">
-					Filtragem por termos
+					Fluxo de agentes
 					<br />
-					específicos
+					(3 LLMs)
+				</div>
+			),
+		},
+		style: {
+			background: "#ccfbf1",
+			border: "2px solid #14b8a6",
+			borderRadius: "8px",
+			padding: "12px 20px",
+			color: "#0f172a",
+			fontWeight: 600,
+		},
+	},
+	{
+		id: "related",
+		position: { x: 1110, y: 325 },
+		data: { label: "Relacionados à AIA (483)" },
+		style: {
+			background: "#dcfce7",
+			border: "2px solid #22c55e",
+			borderRadius: "8px",
+			padding: "12px 20px",
+			color: "#0f172a",
+			fontWeight: 600,
+		},
+	},
+	{
+		id: "not-related",
+		position: { x: 1110, y: 465 },
+		data: { label: "Não relacionados à AIA (122)" },
+		style: {
+			background: "#fef2f2",
+			border: "2px solid #ef4444",
+			borderRadius: "8px",
+			padding: "12px 20px",
+			color: "#0f172a",
+			fontWeight: 600,
+		},
+	},
+	{
+		id: "final",
+		position: { x: 1380, y: 325 },
+		data: {
+			label: (
+				<div className="text-center text-sm">
+					Filtragem adicional por termos
+					<br />
+					específicos (118)
 				</div>
 			),
 		},
@@ -177,8 +224,32 @@ const initialEdges: Edge[] = [
 		markerEnd: { type: MarkerType.ArrowClosed, color: "#64748b" },
 	},
 	{
-		id: "e-classifier-final",
+		id: "e-classifier-agents",
 		source: "classifier",
+		target: "agents",
+		type: "smoothstep",
+		style: { stroke: "#64748b", strokeWidth: 2 },
+		markerEnd: { type: MarkerType.ArrowClosed, color: "#64748b" },
+	},
+	{
+		id: "e-agents-related",
+		source: "agents",
+		target: "related",
+		type: "smoothstep",
+		style: { stroke: "#22c55e", strokeWidth: 2 },
+		markerEnd: { type: MarkerType.ArrowClosed, color: "#22c55e" },
+	},
+	{
+		id: "e-agents-not-related",
+		source: "agents",
+		target: "not-related",
+		type: "smoothstep",
+		style: { stroke: "#ef4444", strokeWidth: 2 },
+		markerEnd: { type: MarkerType.ArrowClosed, color: "#ef4444" },
+	},
+	{
+		id: "e-related-final",
+		source: "related",
 		target: "final",
 		type: "smoothstep",
 		style: { stroke: "#64748b", strokeWidth: 2 },
@@ -191,7 +262,7 @@ export function FlowchartDiagram() {
 	const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
 	return (
-		<div className="h-[600px] w-full overflow-hidden rounded-lg border border-[#cbd5e1] bg-white shadow-inner">
+		<div className="h-[640px] w-full overflow-hidden rounded-lg border border-[#cbd5e1] bg-white shadow-inner">
 			<ReactFlow
 				edges={edges}
 				fitView

@@ -21,8 +21,8 @@ export function MethodologyOverview() {
 					ambiental. A partir de um conjunto inicial de{" "}
 					<span className="font-mono font-semibold text-[#059669]">16.657</span> registros,
 					aplicamos filtros sucessivos de intersecção, impacto de citação (FWCI),
-					classificação por aprendizado de máquina e filtragem por domínio específico,
-					resultando em{" "}
+					classificação por aprendizado de máquina, fluxo de agentes com consenso entre
+					três LLMs e filtragem por domínio específico, resultando em{" "}
 					<span className="font-mono font-semibold text-[#059669]">118</span> registros
 					altamente relevantes.
 				</p>
