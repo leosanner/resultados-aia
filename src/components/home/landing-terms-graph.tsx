@@ -30,9 +30,11 @@ type LandingTermsGraphProps = {
 		nodes: {
 			envNode: Record<string, BaseGraphNode>;
 			tecNode: Record<string, BaseGraphNode>;
-			articlesNode: BaseGraphNode[];
+			articlesNode: BaseGraphNode;
 		};
 		edges: BaseGraphEdge[];
+		totalArticles: number;
+		articleIdsByTopicId: Record<string, string[]>;
 	};
 };
 
@@ -56,11 +58,6 @@ const TOP_OFFSET = 24;
 const MAX_VIEWPORT_HEIGHT = 560;
 const MIN_ROW_GAP = 26;
 const MAX_ROW_GAP = 46;
-const MIN_ARTICLE_ROW_GAP = 18;
-const MAX_ARTICLE_ROW_GAP = 34;
-const MAX_ARTICLE_ROWS = 18;
-const ARTICLE_COLUMN_GAP = 110;
-
 const sortByLabel = (a: BaseGraphNode, b: BaseGraphNode) => {
 	const labelA = (a.data.label ?? a.id).toString();
 	const labelB = (b.data.label ?? b.id).toString();
@@ -100,40 +97,21 @@ const getRowGap = (itemsCount: number, minGap = MIN_ROW_GAP, maxGap = MAX_ROW_GA
 	return Math.max(minGap, Math.min(maxGap, estimatedGap));
 };
 
-const buildClusteredArticleColumn = (nodes: BaseGraphNode[]): Node[] => {
-	const sortedNodes = [...nodes].sort(sortByLabel);
-
-	if (sortedNodes.length === 0) return [];
-
-	const columnCount = Math.min(
-		5,
-		Math.max(1, Math.ceil(sortedNodes.length / MAX_ARTICLE_ROWS)),
-	);
-	const rowCount = Math.ceil(sortedNodes.length / columnCount);
-	const rowGap = getRowGap(rowCount, MIN_ARTICLE_ROW_GAP, MAX_ARTICLE_ROW_GAP);
-	const usedHeight = (rowCount - 1) * rowGap;
-	const verticalOffset = (MAX_VIEWPORT_HEIGHT - TOP_OFFSET - usedHeight) / 2;
-	const startX = COLUMN_X.articles - ((columnCount - 1) * ARTICLE_COLUMN_GAP) / 2;
-
-	return sortedNodes.map((node, index) => {
-		const row = index % rowCount;
-		const column = Math.floor(index / rowCount);
-
-		return {
-			id: node.id,
-			position: {
-				x: startX + column * ARTICLE_COLUMN_GAP,
-				y: TOP_OFFSET + verticalOffset + row * rowGap,
-			},
-			data: { label: node.data.label ?? node.id },
-			style: {
-				...nodeBaseStyle,
-				border: "2px solid #7c3aed",
-				background: "#f8f3ff",
-			},
-		};
-	});
-};
+const buildArticleNode = (node: BaseGraphNode, totalArticles: number): Node => ({
+	id: node.id,
+	position: {
+		x: COLUMN_X.articles,
+		y: TOP_OFFSET + (MAX_VIEWPORT_HEIGHT - TOP_OFFSET) / 2,
+	},
+	data: { label: `${totalArticles} artigos` },
+	style: {
+		...nodeBaseStyle,
+		border: "2px solid #166534",
+		background: "#dcfce7",
+		fontSize: 14,
+		padding: "12px 16px",
+	},
+});
 
 export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 	const router = useRouter();
@@ -145,7 +123,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 
 	const tecBaseNodes = useMemo(() => Object.values(graph.nodes.tecNode), [graph]);
 	const envBaseNodes = useMemo(() => Object.values(graph.nodes.envNode), [graph]);
-	const articleBaseNodes = graph.nodes.articlesNode;
+	const articleBaseNode = graph.nodes.articlesNode;
 	const normalizedSearch = searchTerm.trim().toLowerCase();
 	const showAllTopics = normalizedSearch.length === 0;
 	const connectedTopicIds = useMemo(
@@ -217,6 +195,19 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 	}, [selectedTopicSet, topicLookup]);
 
 	const hasActiveFilter = selectedTopicSet.size > 0;
+	const filteredArticleCount = useMemo(() => {
+		if (!hasActiveFilter) return graph.totalArticles;
+
+		const matchedArticles = new Set<string>();
+		for (const topicId of selectedTopicSet) {
+			const articleIds = graph.articleIdsByTopicId[topicId] ?? [];
+			for (const articleId of articleIds) {
+				matchedArticles.add(articleId);
+			}
+		}
+
+		return matchedArticles.size;
+	}, [hasActiveFilter, graph.totalArticles, graph.articleIdsByTopicId, selectedTopicSet]);
 
 	const visibleEdgesBase = useMemo(() => {
 		if (!hasActiveFilter) return graph.edges;
@@ -225,10 +216,10 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 	}, [graph.edges, hasActiveFilter, selectedTopicSet]);
 
 	const visibleArticleIds = useMemo(() => {
-		if (!hasActiveFilter) return new Set(articleBaseNodes.map((node) => node.id));
+		if (!hasActiveFilter) return new Set([articleBaseNode.id]);
 
 		return new Set(visibleEdgesBase.map((edge) => edge.source));
-	}, [hasActiveFilter, visibleEdgesBase, articleBaseNodes]);
+	}, [hasActiveFilter, visibleEdgesBase, articleBaseNode]);
 
 	const visibleTecNodesBase = useMemo(() => {
 		if (!hasActiveFilter) return tecBaseNodes;
@@ -242,11 +233,13 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 		return envBaseNodes.filter((node) => selectedTopicSet.has(node.id));
 	}, [hasActiveFilter, envBaseNodes, selectedTopicSet]);
 
-	const visibleArticleNodesBase = useMemo(() => {
-		if (!hasActiveFilter) return articleBaseNodes;
-
-		return articleBaseNodes.filter((node) => visibleArticleIds.has(node.id));
-	}, [hasActiveFilter, articleBaseNodes, visibleArticleIds]);
+	const visibleArticleNodeBase = useMemo(
+		() =>
+			filteredArticleCount > 0 && visibleArticleIds.has(articleBaseNode.id)
+				? articleBaseNode
+				: null,
+		[filteredArticleCount, visibleArticleIds, articleBaseNode],
+	);
 
 	const semanticMaxColumnLength = Math.max(
 		visibleTecNodesBase.length,
@@ -262,7 +255,9 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 		semanticMaxColumnLength,
 		semanticRowGap,
 	);
-	const articleNodes: Node[] = buildClusteredArticleColumn(visibleArticleNodesBase);
+	const articleNodes: Node[] = visibleArticleNodeBase
+		? [buildArticleNode(visibleArticleNodeBase, filteredArticleCount)]
+		: [];
 	const envNodes: Node[] = buildSemanticColumn(
 		visibleEnvNodesBase,
 		COLUMN_X.env,
