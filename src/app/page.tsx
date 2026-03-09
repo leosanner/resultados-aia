@@ -99,11 +99,11 @@ export default async function Home() {
 							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"
 							href="/metodologia"
 						>
-							Métodos
+							Metodologia
 						</Link>
 						<button
 							aria-label="Entrar na plataforma"
-							className="rounded-full bg-[#2ecc71] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#28a745]"
+							className="hidden rounded-full bg-[#2ecc71] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#28a745]"
 							type="button"
 						>
 							Entrar
@@ -202,7 +202,7 @@ export default async function Home() {
 							Grafo de Artigos e Termos
 						</h2>
 						<p className="mt-2 text-sm text-[#4a5568]">
-							Verde petróleo: termos tecnológicos, verde folha: termos ambientais, verde escuro: artigos.
+							Use a legenda abaixo do filtro para identificar as cores dos nós.
 						</p>
 						<div className="mt-6">
 							<LandingTermsGraph graph={graphData} />

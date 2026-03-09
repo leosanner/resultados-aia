@@ -89,15 +89,24 @@ const buildSemanticColumn = (
 	}));
 };
 
-const getRowGap = (itemsCount: number, minGap = MIN_ROW_GAP, maxGap = MAX_ROW_GAP) => {
+const getRowGap = (
+	itemsCount: number,
+	minGap = MIN_ROW_GAP,
+	maxGap = MAX_ROW_GAP,
+) => {
 	if (itemsCount <= 1) return maxGap;
 
-	const estimatedGap = Math.floor((MAX_VIEWPORT_HEIGHT - TOP_OFFSET) / (itemsCount - 1));
+	const estimatedGap = Math.floor(
+		(MAX_VIEWPORT_HEIGHT - TOP_OFFSET) / (itemsCount - 1),
+	);
 
 	return Math.max(minGap, Math.min(maxGap, estimatedGap));
 };
 
-const buildArticleNode = (node: BaseGraphNode, totalArticles: number): Node => ({
+const buildArticleNode = (
+	node: BaseGraphNode,
+	totalArticles: number,
+): Node => ({
 	id: node.id,
 	position: {
 		x: COLUMN_X.articles,
@@ -106,8 +115,9 @@ const buildArticleNode = (node: BaseGraphNode, totalArticles: number): Node => (
 	data: { label: `${totalArticles} artigos` },
 	style: {
 		...nodeBaseStyle,
-		border: "2px solid #166534",
-		background: "#dcfce7",
+		border: "2px solid #7c3aed",
+		background: "#f3e8ff",
+		color: "#3b0764",
 		fontSize: 14,
 		padding: "12px 16px",
 	},
@@ -121,8 +131,14 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 		Record<string, { x: number; y: number }>
 	>({});
 
-	const tecBaseNodes = useMemo(() => Object.values(graph.nodes.tecNode), [graph]);
-	const envBaseNodes = useMemo(() => Object.values(graph.nodes.envNode), [graph]);
+	const tecBaseNodes = useMemo(
+		() => Object.values(graph.nodes.tecNode),
+		[graph],
+	);
+	const envBaseNodes = useMemo(
+		() => Object.values(graph.nodes.envNode),
+		[graph],
+	);
 	const articleBaseNode = graph.nodes.articlesNode;
 	const normalizedSearch = searchTerm.trim().toLowerCase();
 	const showAllTopics = normalizedSearch.length === 0;
@@ -207,7 +223,12 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 		}
 
 		return matchedArticles.size;
-	}, [hasActiveFilter, graph.totalArticles, graph.articleIdsByTopicId, selectedTopicSet]);
+	}, [
+		hasActiveFilter,
+		graph.totalArticles,
+		graph.articleIdsByTopicId,
+		selectedTopicSet,
+	]);
 
 	const visibleEdgesBase = useMemo(() => {
 		if (!hasActiveFilter) return graph.edges;
@@ -267,14 +288,17 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 	);
 
 	const visibleNodeIds = new Set(nodesToIds(tecNodes, articleNodes, envNodes));
-	const nodes: Node[] = [...tecNodes, ...articleNodes, ...envNodes].map((node) => {
-		const manualPosition = manualPositions[node.id];
+	const nodes: Node[] = [...tecNodes, ...articleNodes, ...envNodes].map(
+		(node) => {
+			const manualPosition = manualPositions[node.id];
 
-		return manualPosition ? { ...node, position: manualPosition } : node;
-	});
+			return manualPosition ? { ...node, position: manualPosition } : node;
+		},
+	);
 	const edges: Edge[] = visibleEdgesBase
 		.filter(
-			(edge) => visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target),
+			(edge) =>
+				visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target),
 		)
 		.map((edge) => ({
 			id: edge.id,
@@ -295,7 +319,10 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 
 	const clearFilters = () => setSelectedTopicIds([]);
 	const showFoundArticles = () => {
-		if (selectedTermsByType.tec.length === 0 && selectedTermsByType.env.length === 0) {
+		if (
+			selectedTermsByType.tec.length === 0 &&
+			selectedTermsByType.env.length === 0
+		) {
 			return;
 		}
 
@@ -313,11 +340,14 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 		}));
 	};
 
-		return (
+	return (
 		<div className="space-y-4">
 			<div className="rounded-2xl border border-[#bfdcff] bg-[#eef6ff] p-4">
 				<div className="flex flex-wrap items-center justify-between gap-3">
-					<label className="text-sm font-semibold text-[#0f172a]" htmlFor="topic-filter">
+					<label
+						className="text-sm font-semibold text-[#0f172a]"
+						htmlFor="topic-filter"
+					>
 						Filtrar por tópicos
 					</label>
 					<button
@@ -391,6 +421,20 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 				>
 					Mostrar artigos encontrados
 				</button>
+			</div>
+			<div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#dbe6df] bg-white px-3 py-2 text-xs font-semibold text-[#334155]">
+				<span className="inline-flex items-center gap-2">
+					<span className="h-3 w-3 rounded-full bg-[#0ea5e9]" />
+					Termos de tecnologia
+				</span>
+				<span className="inline-flex items-center gap-2">
+					<span className="h-3 w-3 rounded-full bg-[#22c55e]" />
+					Termos ambientais
+				</span>
+				<span className="inline-flex items-center gap-2">
+					<span className="h-3 w-3 rounded-full bg-[#a855f7]" />
+					Número total de artigos
+				</span>
 			</div>
 			<div className="h-[620px] w-full overflow-hidden rounded-3xl border border-[#cbd5e1] bg-[#f8fafc]">
 				<ReactFlow
