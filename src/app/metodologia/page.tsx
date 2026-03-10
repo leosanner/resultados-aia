@@ -35,7 +35,6 @@ export default function MetodologiaPage() {
 				<PipelineFlow />
 				<VisualDiagrams />
 				<StageDetails />
-				<StatsCards />
 				<AgentRefinementSection />
 			</main>
 		</div>
