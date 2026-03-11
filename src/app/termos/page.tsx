@@ -1,4 +1,5 @@
 import { ArticleCard } from "@/components/articles/article-card";
+import { ArticlesYearLineChart } from "@/components/charts/articles-year-line-chart";
 import { getToneColorByIndex } from "@/components/charts/chart-palettes";
 import { TermsInstitutionsMapClient } from "@/components/termos/terms-institutions-map-client";
 import { TermsBarChart } from "@/components/charts/terms-bar-chart";
@@ -57,6 +58,7 @@ function buildArticleFingerprint(article: Article) {
 type ExtendedArticleRecord = {
 	title?: string;
 	json_title?: string;
+	publication_year?: number | string | null;
 	["authorships.institutions.id"]?: string | string[] | null;
 };
 
@@ -328,6 +330,33 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 	);
 
 	institutionMapPoints.sort((a, b) => b.articleCount - a.articleCount);
+	const yearlyCountByPublicationYear = new Map<number, number>();
+	for (const articleId of matchingArticleIds) {
+		const publicationYearRaw =
+			articlesExtended[String(articleId)]?.publication_year;
+		const publicationYear =
+			typeof publicationYearRaw === "number"
+				? publicationYearRaw
+				: Number(publicationYearRaw);
+
+		if (
+			!Number.isInteger(publicationYear) ||
+			publicationYear < 1900 ||
+			publicationYear > 2100
+		) {
+			continue;
+		}
+
+		yearlyCountByPublicationYear.set(
+			publicationYear,
+			(yearlyCountByPublicationYear.get(publicationYear) ?? 0) + 1,
+		);
+	}
+	const yearlyArticlesTrend = Array.from(
+		yearlyCountByPublicationYear.entries(),
+	)
+		.sort((a, b) => a[0] - b[0])
+		.map(([year, total]) => ({ year, total }));
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e8f5ee_0%,_#f5f8f6_42%,_#ffffff_100%)] text-[#0f172a]">
@@ -451,6 +480,21 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 						</p>
 						<div className="mt-4">
 							<TermsBarChart items={chartItems} tone={tone} />
+						</div>
+					</section>
+				) : null}
+
+				{hasSelectedTerms && totalResults > 0 ? (
+					<section className="mt-8 rounded-[16px] border border-[#dce9e1] bg-white p-5">
+						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
+							Evolução anual de artigos
+						</h2>
+						<p className="mt-1 text-sm text-[#64748b]">
+							Quantidade de artigos publicados por ano para os termos
+							selecionados.
+						</p>
+						<div className="mt-4">
+							<ArticlesYearLineChart items={yearlyArticlesTrend} />
 						</div>
 					</section>
 				) : null}
