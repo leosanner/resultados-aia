@@ -1,6 +1,9 @@
 import { ArticleCard } from "@/components/articles/article-card";
 import { getToneColorByIndex } from "@/components/charts/chart-palettes";
+import { TermsInstitutionsMapClient } from "@/components/termos/terms-institutions-map-client";
 import { TermsBarChart } from "@/components/charts/terms-bar-chart";
+import articlesExtendedData from "@/data/articles_extended.json";
+import institutionInformationData from "@/data/instituition_information.json";
 import { formatStageTitle, stageKeyToSlug } from "@/lib/area-utils";
 import {
 	ArticleModel,
@@ -10,6 +13,10 @@ import {
 } from "@/model/article";
 import { EiaModel, type StageArticle } from "@/model/eia-stages";
 import Link from "next/link";
+import type {
+	AreaLegendItem,
+	InstitutionMapPoint,
+} from "@/components/termos/terms-institutions-map";
 
 type PageProps = {
 	searchParams: Promise<{
@@ -45,6 +52,38 @@ function buildArticleFingerprint(article: Article) {
 		abstract: article.abstract,
 		keywords: article.keywords,
 	});
+}
+
+type ExtendedArticleRecord = {
+	title?: string;
+	json_title?: string;
+	["authorships.institutions.id"]?: string | string[] | null;
+};
+
+type InstitutionInformationRecord = {
+	display_name: string;
+	country_code?: string | null;
+	geo?: {
+		city?: string | null;
+		region?: string | null;
+		country?: string | null;
+		latitude: number;
+		longitude: number;
+	};
+};
+
+function toStringArray(value: string | string[] | null | undefined) {
+	if (typeof value === "string") {
+		return [value];
+	}
+	if (Array.isArray(value)) {
+		return value.filter((entry): entry is string => typeof entry === "string");
+	}
+	return [];
+}
+
+function isValidOpenAlexInstitutionId(value: string) {
+	return /^https:\/\/openalex\.org\/I\d+$/i.test(value.trim());
 }
 
 type BarChartItem = {
@@ -140,6 +179,155 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 		label: formatStageTitle(group.stageKey),
 		value: group.articles.length,
 	}));
+	const articleStagesById = new Map<number, string[]>();
+	for (const group of groupedResults) {
+		for (const article of group.articles) {
+			const currentStages = articleStagesById.get(article.id) ?? [];
+			currentStages.push(group.stageKey);
+			articleStagesById.set(article.id, currentStages);
+		}
+	}
+	const stageColorByKey = new Map(
+		groupsWithColors.map((group) => [group.stageKey, group.color]),
+	);
+	const areaLegend: AreaLegendItem[] = groupsWithColors.map((group) => ({
+		stageKey: group.stageKey,
+		label: formatStageTitle(group.stageKey),
+		color: group.color,
+		count: group.articles.length,
+	}));
+	const articlesExtended =
+		articlesExtendedData as Record<string, ExtendedArticleRecord>;
+	const institutionsById =
+		institutionInformationData as Record<string, InstitutionInformationRecord>;
+	const institutionAccumulator = new Map<
+		string,
+		{
+			institution: InstitutionInformationRecord;
+			articleIds: Set<number>;
+			articleDetails: Map<
+				number,
+				{
+					title: string;
+					stageLabels: string[];
+				}
+			>;
+			stageCounts: Map<string, number>;
+		}
+	>();
+	const articlesWithMappedInstitutions = new Set<number>();
+
+	for (const articleId of matchingArticleIds) {
+		const record = articlesExtended[String(articleId)];
+		if (!record) continue;
+
+		const institutionIds = toStringArray(record["authorships.institutions.id"]);
+		let hasInstitutionForCurrentArticle = false;
+
+		for (const rawInstitutionId of institutionIds) {
+			const institutionId = rawInstitutionId.trim();
+			if (!isValidOpenAlexInstitutionId(institutionId)) continue;
+
+			const institution = institutionsById[institutionId];
+			if (!institution || !institution.geo) continue;
+
+			const { latitude, longitude } = institution.geo;
+			if (typeof latitude !== "number" || typeof longitude !== "number") {
+				continue;
+			}
+
+			hasInstitutionForCurrentArticle = true;
+			const current = institutionAccumulator.get(institutionId);
+			const articleTitle =
+				record.title ?? record.json_title ?? `Artigo ${articleId}`;
+			const stageLabels =
+				(articleStagesById.get(articleId) ?? []).map((stageKey) =>
+					formatStageTitle(stageKey),
+				) ?? [];
+			const normalizedStageLabels =
+				stageLabels.length > 0 ? stageLabels : ["Área não classificada"];
+
+			if (!current) {
+				const stageCounts = new Map<string, number>();
+				for (const stageKey of articleStagesById.get(articleId) ?? []) {
+					stageCounts.set(stageKey, (stageCounts.get(stageKey) ?? 0) + 1);
+				}
+
+				institutionAccumulator.set(institutionId, {
+					institution,
+					articleIds: new Set([articleId]),
+					articleDetails: new Map([
+						[
+							articleId,
+							{
+								title: articleTitle,
+								stageLabels: normalizedStageLabels,
+							},
+						],
+					]),
+					stageCounts,
+				});
+				continue;
+			}
+
+			current.articleIds.add(articleId);
+			if (!current.articleDetails.has(articleId)) {
+				current.articleDetails.set(articleId, {
+					title: articleTitle,
+					stageLabels: normalizedStageLabels,
+				});
+			}
+			for (const stageKey of articleStagesById.get(articleId) ?? []) {
+				current.stageCounts.set(
+					stageKey,
+					(current.stageCounts.get(stageKey) ?? 0) + 1,
+				);
+			}
+		}
+
+		if (hasInstitutionForCurrentArticle) {
+			articlesWithMappedInstitutions.add(articleId);
+		}
+	}
+
+	const institutionMapPoints: InstitutionMapPoint[] = Array.from(
+		institutionAccumulator.entries(),
+	).map(
+		([
+			institutionId,
+			{ institution, articleIds, articleDetails, stageCounts },
+		]) => {
+			const dominantStageKey = Array.from(stageCounts.entries()).sort(
+				(a, b) => b[1] - a[1],
+			)[0]?.[0];
+
+			return {
+				id: institutionId,
+				name: institution.display_name,
+				city: institution.geo?.city ?? null,
+				region: institution.geo?.region ?? null,
+				country: institution.geo?.country ?? institution.country_code ?? null,
+				latitude: institution.geo?.latitude ?? 0,
+				longitude: institution.geo?.longitude ?? 0,
+				articleCount: articleIds.size,
+				articles: Array.from(articleDetails.entries())
+					.map(([id, detail]) => ({
+						id,
+						title: detail.title,
+						stageLabel: detail.stageLabels.join(" / "),
+					}))
+					.slice(0, 6),
+				dominantAreaLabel: dominantStageKey
+					? formatStageTitle(dominantStageKey)
+					: "Área não classificada",
+				color: dominantStageKey
+					? (stageColorByKey.get(dominantStageKey) ?? "#0ea5e9")
+					: "#0ea5e9",
+			};
+		},
+	);
+
+	institutionMapPoints.sort((a, b) => b.articleCount - a.articleCount);
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e8f5ee_0%,_#f5f8f6_42%,_#ffffff_100%)] text-[#0f172a]">
@@ -265,6 +453,15 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 							<TermsBarChart items={chartItems} tone={tone} />
 						</div>
 					</section>
+				) : null}
+
+				{hasSelectedTerms && totalResults > 0 ? (
+					<TermsInstitutionsMapClient
+						areas={areaLegend}
+						articlesWithMappedInstitutions={articlesWithMappedInstitutions.size}
+						points={institutionMapPoints}
+						totalArticles={totalResults}
+					/>
 				) : null}
 
 				{hasSelectedTerms ? (
