@@ -157,26 +157,29 @@ export default async function AreaArticlesPage({
 		tecTerm: selectedTechnologyTerms,
 	});
 	const articlesExtended = await articleModel.getArticlesExtended();
-	const articleTermsById = new Map(
-		await Promise.all(
-			articles.map(async (article) => {
-				const articleFt = await articleModel.getArticleFrequencyTerms(
+	type ArticleTermsSummary = { technology: string[]; environmental: string[] };
+	const articleTermsEntries: Array<[number, ArticleTermsSummary]> = await Promise.all(
+		articles.map(async (article) => {
+			const articleFt = await articleModel.getArticleFrequencyTerms(article.id);
+			if (!articleFt) {
+				return [
 					article.id,
-				);
-				if (!articleFt) {
-					return [article.id, { technology: [], environmental: [] }] as const;
-				}
+					{ technology: [] as string[], environmental: [] as string[] },
+				];
+			}
 
-				const technology = summarizeTerms(
-					Object.keys(filterOcurrencies(articleFt.tec)).map(formatTermLabel),
-				);
-				const environmental = summarizeTerms(
-					Object.keys(filterOcurrencies(articleFt.env)).map(formatTermLabel),
-				);
+			const technology = summarizeTerms(
+				Object.keys(filterOcurrencies(articleFt.tec)).map(formatTermLabel),
+			);
+			const environmental = summarizeTerms(
+				Object.keys(filterOcurrencies(articleFt.env)).map(formatTermLabel),
+			);
 
-				return [article.id, { technology, environmental }] as const;
-			}),
-		),
+			return [article.id, { technology, environmental }];
+		}),
+	);
+	const articleTermsById = new Map<number, ArticleTermsSummary>(
+		articleTermsEntries,
 	);
 
 	return (

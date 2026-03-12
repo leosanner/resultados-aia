@@ -47,10 +47,10 @@ const DEFAULT_CENTER: [number, number] = [-46.6333, -23.5505];
 const DEFAULT_ZOOM = 1.8;
 const FALLBACK_AREA_COLOR = "#64748b";
 const SATELLITE_STYLE = {
-	version: 8,
+	version: 8 as const,
 	sources: {
 		"esri-world-imagery": {
-			type: "raster",
+			type: "raster" as const,
 			tiles: [
 				"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
 			],
@@ -61,11 +61,11 @@ const SATELLITE_STYLE = {
 	layers: [
 		{
 			id: "esri-world-imagery-layer",
-			type: "raster",
+			type: "raster" as const,
 			source: "esri-world-imagery",
 		},
 	],
-} as const;
+};
 
 function normalizeAreaLabel(label: string): string {
 	return label.trim().toLowerCase().replace(/\s+/g, " ");

@@ -38,26 +38,28 @@ type LandingTermsGraphProps = {
 	};
 };
 
-const nodeBaseStyle = {
+const getNodeBaseStyle = (fontScale: number) => ({
 	background: "#ffffff",
 	borderRadius: 12,
-	padding: "8px 10px",
+	padding: `${Math.round(8 * fontScale)}px ${Math.round(10 * fontScale)}px`,
 	color: "#111111",
-	fontSize: 12,
+	fontSize: Math.round(12 * fontScale),
 	fontWeight: 600,
 	boxShadow: "0 12px 22px -14px rgba(17, 17, 17, 0.42)",
-};
+});
 
 const COLUMN_X = {
-	tec: 80,
-	articles: 520,
-	env: 960,
+	tec: 140,
+	articles: 620,
+	env: 1100,
 } as const;
 
 const TOP_OFFSET = 24;
-const MAX_VIEWPORT_HEIGHT = 560;
-const MIN_ROW_GAP = 26;
-const MAX_ROW_GAP = 46;
+const BASE_ROW_GAP = 62;
+const MAX_ROWS_PER_LANE = 14;
+const LANE_GAP = 180;
+const MIN_GRAPH_HEIGHT = 620;
+const MAX_GRAPH_HEIGHT = 980;
 const sortByLabel = (a: BaseGraphNode, b: BaseGraphNode) => {
 	const labelA = (a.data.label ?? a.id).toString();
 	const labelB = (b.data.label ?? b.id).toString();
@@ -69,57 +71,58 @@ const buildSemanticColumn = (
 	nodes: BaseGraphNode[],
 	columnX: number,
 	borderColor: string,
-	maxColumnLength: number,
-	rowGap: number,
-): Node[] => {
+	side: "left" | "right",
+	fontScale: number,
+): { nodes: Node[]; maxY: number } => {
 	const sortedNodes = [...nodes].sort(sortByLabel);
-	const columnOffset = ((maxColumnLength - sortedNodes.length) * rowGap) / 2;
+	const laneCount = Math.max(1, Math.ceil(sortedNodes.length / MAX_ROWS_PER_LANE));
+	const rowsPerLane = Math.max(1, Math.ceil(sortedNodes.length / laneCount));
+	const rowGap = Math.round(BASE_ROW_GAP * fontScale);
+	let maxY = TOP_OFFSET;
 
-	return sortedNodes.map((node, index) => ({
-		id: node.id,
-		position: {
-			x: columnX,
-			y: TOP_OFFSET + columnOffset + index * rowGap,
-		},
-		data: { label: node.data.label ?? node.id },
-		style: {
-			...nodeBaseStyle,
-			border: `2px solid ${borderColor}`,
-		},
-	}));
-};
+	const positionedNodes = sortedNodes.map((node, index) => {
+		const laneIndex = Math.floor(index / rowsPerLane);
+		const rowIndex = index % rowsPerLane;
+		const x =
+			side === "left"
+				? columnX - (laneCount - 1 - laneIndex) * LANE_GAP
+				: columnX + laneIndex * LANE_GAP;
+		const y = TOP_OFFSET + rowIndex * rowGap;
+		if (y > maxY) maxY = y;
 
-const getRowGap = (
-	itemsCount: number,
-	minGap = MIN_ROW_GAP,
-	maxGap = MAX_ROW_GAP,
-) => {
-	if (itemsCount <= 1) return maxGap;
+		return {
+			id: node.id,
+			position: { x, y },
+			data: { label: node.data.label ?? node.id },
+			style: {
+				...getNodeBaseStyle(fontScale),
+				border: `2px solid ${borderColor}`,
+			},
+		} satisfies Node;
+	});
 
-	const estimatedGap = Math.floor(
-		(MAX_VIEWPORT_HEIGHT - TOP_OFFSET) / (itemsCount - 1),
-	);
-
-	return Math.max(minGap, Math.min(maxGap, estimatedGap));
+	return { nodes: positionedNodes, maxY };
 };
 
 const buildArticleNode = (
 	node: BaseGraphNode,
 	totalArticles: number,
+	centerY: number,
+	fontScale: number,
 ): Node => ({
 	id: node.id,
 	position: {
 		x: COLUMN_X.articles,
-		y: TOP_OFFSET + (MAX_VIEWPORT_HEIGHT - TOP_OFFSET) / 2,
+		y: centerY,
 	},
 	data: { label: `${totalArticles} artigos` },
 	style: {
-		...nodeBaseStyle,
+		...getNodeBaseStyle(fontScale),
 		border: "2px solid #7c3aed",
 		background: "#f3e8ff",
 		color: "#3b0764",
-		fontSize: 14,
-		padding: "12px 16px",
+		fontSize: Math.round(14 * fontScale),
+		padding: `${Math.round(12 * fontScale)}px ${Math.round(16 * fontScale)}px`,
 	},
 });
 
@@ -130,6 +133,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 	const [manualPositions, setManualPositions] = useState<
 		Record<string, { x: number; y: number }>
 	>({});
+	const [fontScale, setFontScale] = useState(1);
 
 	const tecBaseNodes = useMemo(
 		() => Object.values(graph.nodes.tecNode),
@@ -262,29 +266,37 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 		[filteredArticleCount, visibleArticleIds, articleBaseNode],
 	);
 
-	const semanticMaxColumnLength = Math.max(
-		visibleTecNodesBase.length,
-		visibleEnvNodesBase.length,
-		1,
-	);
-	const semanticRowGap = getRowGap(semanticMaxColumnLength);
-
-	const tecNodes: Node[] = buildSemanticColumn(
+	const tecLayout = buildSemanticColumn(
 		visibleTecNodesBase,
 		COLUMN_X.tec,
 		"#0ea5e9",
-		semanticMaxColumnLength,
-		semanticRowGap,
+		"left",
+		fontScale,
 	);
-	const articleNodes: Node[] = visibleArticleNodeBase
-		? [buildArticleNode(visibleArticleNodeBase, filteredArticleCount)]
-		: [];
-	const envNodes: Node[] = buildSemanticColumn(
+	const tecNodes = tecLayout.nodes;
+	const envLayout = buildSemanticColumn(
 		visibleEnvNodesBase,
 		COLUMN_X.env,
 		"#22c55e",
-		semanticMaxColumnLength,
-		semanticRowGap,
+		"right",
+		fontScale,
+	);
+	const envNodes = envLayout.nodes;
+	const maxColumnY = Math.max(tecLayout.maxY, envLayout.maxY, TOP_OFFSET + 220);
+	const articleCenterY = TOP_OFFSET + (maxColumnY - TOP_OFFSET) / 2;
+	const articleNodes: Node[] = visibleArticleNodeBase
+		? [
+				buildArticleNode(
+					visibleArticleNodeBase,
+					filteredArticleCount,
+					articleCenterY,
+					fontScale,
+				),
+			]
+		: [];
+	const graphHeight = Math.min(
+		MAX_GRAPH_HEIGHT,
+		Math.max(MIN_GRAPH_HEIGHT, Math.round(maxColumnY + 120)),
 	);
 
 	const visibleNodeIds = new Set(nodesToIds(tecNodes, articleNodes, envNodes));
@@ -410,17 +422,40 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 				</div>
 			</div>
 			<div className="flex justify-end">
-				<button
-					className="rounded-full bg-[#16a34a] px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors enabled:hover:bg-[#15803d] disabled:cursor-not-allowed disabled:bg-[#86efac]"
-					disabled={
-						selectedTermsByType.tec.length === 0 &&
-						selectedTermsByType.env.length === 0
-					}
-					onClick={showFoundArticles}
-					type="button"
-				>
-					Mostrar artigos encontrados
-				</button>
+				<div className="flex items-center gap-2">
+					<div className="inline-flex items-center gap-1 rounded-full border border-[#cbd5e1] bg-white px-2 py-1 text-xs font-semibold text-[#334155]">
+						<button
+							aria-label="Diminuir fonte dos nós"
+							className="rounded px-2 py-0.5 hover:bg-[#f1f5f9]"
+							onClick={() => setFontScale((prev) => Math.max(0.8, prev - 0.1))}
+							type="button"
+						>
+							A-
+						</button>
+						<span className="min-w-8 text-center text-[11px]">
+							{Math.round(fontScale * 100)}%
+						</span>
+						<button
+							aria-label="Aumentar fonte dos nós"
+							className="rounded px-2 py-0.5 hover:bg-[#f1f5f9]"
+							onClick={() => setFontScale((prev) => Math.min(1.6, prev + 0.1))}
+							type="button"
+						>
+							A+
+						</button>
+					</div>
+					<button
+						className="rounded-full bg-[#16a34a] px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors enabled:hover:bg-[#15803d] disabled:cursor-not-allowed disabled:bg-[#86efac]"
+						disabled={
+							selectedTermsByType.tec.length === 0 &&
+							selectedTermsByType.env.length === 0
+						}
+						onClick={showFoundArticles}
+						type="button"
+					>
+						Mostrar artigos encontrados
+					</button>
+				</div>
 			</div>
 			<div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#dbe6df] bg-white px-3 py-2 text-xs font-semibold text-[#334155]">
 				<span className="inline-flex items-center gap-2">
@@ -436,11 +471,14 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 					Número total de artigos
 				</span>
 			</div>
-			<div className="h-[620px] w-full overflow-hidden rounded-3xl border border-[#cbd5e1] bg-[#f8fafc]">
+			<div
+				className="w-full overflow-hidden rounded-3xl border border-[#cbd5e1] bg-[#f8fafc]"
+				style={{ height: graphHeight }}
+			>
 				<ReactFlow
 					edges={edges}
 					fitView
-					fitViewOptions={{ padding: 0.15 }}
+					fitViewOptions={{ padding: 0.26 }}
 					maxZoom={1.4}
 					minZoom={0.3}
 					nodes={nodes}
