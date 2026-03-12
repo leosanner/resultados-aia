@@ -101,6 +101,12 @@ export default async function Home() {
 						>
 							Metodologia
 						</Link>
+						<Link
+							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"
+							href="/autores"
+						>
+							Autores
+						</Link>
 						<button
 							aria-label="Entrar na plataforma"
 							className="hidden rounded-full bg-[#2ecc71] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#28a745]"

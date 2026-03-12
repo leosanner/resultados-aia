@@ -447,6 +447,12 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 						>
 							Métodos
 						</Link>
+						<Link
+							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"
+							href="/autores"
+						>
+							Autores
+						</Link>
 						<span className="rounded-full bg-[#2ecc71] px-5 py-2 text-sm font-semibold text-white">
 							Resultados
 						</span>
