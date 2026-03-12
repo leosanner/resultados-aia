@@ -27,6 +27,33 @@ export class EiaModel {
 		this.articleModel = new ArticleModel();
 	}
 
+	async getArticlesByStageWithPages(pageSize: number = -1) {
+		const articlesByStage = await this.getArticlesByStage();
+		if (pageSize <= 0) {
+			return articlesByStage;
+		}
+
+		const splitedContent: Record<string, Record<number, StageArticle[]>> = {};
+
+		for (const [key, value] of Object.entries(articlesByStage) as [
+			string,
+			StageArticle[],
+		][]) {
+			splitedContent[key] = splitIntoPages(value, pageSize);
+		}
+
+		function splitIntoPages(articles: StageArticle[], pageSize: number) {
+			const pages: Record<number, StageArticle[]> = {};
+			for (let start = 0, page = 1; start < articles.length; start += pageSize, page++) {
+				pages[page] = articles.slice(start, start + pageSize);
+			}
+
+			return pages;
+		}
+
+		return splitedContent;
+	}
+
 	async getArticlesByStage() {
 		const eiaStagesWithArticles = await loadEiaStages();
 

@@ -23,8 +23,13 @@ type PageProps = {
 	}>;
 	searchParams: Promise<{
 		term?: string | string[];
+		page?: string | string[];
+		pageSize?: string | string[];
 	}>;
 };
+
+const PAGE_SIZE_OPTIONS = [5, 10, 20, 30, 50] as const;
+type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number];
 
 function formatTermLabel(text: string) {
 	return text
@@ -38,6 +43,27 @@ function buildTermHref(areaSlug: string, termLabel: string) {
 	return {
 		pathname: `/areas/${areaSlug}/artigos`,
 		query: { term: termLabel },
+	};
+}
+
+function buildPaginationHref(
+	areaSlug: string,
+	selectedTerms: string[],
+	page: number,
+	pageSize: number,
+) {
+	const query: Record<string, string | string[]> = {
+		page: String(page),
+		pageSize: String(pageSize),
+	};
+
+	if (selectedTerms.length > 0) {
+		query.term = selectedTerms;
+	}
+
+	return {
+		pathname: `/areas/${areaSlug}/artigos`,
+		query,
 	};
 }
 
@@ -105,7 +131,7 @@ export default async function AreaArticlesPage({
 	searchParams,
 }: PageProps) {
 	const { areaSlug } = await params;
-	const { term } = await searchParams;
+	const { term, page, pageSize } = await searchParams;
 	const stageKey = slugToStageKey(areaSlug);
 	const eiaModel = new EiaModel();
 	const articleModel = new ArticleModel();
@@ -147,10 +173,28 @@ export default async function AreaArticlesPage({
 		...selectedTechnologyTerms,
 		...selectedEnvironmentalTerms,
 	];
+	const pageSizeRaw = Array.isArray(pageSize) ? pageSize[0] : pageSize;
+	const requestedPageSize = Number(pageSizeRaw);
+	const selectedPageSize: PageSizeOption = PAGE_SIZE_OPTIONS.includes(
+		requestedPageSize as PageSizeOption,
+	)
+		? (requestedPageSize as PageSizeOption)
+		: 10;
+	const pageRaw = Array.isArray(page) ? page[0] : page;
+	const requestedPage = Number(pageRaw);
 	const articles = await eiaModel.filterArticlesByTerms(allArticles, {
 		envTerm: selectedEnvironmentalTerms,
 		tecTerm: selectedTechnologyTerms,
 	});
+	const totalPages = Math.max(1, Math.ceil(articles.length / selectedPageSize));
+	const currentPage =
+		Number.isInteger(requestedPage) && requestedPage > 0
+			? Math.min(requestedPage, totalPages)
+			: 1;
+	const pageStart = (currentPage - 1) * selectedPageSize;
+	const paginatedArticles = articles.slice(pageStart, pageStart + selectedPageSize);
+	const currentStartArticle = articles.length === 0 ? 0 : pageStart + 1;
+	const currentEndArticle = Math.min(pageStart + selectedPageSize, articles.length);
 	const articlesExtended = await articleModel.getArticlesExtended();
 	type ArticleTermsSummary = { technology: string[]; environmental: string[] };
 	const articleTermsEntries: Array<[number, ArticleTermsSummary]> = await Promise.all(
@@ -215,6 +259,7 @@ export default async function AreaArticlesPage({
 								Limpar filtros
 							</Link>
 						</div>
+						<input name="page" type="hidden" value="1" />
 
 						<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 							<article className="rounded-[10px] border border-[#bfdbfe] bg-[#f8fbff] p-4">
@@ -295,13 +340,29 @@ export default async function AreaArticlesPage({
 								</div>
 							</article>
 						</div>
+						<div className="flex flex-wrap items-end justify-between gap-3">
+							<label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.8px] text-[#64748b]">
+								Artigos por página
+								<select
+									className="h-10 min-w-28 rounded-md border border-[#cfe0d6] bg-white px-2.5 text-sm font-semibold text-[#1f2937] outline-none focus:border-[#0C7C3C]"
+									defaultValue={String(selectedPageSize)}
+									name="pageSize"
+								>
+									{PAGE_SIZE_OPTIONS.map((option) => (
+										<option key={option} value={option}>
+											{option}
+										</option>
+									))}
+								</select>
+							</label>
 
-						<button
-							className="inline-flex rounded-md bg-[#0C7C3C] px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors hover:bg-[#085E2E]"
-							type="submit"
-						>
-							Aplicar filtros
-						</button>
+							<button
+								className="inline-flex rounded-md bg-[#0C7C3C] px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors hover:bg-[#085E2E]"
+								type="submit"
+							>
+								Aplicar filtros
+							</button>
+						</div>
 					</form>
 				</section>
 
@@ -310,11 +371,17 @@ export default async function AreaArticlesPage({
 					className="mt-8 space-y-4"
 				>
 					{articles.length > 0 ? (
-						articles.map((article, index) => (
+						<p className="text-sm font-semibold text-[#556070]">
+							Mostrando {currentStartArticle}–{currentEndArticle} de{" "}
+							{articles.length} artigos
+						</p>
+					) : null}
+					{articles.length > 0 ? (
+						paginatedArticles.map((article) => (
 							<ArticleCard
 								abstract={article.abstract}
 								href={`/areas/${areaSlug}/artigos/${article.id}`}
-								key={`${article.title}-${index}`}
+								key={`${article.id}`}
 								keywords={article.keywords ?? []}
 								metadata={buildArticleMetadata({
 									publish_date:
@@ -344,6 +411,48 @@ export default async function AreaArticlesPage({
 						</div>
 					)}
 				</section>
+				{articles.length > 0 ? (
+					<nav
+						aria-label="Paginação de artigos"
+						className="mt-6 flex flex-wrap items-center justify-between gap-3"
+					>
+						<Link
+							aria-disabled={currentPage <= 1}
+							className={`inline-flex rounded-md px-3 py-2 text-xs font-bold uppercase tracking-[0.8px] ${
+								currentPage <= 1
+									? "pointer-events-none border border-[#d1d5db] bg-[#f3f4f6] text-[#9ca3af]"
+									: "border border-[#cfe0d6] bg-white text-[#085E2E] hover:border-[#9bc9af]"
+							}`}
+							href={buildPaginationHref(
+								areaSlug,
+								selectedTerms,
+								Math.max(1, currentPage - 1),
+								selectedPageSize,
+							)}
+						>
+							Anterior
+						</Link>
+						<p className="text-sm font-semibold text-[#556070]">
+							Página {currentPage} de {totalPages}
+						</p>
+						<Link
+							aria-disabled={currentPage >= totalPages}
+							className={`inline-flex rounded-md px-3 py-2 text-xs font-bold uppercase tracking-[0.8px] ${
+								currentPage >= totalPages
+									? "pointer-events-none border border-[#d1d5db] bg-[#f3f4f6] text-[#9ca3af]"
+									: "border border-[#cfe0d6] bg-white text-[#085E2E] hover:border-[#9bc9af]"
+							}`}
+							href={buildPaginationHref(
+								areaSlug,
+								selectedTerms,
+								Math.min(totalPages, currentPage + 1),
+								selectedPageSize,
+							)}
+						>
+							Próxima
+						</Link>
+					</nav>
+				) : null}
 			</main>
 		</div>
 	);
