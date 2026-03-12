@@ -5,6 +5,7 @@ import institutionInformationData from "@/data/instituition_information.json";
 import { formatStageTitle, slugToStageKey } from "@/lib/area-utils";
 import { ArticleModel } from "@/model/article";
 import { EiaModel } from "@/model/eia-stages";
+import { filterOcurrencies } from "@/utils/ocurrencies";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type {
@@ -71,6 +72,11 @@ function isValidOpenAlexInstitutionId(value: string) {
 	return /^https:\/\/openalex\.org\/I\d+$/i.test(value.trim());
 }
 
+function summarizeTerms(terms: string[], maxItems: number = 3) {
+	if (terms.length <= maxItems) return terms;
+	return [...terms.slice(0, maxItems), `+${terms.length - maxItems}`];
+}
+
 export default async function AreaStatisticsPage({ params }: PageProps) {
 	const { areaSlug } = await params;
 	const stageKey = slugToStageKey(areaSlug);
@@ -111,11 +117,50 @@ export default async function AreaStatisticsPage({ params }: PageProps) {
 		{
 			institution: InstitutionInformationRecord;
 			articleIds: Set<number>;
-			articleDetails: Map<number, { title: string; stageLabels: string[] }>;
+			articleDetails: Map<
+				number,
+				{
+					title: string;
+					stageLabels: string[];
+					technologyTerms: string[];
+					environmentalTerms: string[];
+				}
+			>;
 		}
 	>();
 	const articlesWithMappedInstitutions = new Set<number>();
 	const yearlyCountByPublicationYear = new Map<number, number>();
+	type ArticleTermsSummary = {
+		technologyTerms: string[];
+		environmentalTerms: string[];
+	};
+	const articleTermsEntries: Array<[number, ArticleTermsSummary]> =
+		await Promise.all(
+			areaArticles.map(async (article) => {
+				const articleFt = await articleModel.getArticleFrequencyTerms(article.id);
+				if (!articleFt) {
+					return [
+						article.id,
+						{
+							technologyTerms: [] as string[],
+							environmentalTerms: [] as string[],
+						},
+					];
+				}
+
+				const technologyTerms = summarizeTerms(
+					Object.keys(filterOcurrencies(articleFt.tec)).map(formatTermLabel),
+				);
+				const environmentalTerms = summarizeTerms(
+					Object.keys(filterOcurrencies(articleFt.env)).map(formatTermLabel),
+				);
+
+				return [article.id, { technologyTerms, environmentalTerms }];
+			}),
+		);
+	const articleTermsById = new Map<number, ArticleTermsSummary>(
+		articleTermsEntries,
+	);
 
 	for (const article of areaArticles) {
 		const articleId = article.id;
@@ -153,6 +198,10 @@ export default async function AreaStatisticsPage({ params }: PageProps) {
 			hasInstitutionForCurrentArticle = true;
 			const current = institutionAccumulator.get(institutionId);
 			const articleTitle = record.title ?? record.json_title ?? `Artigo ${articleId}`;
+			const articleTerms = articleTermsById.get(articleId) ?? {
+				technologyTerms: [],
+				environmentalTerms: [],
+			};
 
 			if (!current) {
 				institutionAccumulator.set(institutionId, {
@@ -164,6 +213,8 @@ export default async function AreaStatisticsPage({ params }: PageProps) {
 							{
 								title: articleTitle,
 								stageLabels: [stageName],
+								technologyTerms: articleTerms.technologyTerms,
+								environmentalTerms: articleTerms.environmentalTerms,
 							},
 						],
 					]),
@@ -176,6 +227,8 @@ export default async function AreaStatisticsPage({ params }: PageProps) {
 				current.articleDetails.set(articleId, {
 					title: articleTitle,
 					stageLabels: [stageName],
+					technologyTerms: articleTerms.technologyTerms,
+					environmentalTerms: articleTerms.environmentalTerms,
 				});
 			}
 		}
@@ -205,6 +258,8 @@ export default async function AreaStatisticsPage({ params }: PageProps) {
 				id,
 				title: detail.title,
 				stageLabel: detail.stageLabels.join(" / "),
+				technologyTerms: detail.technologyTerms,
+				environmentalTerms: detail.environmentalTerms,
 			}))
 			.slice(0, 6),
 		dominantAreaLabel: stageName,

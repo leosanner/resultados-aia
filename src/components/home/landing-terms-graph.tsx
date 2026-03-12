@@ -25,7 +25,7 @@ type BaseGraphEdge = {
 	type?: string;
 };
 
-type LandingTermsGraphProps = {
+export type LandingTermsGraphProps = {
 	graph: {
 		nodes: {
 			envNode: Record<string, BaseGraphNode>;

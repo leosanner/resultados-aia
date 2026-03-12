@@ -24,6 +24,8 @@ export type InstitutionMapPoint = {
 		id: number;
 		title: string;
 		stageLabel: string;
+		technologyTerms?: string[];
+		environmentalTerms?: string[];
 	}>;
 	dominantAreaLabel: string;
 	color: string;
@@ -352,6 +354,30 @@ export function TermsInstitutionsMap({
 																	);
 																})}
 															</div>
+															{(article.technologyTerms ?? []).length > 0 ? (
+																<div className="mt-1 flex flex-wrap gap-1">
+																	{(article.technologyTerms ?? []).map((term) => (
+																		<span
+																			className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-2 py-0.5 text-[10px] font-semibold text-[#1e3a8a]"
+																			key={`${article.id}-tec-${term}`}
+																		>
+																			Tec: {term}
+																		</span>
+																	))}
+																</div>
+															) : null}
+															{(article.environmentalTerms ?? []).length > 0 ? (
+																<div className="mt-1 flex flex-wrap gap-1">
+																	{(article.environmentalTerms ?? []).map((term) => (
+																		<span
+																			className="rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-2 py-0.5 text-[10px] font-semibold text-[#166534]"
+																			key={`${article.id}-env-${term}`}
+																		>
+																			Env: {term}
+																		</span>
+																	))}
+																</div>
+															) : null}
 														</li>
 													);
 												})}

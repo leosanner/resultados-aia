@@ -7,6 +7,7 @@ import institutionInformationData from "@/data/instituition_information.json";
 import { formatStageTitle } from "@/lib/area-utils";
 import { ArticleModel } from "@/model/article";
 import { EiaModel, type StageArticle } from "@/model/eia-stages";
+import { filterOcurrencies } from "@/utils/ocurrencies";
 import type {
 	AreaLegendItem,
 	InstitutionMapPoint,
@@ -75,6 +76,11 @@ function toStringArray(value: string | string[] | null | undefined) {
 
 function isValidOpenAlexInstitutionId(value: string) {
 	return /^https:\/\/openalex\.org\/I\d+$/i.test(value.trim());
+}
+
+function summarizeTerms(terms: string[], maxItems: number = 3) {
+	if (terms.length <= maxItems) return terms;
+	return [...terms.slice(0, maxItems), `+${terms.length - maxItems}`];
 }
 
 function buildYearlyTrend(articleIds: Iterable<number>, records: Record<string, ExtendedArticleRecord>) {
@@ -169,11 +175,50 @@ export default async function ContextualizacaoGeralPage() {
 		{
 			institution: InstitutionInformationRecord;
 			articleIds: Set<number>;
-			articleDetails: Map<number, { title: string; stageLabels: string[] }>;
+			articleDetails: Map<
+				number,
+				{
+					title: string;
+					stageLabels: string[];
+					technologyTerms: string[];
+					environmentalTerms: string[];
+				}
+			>;
 			stageCounts: Map<string, number>;
 		}
 	>();
 	const articlesWithMappedInstitutions = new Set<number>();
+	type ArticleTermsSummary = {
+		technologyTerms: string[];
+		environmentalTerms: string[];
+	};
+	const articleTermsEntries: Array<[number, ArticleTermsSummary]> =
+		await Promise.all(
+			Array.from(allArticleIds).map(async (articleId) => {
+				const articleFt = await articleModel.getArticleFrequencyTerms(articleId);
+				if (!articleFt) {
+					return [
+						articleId,
+						{
+							technologyTerms: [] as string[],
+							environmentalTerms: [] as string[],
+						},
+					];
+				}
+
+				const technologyTerms = summarizeTerms(
+					Object.keys(filterOcurrencies(articleFt.tec)).map(formatTermLabel),
+				);
+				const environmentalTerms = summarizeTerms(
+					Object.keys(filterOcurrencies(articleFt.env)).map(formatTermLabel),
+				);
+
+				return [articleId, { technologyTerms, environmentalTerms }];
+			}),
+		);
+	const articleTermsById = new Map<number, ArticleTermsSummary>(
+		articleTermsEntries,
+	);
 
 	for (const articleId of allArticleIds) {
 		const record = articlesExtended[String(articleId)];
@@ -202,6 +247,10 @@ export default async function ContextualizacaoGeralPage() {
 				) ?? [];
 			const normalizedStageLabels =
 				stageLabels.length > 0 ? stageLabels : ["Área não classificada"];
+			const articleTerms = articleTermsById.get(articleId) ?? {
+				technologyTerms: [],
+				environmentalTerms: [],
+			};
 
 			if (!current) {
 				const stageCounts = new Map<string, number>();
@@ -218,6 +267,8 @@ export default async function ContextualizacaoGeralPage() {
 							{
 								title: articleTitle,
 								stageLabels: normalizedStageLabels,
+								technologyTerms: articleTerms.technologyTerms,
+								environmentalTerms: articleTerms.environmentalTerms,
 							},
 						],
 					]),
@@ -231,6 +282,8 @@ export default async function ContextualizacaoGeralPage() {
 				current.articleDetails.set(articleId, {
 					title: articleTitle,
 					stageLabels: normalizedStageLabels,
+					technologyTerms: articleTerms.technologyTerms,
+					environmentalTerms: articleTerms.environmentalTerms,
 				});
 			}
 			for (const stageKey of articleStagesById.get(articleId) ?? []) {
@@ -267,6 +320,8 @@ export default async function ContextualizacaoGeralPage() {
 					id,
 					title: detail.title,
 					stageLabel: detail.stageLabels.join(" / "),
+					technologyTerms: detail.technologyTerms,
+					environmentalTerms: detail.environmentalTerms,
 				}))
 				.slice(0, 6),
 			dominantAreaLabel: dominantStageKey

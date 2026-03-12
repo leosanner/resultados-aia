@@ -1,4 +1,4 @@
-import { LandingTermsGraph } from "@/components/home/landing-terms-graph";
+import { LandingTermsGraphClient } from "@/components/home/landing-terms-graph-client";
 import { MainNavbar } from "@/components/layout/main-navbar";
 import { graphContent } from "@/infra/build-graphs";
 import { EiaModel } from "@/model/eia-stages";
@@ -163,7 +163,7 @@ export default async function Home() {
 							Use a legenda abaixo do filtro para identificar as cores dos nós.
 						</p>
 						<div className="mt-6">
-							<LandingTermsGraph graph={graphData} />
+							<LandingTermsGraphClient graph={graphData} />
 						</div>
 					</section>
 				) : null}
