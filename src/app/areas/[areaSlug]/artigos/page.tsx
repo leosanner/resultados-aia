@@ -2,6 +2,7 @@ import {
 	ArticleCard,
 	type ArticleMetadata,
 } from "@/components/articles/article-card";
+import { MainNavbar } from "@/components/layout/main-navbar";
 import { formatStageTitle, slugToStageKey } from "@/lib/area-utils";
 import {
 	ArticleModel,
@@ -12,6 +13,7 @@ import {
 } from "@/model/article";
 import { EiaModel } from "@/model/eia-stages";
 import { filterOcurrencies } from "@/utils/ocurrencies";
+import { Leaf, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -23,13 +25,6 @@ type PageProps = {
 		term?: string | string[];
 	}>;
 };
-
-const logoIcon =
-	"https://www.figma.com/api/mcp/asset/eb37f0db-6b60-4c9e-b2f0-6144dc10d9a5";
-const searchIcon =
-	"https://www.figma.com/api/mcp/asset/896216f6-cda3-48c5-8b7f-a0125e312cca";
-const areaIcon =
-	"https://www.figma.com/api/mcp/asset/278f0d50-2b33-4c45-b884-a09c58a8f5bc";
 
 function formatTermLabel(text: string) {
 	return text
@@ -183,25 +178,22 @@ export default async function AreaArticlesPage({
 	);
 
 	return (
-		<div className="min-h-screen bg-[#f6f8f6] text-[#0f172a]">
+		<div className="min-h-screen bg-[#e4ece7] text-[#1f2937]">
+			<MainNavbar showEntrarButton />
 			<main className="mx-auto w-full max-w-[992px] px-6 py-8 md:px-12">
-				<div className="border-b border-[#e2e8f0] pb-8">
-					<Link
-						className="text-xs font-bold uppercase tracking-[1.2px] text-[#94a3b8] hover:text-[#64748b]"
-						href="/"
-					>
-						Voltar para áreas
-					</Link>
-					<p className="mt-6 text-xs font-bold uppercase tracking-[1.2px] text-[#94a3b8]">
+				<div className="rounded-2xl border border-[#d7e4dc] bg-white p-6 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
+					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#64748b]">
 						Área selecionada
 					</p>
 					<div className="mt-2 flex items-center gap-3">
-						<img alt="" className="h-[21px] w-[21px]" src={areaIcon} />
-						<h1 className="text-4xl font-black tracking-[-0.9px] text-[#0f172a]">
+						<div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e9f5ed] ring-1 ring-[#b3d7c1]">
+							<Leaf aria-hidden className="h-4 w-4 text-[#0C7C3C]" />
+						</div>
+						<h1 className="text-4xl font-black tracking-[-0.9px] text-[#1f2937]">
 							{stageName}
 						</h1>
 					</div>
-					<p className="mt-2 text-base font-medium text-[#64748b]">
+					<p className="mt-2 text-base font-medium text-[#556070]">
 						Exibindo {articles.length} artigos e pesquisas acadêmicas{" "}
 						{selectedTerms.length > 0
 							? "(com filtros de termos aplicados)"
@@ -209,14 +201,15 @@ export default async function AreaArticlesPage({
 					</p>
 				</div>
 
-				<section className="mt-6 rounded-[12px] border border-[#dbeafe] bg-[#f8fbff] p-5">
+				<section className="mt-6 rounded-[12px] border border-[#cfe0d6] bg-white p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
 					<form className="space-y-5" method="GET">
 						<div className="flex items-center justify-between gap-3">
-							<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#1e3a8a]">
+							<h2 className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[1px] text-[#085E2E]">
+								<SlidersHorizontal aria-hidden className="h-4 w-4" />
 								Filtrar por termos
 							</h2>
 							<Link
-								className="text-xs font-bold uppercase tracking-[1px] text-[#1d4ed8] hover:text-[#1e40af]"
+								className="text-xs font-bold uppercase tracking-[1px] text-[#0C7C3C] hover:text-[#085E2E]"
 								href={`/areas/${areaSlug}/artigos`}
 							>
 								Limpar filtros
@@ -224,7 +217,7 @@ export default async function AreaArticlesPage({
 						</div>
 
 						<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-							<article className="rounded-[10px] border border-[#bfdbfe] bg-white p-4">
+							<article className="rounded-[10px] border border-[#bfdbfe] bg-[#f8fbff] p-4">
 								<h3 className="text-xs font-bold uppercase tracking-[0.9px] text-[#1d4ed8]">
 									Termos de tecnologia
 								</h3>
@@ -263,20 +256,20 @@ export default async function AreaArticlesPage({
 								</div>
 							</article>
 
-							<article className="rounded-[10px] border border-[#bbf7d0] bg-white p-4">
-								<h3 className="text-xs font-bold uppercase tracking-[0.9px] text-[#15803d]">
+							<article className="rounded-[10px] border border-[#bbf7d0] bg-[#f8fff9] p-4">
+								<h3 className="text-xs font-bold uppercase tracking-[0.9px] text-[#085E2E]">
 									Termos ambientais
 								</h3>
 								<div className="mt-3 flex max-h-48 flex-wrap gap-2 overflow-y-auto pr-1">
 									{availableEnvironmentalTerms.length > 0 ? (
 										availableEnvironmentalTerms.map(([termLabel]) => (
 											<div
-												className="inline-flex items-center gap-2 rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-2.5 py-1 text-[11px] font-semibold text-[#166534]"
+												className="inline-flex items-center gap-2 rounded-full border border-[#cfe0d6] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#085E2E]"
 												key={termLabel}
 											>
 												<label className="inline-flex cursor-pointer items-center gap-1.5">
 													<input
-														className="h-3.5 w-3.5 accent-[#16a34a]"
+														className="h-3.5 w-3.5 accent-[#0C7C3C]"
 														defaultChecked={selectedTerms.includes(
 															termLabel as Term,
 														)}
@@ -287,7 +280,7 @@ export default async function AreaArticlesPage({
 													<span>{formatTermLabel(termLabel)}</span>
 												</label>
 												<Link
-													className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.6px] text-[#15803d] hover:bg-[#dcfce7]"
+													className="rounded-full bg-[#f2c94c] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.6px] text-[#3f320c] hover:bg-[#e4bc45]"
 													href={buildTermHref(areaSlug, termLabel)}
 												>
 													Ver artigos
@@ -304,7 +297,7 @@ export default async function AreaArticlesPage({
 						</div>
 
 						<button
-							className="inline-flex rounded-full bg-[#2563eb] px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white hover:bg-[#1d4ed8]"
+							className="inline-flex rounded-md bg-[#0C7C3C] px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors hover:bg-[#085E2E]"
 							type="submit"
 						>
 							Aplicar filtros
@@ -341,11 +334,11 @@ export default async function AreaArticlesPage({
 							/>
 						))
 					) : (
-						<div className="rounded-[12px] border border-[#e2e8f0] bg-white p-6">
-							<h2 className="text-lg font-bold text-[#0f172a]">
+						<div className="rounded-[12px] border border-[#d7e4dc] bg-white p-6">
+							<h2 className="text-lg font-bold text-[#1f2937]">
 								Nenhum artigo encontrado
 							</h2>
-							<p className="mt-2 text-sm text-[#64748b]">
+							<p className="mt-2 text-sm text-[#556070]">
 								Não há artigos disponíveis para esta área no momento.
 							</p>
 						</div>

@@ -32,12 +32,12 @@ export function ArticleCard({
 		/^https?:\/\//i.test(resolvedTitleHref);
 
 	return (
-		<article className="rounded-[12px] border border-[#e2e8f0] bg-white p-[21px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
-			<h2 className="text-[18px] font-bold leading-7 text-[#0f172a]">
+		<article className="rounded-[12px] border border-[#d7e4dc] bg-white p-[21px] shadow-[0px_14px_28px_-28px_rgba(17,24,39,0.9)] transition-colors hover:border-[#9bc9af]">
+			<h2 className="text-[18px] font-bold leading-7 text-[#1f2937]">
 				{resolvedTitleHref ? (
 					isExternalTitleHref ? (
 						<a
-							className="hover:text-[#16a34a] hover:underline"
+							className="transition-colors hover:text-[#0C7C3C] hover:underline"
 							href={resolvedTitleHref}
 							rel="noopener noreferrer"
 							target="_blank"
@@ -46,7 +46,7 @@ export function ArticleCard({
 						</a>
 					) : (
 						<Link
-							className="hover:text-[#16a34a] hover:underline"
+							className="transition-colors hover:text-[#0C7C3C] hover:underline"
 							href={resolvedTitleHref}
 						>
 							{firstCharUpperCase(title)}
@@ -59,22 +59,22 @@ export function ArticleCard({
 				)}
 			</h2>
 			{showAbstract ? (
-				<p className="mt-2 text-[14px] leading-6 text-[#64748b]">{abstract}</p>
+				<p className="mt-2 text-[14px] leading-6 text-[#556070]">{abstract}</p>
 			) : null}
 			{metadata.length > 0 ? (
-				<div className="mt-2 space-y-1.5 border-l-2 border-[#e2e8f0] pl-3">
+				<div className="mt-2 space-y-1.5 border-l-2 border-[#d7e4dc] pl-3">
 					{metadata.map((item) => {
 						const isTechnology = item.label === "Tecnologia";
 						const isEnvironmental = item.label === "Ambientais";
 						const lineClassName = isTechnology
-							? "text-[13px] leading-5 text-[#1d4ed8]"
+							? "text-[13px] leading-5 text-[#1F6F8B]"
 							: isEnvironmental
-								? "text-[13px] leading-5 text-[#15803d]"
+								? "text-[13px] leading-5 text-[#0C7C3C]"
 								: "text-[13px] leading-5 text-[#334155]";
 						const labelClassName = isTechnology
-							? "mr-1 text-[11px] font-semibold uppercase tracking-[0.5px] text-[#1d4ed8]"
+							? "mr-1 text-[11px] font-semibold uppercase tracking-[0.5px] text-[#1F6F8B]"
 							: isEnvironmental
-								? "mr-1 text-[11px] font-semibold uppercase tracking-[0.5px] text-[#15803d]"
+								? "mr-1 text-[11px] font-semibold uppercase tracking-[0.5px] text-[#0C7C3C]"
 								: "mr-1 text-[11px] font-semibold uppercase tracking-[0.5px] text-[#64748b]";
 
 						return (
@@ -96,7 +96,7 @@ export function ArticleCard({
 						/>
 					))
 				) : (
-					<span className="inline-flex rounded-[4px] bg-[#f1f5f9] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.5px] text-[#64748b]">
+					<span className="inline-flex rounded-[4px] bg-[#eef4f0] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.5px] text-[#64748b]">
 						Sem palavras-chave
 					</span>
 				)}

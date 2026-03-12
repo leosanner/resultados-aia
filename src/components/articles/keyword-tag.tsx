@@ -4,9 +4,9 @@ type KeywordTagProps = {
 };
 
 const TAG_STYLES = [
-  "bg-[rgba(43,238,75,0.1)] text-[#16a34a]",
-  "bg-[#dbeafe] text-[#2563eb]",
-  "bg-[#ecfeff] text-[#0e7490]",
+  "bg-[#edf8f2] text-[#0C7C3C]",
+  "bg-[#edf5fa] text-[#1F6F8B]",
+  "bg-[#fff8e5] text-[#7a641e]",
 ];
 
 export function KeywordTag({ keyword, index }: KeywordTagProps) {
