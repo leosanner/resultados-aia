@@ -25,10 +25,10 @@ export function StageDetails() {
 	const [expandedStage, setExpandedStage] = useState<number | null>(null);
 
 	return (
-		<section className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-16 md:py-24">
+		<section className="border-t border-[#cfe0d6] bg-[#edf4ef] px-6 py-16 md:py-24">
 			<div className="mx-auto max-w-5xl">
 				<motion.h2
-					className="mb-12 text-center text-3xl tracking-[-0.8px] text-[#0f172a]"
+					className="mb-12 text-center text-3xl tracking-[-0.8px] text-[#1f2937]"
 					initial={{ opacity: 0, y: 20 }}
 					transition={{ duration: 0.45 }}
 					viewport={{ once: true }}
@@ -62,8 +62,8 @@ export function StageDetails() {
 												{stageIcon(stage.id)}
 											</div>
 											<div className="flex-1">
-												<h3 className="mb-1 text-xl font-semibold text-[#0f172a]">{stage.title}</h3>
-												<p className="mb-3 text-sm text-[#475569]">{stage.subtitle}</p>
+												<h3 className="mb-1 text-xl font-semibold text-[#1f2937]">{stage.title}</h3>
+												<p className="mb-3 text-sm text-[#556070]">{stage.subtitle}</p>
 												<div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
 													{stage.input ? (
 														<div>
@@ -73,7 +73,7 @@ export function StageDetails() {
 													) : null}
 													<div>
 														<span className="text-[#64748b]">Saída: </span>
-														<span className="font-mono font-semibold text-[#059669]">
+														<span className="font-mono font-semibold text-[#0C7C3C]">
 															{stage.output}
 														</span>
 													</div>
@@ -91,7 +91,7 @@ export function StageDetails() {
 								</button>
 
 								{expanded ? (
-									<div className="border-t border-[#e2e8f0] bg-white px-6 py-6">
+									<div className="border-t border-[#d7e4dc] bg-white px-6 py-6">
 										<div className="space-y-6">
 											<div>
 												<h4 className="mb-2 text-sm font-semibold uppercase tracking-[0.8px] text-[#64748b]">

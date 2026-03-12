@@ -134,16 +134,12 @@ export default async function ContextualizacaoGeralPage() {
 	const sortedStageEntries = Object.entries(articlesByStage).sort(
 		(a, b) => b[1].length - a[1].length,
 	);
-	const totalArticles = sortedStageEntries.reduce(
-		(sum, [, articles]) => sum + articles.length,
-		0,
-	);
-	const totalAreas = sortedStageEntries.length;
-
 	const allStageArticles: StageArticle[] = sortedStageEntries.flatMap(
 		([, articles]) => articles,
 	);
 	const allArticleIds = new Set(allStageArticles.map((article) => article.id));
+	const totalArticles = allArticleIds.size;
+	const totalAreas = sortedStageEntries.length;
 
 	const stageColorByKey = new Map(
 		sortedStageEntries.map(([stageKey], index) => [

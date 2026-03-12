@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export function HeroSection() {
 	return (
-		<section className="relative overflow-hidden border-b border-[#cbd5e1] bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_55%,_#ffffff_100%)] px-6 py-20 md:py-28">
+		<section className="relative overflow-hidden border-b border-[#bdd6c5] bg-[linear-gradient(180deg,_#0a5e30_0%,_#0C7C3C_100%)] px-6 py-20 md:py-28">
 			<motion.div
 				animate={{ opacity: 1, y: 0 }}
 				className="mx-auto max-w-5xl"
@@ -13,7 +13,7 @@ export function HeroSection() {
 			>
 				<motion.h1
 					animate={{ opacity: 1, y: 0 }}
-					className="mb-6 text-5xl tracking-[-1.2px] text-[#0f172a] md:text-6xl"
+					className="mb-6 text-5xl tracking-[-1.2px] text-white md:text-6xl"
 					initial={{ opacity: 0, y: 20 }}
 					transition={{ delay: 0.08, duration: 0.55 }}
 				>
@@ -21,7 +21,7 @@ export function HeroSection() {
 				</motion.h1>
 				<motion.p
 					animate={{ opacity: 1, y: 0 }}
-					className="max-w-3xl text-lg leading-relaxed text-[#475569] md:text-xl"
+					className="max-w-3xl text-lg leading-relaxed text-[#d7ebdd] md:text-xl"
 					initial={{ opacity: 0, y: 20 }}
 					transition={{ delay: 0.16, duration: 0.55 }}
 				>

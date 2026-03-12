@@ -7,16 +7,8 @@ import { AgentRefinementSection } from "@/components/metodologia/agent-refinemen
 
 export default function MetodologiaPage() {
 	return (
-		<div className="min-h-screen bg-white text-[#0f172a]">
+		<div className="min-h-screen bg-[#e8efe9] text-[#1f2937]">
 			<main>
-				<section className="mx-auto w-full max-w-[1160px] px-6 pb-4 pt-8 md:px-10">
-					<p className="text-xs font-bold uppercase tracking-[1px] text-[#2563eb]">
-						Projeto AIA
-					</p>
-					<h1 className="mt-1 text-2xl font-black tracking-[-0.6px] text-[#0f172a]">
-						Metodologia
-					</h1>
-				</section>
 				<HeroSection />
 				<MethodologyOverview />
 				<PipelineFlow />
