@@ -2,11 +2,11 @@ import { ArticlesYearLineChart } from "@/components/charts/articles-year-line-ch
 import { getToneColorByIndex } from "@/components/charts/chart-palettes";
 import { TermsBarChart } from "@/components/charts/terms-bar-chart";
 import { TermsInstitutionsMapClient } from "@/components/termos/terms-institutions-map-client";
+import { MainNavbar } from "@/components/layout/main-navbar";
 import institutionInformationData from "@/data/instituition_information.json";
 import { formatStageTitle } from "@/lib/area-utils";
 import { ArticleModel } from "@/model/article";
 import { EiaModel, type StageArticle } from "@/model/eia-stages";
-import Link from "next/link";
 import type {
 	AreaLegendItem,
 	InstitutionMapPoint,
@@ -45,9 +45,6 @@ type AreaNarrativeCard = {
 	topTechnologyTerms: BarChartItem[];
 	topEnvironmentalTerms: BarChartItem[];
 };
-
-const logoIcon =
-	"https://www.figma.com/api/mcp/asset/5991a927-15ee-4ad4-a626-237193d1b42d";
 
 function formatTotal(count: number) {
 	return new Intl.NumberFormat("pt-BR").format(count);
@@ -322,43 +319,7 @@ export default async function ContextualizacaoGeralPage() {
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e8f5ee_0%,_#f5f8f6_42%,_#ffffff_100%)] text-[#0f172a]">
-			<header className="w-full border-b border-[#173f2f] bg-[#0f1f19]/95 px-6 py-6 backdrop-blur-sm sm:px-10 lg:px-20 lg:py-8">
-				<div className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-4">
-					<div className="flex items-center gap-3">
-						<div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2ecc71]/20 ring-1 ring-[#28a745]/30">
-							<img alt="" className="h-4 w-4" src={logoIcon} />
-						</div>
-						<div className="leading-tight">
-							<p className="text-xl font-extrabold tracking-[-0.5px] text-white">
-								Explorador AIA
-							</p>
-							<p className="text-[10px] font-bold uppercase tracking-[1px] text-[#7dd3a8]">
-								Base de Pesquisa
-							</p>
-						</div>
-					</div>
-					<nav
-						aria-label="Navegação principal"
-						className="hidden items-center gap-8 md:flex"
-					>
-						<Link className="text-sm font-medium text-white" href="/contextualizacao-geral">
-							Contextualização Geral
-						</Link>
-						<Link
-							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"
-							href="/metodologia"
-						>
-							Metodologia
-						</Link>
-						<Link
-							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"
-							href="/autores"
-						>
-							Autores
-						</Link>
-					</nav>
-				</div>
-			</header>
+			<MainNavbar activePage="contextualizacao" />
 
 			<main className="mx-auto w-full max-w-[1280px] px-6 py-8 sm:px-10 lg:px-20">
 				<section className="rounded-3xl border border-[#dbe6df] bg-white/90 p-6 shadow-[0px_12px_28px_-22px_rgba(15,23,42,0.4)]">
@@ -511,4 +472,3 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
 		</div>
 	);
 }
-

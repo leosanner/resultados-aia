@@ -1,16 +1,13 @@
 import { formatStageTitle } from "@/lib/area-utils";
 import { EiaModel } from "@/model/eia-stages";
 import { StageAuthorsCard } from "@/components/autores/stage-authors-card";
-import Link from "next/link";
+import { MainNavbar } from "@/components/layout/main-navbar";
 
 type AuthorByStage = {
 	authorId: string;
 	authorName: string;
 	publications: number[];
 };
-
-const logoIcon =
-	"https://www.figma.com/api/mcp/asset/5991a927-15ee-4ad4-a626-237193d1b42d";
 
 export default async function AuthorsPage() {
 	const eiaModel = new EiaModel();
@@ -39,46 +36,7 @@ export default async function AuthorsPage() {
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#edf8f2_0%,_#f4f8f6_40%,_#ffffff_100%)] text-[#111111]">
-			<header className="w-full border-b border-[#173f2f] bg-[#0f1f19]/95 px-6 py-6 backdrop-blur-sm sm:px-10 lg:px-20 lg:py-8">
-				<div className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-4">
-					<div className="flex items-center gap-3">
-						<div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2ecc71]/20 ring-1 ring-[#28a745]/30">
-							<img alt="" className="h-4 w-4" src={logoIcon} />
-						</div>
-						<div className="leading-tight">
-							<p className="text-xl font-extrabold tracking-[-0.5px] text-white">
-								Explorador AIA
-							</p>
-							<p className="text-[10px] font-bold uppercase tracking-[1px] text-[#7dd3a8]">
-								Base de Pesquisa
-							</p>
-						</div>
-					</div>
-					<nav
-						aria-label="Navegação principal"
-						className="hidden items-center gap-8 md:flex"
-					>
-						<Link
-							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"
-							href="/contextualizacao-geral"
-						>
-							Contextualização Geral
-						</Link>
-						<Link
-							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"
-							href="/metodologia"
-						>
-							Metodologia
-						</Link>
-						<Link
-							className="text-sm font-medium text-white"
-							href="/autores"
-						>
-							Autores
-						</Link>
-					</nav>
-				</div>
-			</header>
+			<MainNavbar activePage="autores" />
 
 			<main className="mx-auto w-full max-w-[1280px] px-6 py-8 sm:px-10 lg:px-20">
 				<section className="max-w-[760px]">
