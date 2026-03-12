@@ -2,7 +2,6 @@ import {
 	ArticleCard,
 	type ArticleMetadata,
 } from "@/components/articles/article-card";
-import { MainNavbar } from "@/components/layout/main-navbar";
 import { formatStageTitle, slugToStageKey } from "@/lib/area-utils";
 import {
 	ArticleModel,
@@ -223,7 +222,6 @@ export default async function AreaArticlesPage({
 
 	return (
 		<div className="min-h-screen bg-[#e4ece7] text-[#1f2937]">
-			<MainNavbar showEntrarButton />
 			<main className="mx-auto w-full max-w-[992px] px-6 py-8 md:px-12">
 				<div className="rounded-2xl border border-[#d7e4dc] bg-white p-6 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
 					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#64748b]">

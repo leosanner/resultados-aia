@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { DefaultHeader } from "@/components/layout/default-header";
+import { MainFooter } from "@/components/layout/main-footer";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -17,7 +19,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={cn("font-sans", geist.variable)}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <div className="flex min-h-screen flex-col">
+          <DefaultHeader />
+          <div className="flex-1">{children}</div>
+          <MainFooter />
+        </div>
+      </body>
     </html>
   );
 }

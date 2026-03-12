@@ -1,7 +1,6 @@
 import { formatStageTitle } from "@/lib/area-utils";
 import { EiaModel } from "@/model/eia-stages";
 import { StageAuthorsCard } from "@/components/autores/stage-authors-card";
-import { MainNavbar } from "@/components/layout/main-navbar";
 
 type AuthorByStage = {
 	authorId: string;
@@ -36,8 +35,6 @@ export default async function AuthorsPage() {
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#edf8f2_0%,_#f4f8f6_40%,_#ffffff_100%)] text-[#111111]">
-			<MainNavbar activePage="autores" />
-
 			<main className="mx-auto w-full max-w-[1280px] px-6 py-8 sm:px-10 lg:px-20">
 				<section className="max-w-[760px]">
 					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#256f4f]">

@@ -2,7 +2,6 @@ import { ArticlesYearLineChart } from "@/components/charts/articles-year-line-ch
 import { getToneColorByIndex } from "@/components/charts/chart-palettes";
 import { TermsBarChart } from "@/components/charts/terms-bar-chart";
 import { TermsInstitutionsMapClient } from "@/components/termos/terms-institutions-map-client";
-import { MainNavbar } from "@/components/layout/main-navbar";
 import institutionInformationData from "@/data/instituition_information.json";
 import { formatStageTitle } from "@/lib/area-utils";
 import { ArticleModel } from "@/model/article";
@@ -374,8 +373,6 @@ export default async function ContextualizacaoGeralPage() {
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e8f5ee_0%,_#f5f8f6_42%,_#ffffff_100%)] text-[#0f172a]">
-			<MainNavbar activePage="contextualizacao" />
-
 			<main className="mx-auto w-full max-w-[1280px] px-6 py-8 sm:px-10 lg:px-20">
 				<section className="rounded-3xl border border-[#dbe6df] bg-white/90 p-6 shadow-[0px_12px_28px_-22px_rgba(15,23,42,0.4)]">
 					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#256f4f]">

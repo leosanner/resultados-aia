@@ -426,12 +426,49 @@ export function TermsInstitutionsMap({
 }
 
 function StatCard({ label, value }: { label: string; value: number }) {
+	const toneByLabel: Record<
+		string,
+		{
+			borderClass: string;
+			bgClass: string;
+			labelClass: string;
+			valueClass: string;
+		}
+	> = {
+		"Artigos filtrados": {
+			borderClass: "border-[#86efac]",
+			bgClass: "bg-[#f0fdf4]",
+			labelClass: "text-[#166534]",
+			valueClass: "text-[#14532d]",
+		},
+		"Com afiliação mapeada": {
+			borderClass: "border-[#60a5fa]",
+			bgClass: "bg-[#eff6ff]",
+			labelClass: "text-[#1d4ed8]",
+			valueClass: "text-[#1e3a8a]",
+		},
+		"Instituições únicas": {
+			borderClass: "border-[#fcd34d]",
+			bgClass: "bg-[#fffbeb]",
+			labelClass: "text-[#92400e]",
+			valueClass: "text-[#713f12]",
+		},
+		"Sem geolocalização": {
+			borderClass: "border-[#cbd5e1]",
+			bgClass: "bg-[#f8fafc]",
+			labelClass: "text-[#64748b]",
+			valueClass: "text-[#0f172a]",
+		},
+	};
+
+	const tone = toneByLabel[label] ?? toneByLabel["Sem geolocalização"];
+
 	return (
-		<div className="rounded-xl border border-[#dbe7df] bg-[#f8fafc] px-4 py-3">
-			<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#64748b]">
+		<div className={`rounded-xl border px-4 py-3 ${tone.borderClass} ${tone.bgClass}`}>
+			<p className={`text-[11px] font-bold uppercase tracking-[0.8px] ${tone.labelClass}`}>
 				{label}
 			</p>
-			<p className="mt-1 text-2xl font-black text-[#0f172a]">{value}</p>
+			<p className={`mt-1 text-2xl font-black ${tone.valueClass}`}>{value}</p>
 		</div>
 	);
 }

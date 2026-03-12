@@ -1,10 +1,8 @@
 import { LandingTermsGraphClient } from "@/components/home/landing-terms-graph-client";
-import { MainNavbar } from "@/components/layout/main-navbar";
 import { AnimatedButton } from "@/components/ui/animated-button";
 import { graphContent } from "@/infra/build-graphs";
 import { formatStageTitle, stageKeyToSlug } from "@/lib/area-utils";
 import { EiaModel } from "@/model/eia-stages";
-import Link from "next/link";
 
 type AreaCardStyle = {
 	badgeClass: string;
@@ -62,8 +60,6 @@ export default async function Home() {
 
 	return (
 		<div className="min-h-screen bg-[#f5f7f6] text-[#2B2B2B]">
-			<MainNavbar showEntrarButton />
-
 			<main className="mx-auto flex w-full max-w-[1280px] flex-col gap-12 px-6 pb-14 pt-6 sm:px-10 lg:gap-16 lg:px-20 lg:pt-12">
 				<section className="relative overflow-hidden rounded-[28px] border border-[#cde0d4] bg-[#064722] p-8 text-white shadow-[0px_24px_50px_-36px_rgba(8,94,46,0.85)] sm:p-10 lg:p-12">
 					<div className="relative max-w-[760px]">
@@ -160,37 +156,6 @@ export default async function Home() {
 					</section>
 				) : null}
 			</main>
-
-			<footer className="border-t border-[#123629] bg-[#0b281f] px-6 py-12 sm:px-10 lg:px-20">
-				<div className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 text-sm text-[#d4e3da] md:flex-row md:items-start md:justify-between">
-					<div>
-						<nav
-							aria-label="Mapa do site"
-							className="flex flex-wrap items-center gap-x-6 gap-y-2"
-						>
-							<Link className="text-white transition-colors hover:text-[#d4e3da]" href="/">
-								Início
-							</Link>
-							<Link
-								className="text-white transition-colors hover:text-[#d4e3da]"
-								href="/contextualizacao-geral"
-							>
-								Contextualização Geral
-							</Link>
-							<Link className="text-white transition-colors hover:text-[#d4e3da]" href="/metodologia">
-								Metodologia
-							</Link>
-							<Link className="text-white transition-colors hover:text-[#d4e3da]" href="/autores">
-								Autores
-							</Link>
-							<Link className="text-white transition-colors hover:text-[#d4e3da]" href="/termos">
-								Termos
-							</Link>
-						</nav>
-					</div>
-					<p>© 2026 Projeto Base de Pesquisa AIA.</p>
-				</div>
-			</footer>
 		</div>
 	);
 }
