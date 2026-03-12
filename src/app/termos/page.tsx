@@ -1,9 +1,11 @@
-import { ArticleCard } from "@/components/articles/article-card";
+import {
+	ArticleCard,
+	type ArticleMetadata,
+} from "@/components/articles/article-card";
 import { ArticlesYearLineChart } from "@/components/charts/articles-year-line-chart";
 import { getToneColorByIndex } from "@/components/charts/chart-palettes";
 import { TermsInstitutionsMapClient } from "@/components/termos/terms-institutions-map-client";
 import { TermsBarChart } from "@/components/charts/terms-bar-chart";
-import articlesExtendedData from "@/data/articles_extended.json";
 import institutionInformationData from "@/data/instituition_information.json";
 import { formatStageTitle, stageKeyToSlug } from "@/lib/area-utils";
 import {
@@ -58,7 +60,14 @@ function buildArticleFingerprint(article: Article) {
 type ExtendedArticleRecord = {
 	title?: string;
 	json_title?: string;
+	publish_date?: string | null;
 	publication_year?: number | string | null;
+	doi_x?: string | null;
+	doi_y?: string | null;
+	source?: string | null;
+	["primary_location.source.display_name"]?: string | null;
+	cited_by_count?: number | string | null;
+	language?: string | null;
 	["authorships.institutions.id"]?: string | string[] | null;
 };
 
@@ -105,6 +114,52 @@ function hexToRgba(hex: string, alpha: number) {
 	return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+function buildArticleMetadata(
+	record: ExtendedArticleRecord | undefined,
+): ArticleMetadata[] {
+	if (!record) return [];
+
+	const publicationDate =
+		typeof record.publish_date === "string" ? record.publish_date.trim() : "";
+	const publicationYear =
+		typeof record.publication_year === "number"
+			? String(record.publication_year)
+			: typeof record.publication_year === "string"
+				? record.publication_year.trim()
+				: "";
+	const sourceName =
+		typeof record["primary_location.source.display_name"] === "string"
+			? record["primary_location.source.display_name"].trim()
+			: typeof record.source === "string"
+				? record.source.trim()
+				: "";
+	const doiRaw =
+		typeof record.doi_x === "string" && record.doi_x.trim()
+			? record.doi_x.trim()
+			: typeof record.doi_y === "string"
+				? record.doi_y.replace(/^https?:\/\/doi\.org\//i, "").trim()
+				: "";
+	const citedBy =
+		typeof record.cited_by_count === "number"
+			? String(record.cited_by_count)
+			: typeof record.cited_by_count === "string"
+				? record.cited_by_count.trim()
+				: "";
+	const language =
+		typeof record.language === "string" ? record.language.trim() : "";
+
+	return [
+		publicationDate ? { label: "Data", value: publicationDate } : null,
+		!publicationDate && publicationYear
+			? { label: "Ano", value: publicationYear }
+			: null,
+		sourceName ? { label: "Fonte", value: sourceName } : null,
+		doiRaw ? { label: "DOI", value: doiRaw } : null,
+		citedBy ? { label: "Citações", value: citedBy } : null,
+		language ? { label: "Idioma", value: language } : null,
+	].filter((item): item is ArticleMetadata => Boolean(item));
+}
+
 export default async function TermArticlesPage({ searchParams }: PageProps) {
 	const currentSearchParams = await searchParams;
 	const selectedTecTerms = normalizeTerms(toArray(currentSearchParams.tec));
@@ -131,6 +186,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 	const eiaModel = new EiaModel();
 	const articleModel = new ArticleModel();
 	const articlesByStage = await eiaModel.getArticlesByStage();
+	const articlesExtendedRaw = await articleModel.getArticlesExtended();
 	const matchingArticleIds = new Set<number>();
 
 	if (hasSelectedTerms) {
@@ -199,7 +255,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 		count: group.articles.length,
 	}));
 	const articlesExtended =
-		articlesExtendedData as Record<string, ExtendedArticleRecord>;
+		articlesExtendedRaw as unknown as Record<string, ExtendedArticleRecord>;
 	const institutionsById =
 		institutionInformationData as Record<string, InstitutionInformationRecord>;
 	const institutionAccumulator = new Map<
@@ -545,6 +601,10 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 													href={`/areas/${areaSlug}/artigos/${article.id}`}
 													key={`${group.stageKey}-${article.id}`}
 													keywords={article.keywords ?? []}
+													metadata={buildArticleMetadata(
+														articlesExtended[String(article.id)],
+													)}
+													showAbstract={false}
 													title={article.title}
 												/>
 											))}

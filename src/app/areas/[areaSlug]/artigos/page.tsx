@@ -1,7 +1,17 @@
-import { ArticleCard } from "@/components/articles/article-card";
+import {
+	ArticleCard,
+	type ArticleMetadata,
+} from "@/components/articles/article-card";
 import { formatStageTitle, slugToStageKey } from "@/lib/area-utils";
-import { EnvTerm, TecTerm, Term } from "@/model/article";
+import {
+	ArticleModel,
+	type ArticleExtend,
+	EnvTerm,
+	TecTerm,
+	Term,
+} from "@/model/article";
 import { EiaModel } from "@/model/eia-stages";
+import { filterOcurrencies } from "@/utils/ocurrencies";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -36,6 +46,65 @@ function buildTermHref(areaSlug: string, termLabel: string) {
 	};
 }
 
+function buildArticleMetadata(record: {
+	publish_date: string;
+	authors: { name: string }[];
+	technologyTerms: string[];
+	environmentalTerms: string[];
+}): ArticleMetadata[] {
+	const publicationDate =
+		typeof record.publish_date === "string" ? record.publish_date.trim() : "";
+	const authors = Array.isArray(record.authors)
+		? record.authors
+				.map((author) => author?.name?.trim())
+				.filter((name): name is string => Boolean(name))
+		: [];
+	const authorLabel =
+		authors.length > 0
+			? authors.slice(0, 3).join(", ") + (authors.length > 3 ? " et al." : "")
+			: "";
+	const technologyLabel =
+		record.technologyTerms.length > 0 ? record.technologyTerms.join(", ") : "";
+	const environmentalLabel =
+		record.environmentalTerms.length > 0
+			? record.environmentalTerms.join(", ")
+			: "";
+
+	return [
+		publicationDate ? { label: "Data", value: publicationDate } : null,
+		authorLabel ? { label: "Autores", value: authorLabel } : null,
+		technologyLabel ? { label: "Tecnologia", value: technologyLabel } : null,
+		environmentalLabel
+			? { label: "Ambientais", value: environmentalLabel }
+			: null,
+	].filter((item): item is ArticleMetadata => Boolean(item));
+}
+
+function summarizeTerms(terms: string[], maxItems: number = 4) {
+	if (terms.length <= maxItems) return terms;
+	return [...terms.slice(0, maxItems), `+${terms.length - maxItems}`];
+}
+
+function buildPreferredArticleHref(
+	record: Partial<Pick<ArticleExtend, "doi_x" | "doi_y" | "id">> | undefined,
+	internalHref: string,
+) {
+	const doiY = typeof record?.doi_y === "string" ? record.doi_y.trim() : "";
+	if (doiY) return doiY;
+
+	const doiX = typeof record?.doi_x === "string" ? record.doi_x.trim() : "";
+	if (doiX) return `https://doi.org/${doiX}`;
+
+	const openAlexId = typeof record?.id === "string" ? record.id.trim() : "";
+	if (openAlexId) {
+		return /^https?:\/\//i.test(openAlexId)
+			? openAlexId
+			: `https://openalex.org/${openAlexId}`;
+	}
+
+	return internalHref;
+}
+
 export default async function AreaArticlesPage({
 	params,
 	searchParams,
@@ -44,6 +113,7 @@ export default async function AreaArticlesPage({
 	const { term } = await searchParams;
 	const stageKey = slugToStageKey(areaSlug);
 	const eiaModel = new EiaModel();
+	const articleModel = new ArticleModel();
 
 	let articlesByStage: Awaited<ReturnType<EiaModel["getArticlesByStage"]>>;
 	try {
@@ -71,11 +141,7 @@ export default async function AreaArticlesPage({
 	const availableEnvironmentalTermsSet = new Set(
 		availableEnvironmentalTerms.map(([termKey]) => termKey),
 	);
-	const selectedTermsRaw = Array.isArray(term)
-		? term
-		: term
-			? [term]
-			: [];
+	const selectedTermsRaw = Array.isArray(term) ? term : term ? [term] : [];
 	const selectedTechnologyTerms = selectedTermsRaw.filter(
 		(value): value is TecTerm => availableTechnologyTermsSet.has(value),
 	);
@@ -90,38 +156,31 @@ export default async function AreaArticlesPage({
 		envTerm: selectedEnvironmentalTerms,
 		tecTerm: selectedTechnologyTerms,
 	});
+	const articlesExtended = await articleModel.getArticlesExtended();
+	const articleTermsById = new Map(
+		await Promise.all(
+			articles.map(async (article) => {
+				const articleFt = await articleModel.getArticleFrequencyTerms(
+					article.id,
+				);
+				if (!articleFt) {
+					return [article.id, { technology: [], environmental: [] }] as const;
+				}
+
+				const technology = summarizeTerms(
+					Object.keys(filterOcurrencies(articleFt.tec)).map(formatTermLabel),
+				);
+				const environmental = summarizeTerms(
+					Object.keys(filterOcurrencies(articleFt.env)).map(formatTermLabel),
+				);
+
+				return [article.id, { technology, environmental }] as const;
+			}),
+		),
+	);
 
 	return (
 		<div className="min-h-screen bg-[#f6f8f6] text-[#0f172a]">
-			<header className="border-b border-[#e2e8f0] bg-white px-6 py-3">
-				<div className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-4">
-					<div className="flex items-center gap-8">
-						<div className="flex items-center gap-2">
-							<div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[#2bee4b]">
-								<img alt="" className="h-[18px] w-[18px]" src={logoIcon} />
-							</div>
-							<p className="text-[18px]/7 font-bold tracking-[-0.45px] text-[#0f172a]">
-								<Link href={"/"}>Ferramenta de Pesquisa AIA</Link>
-							</p>
-						</div>
-						<div className="hidden w-[320px] items-center rounded-[8px] bg-[#f1f5f9] px-3 py-1.5 md:flex">
-							<img alt="" className="h-[18px] w-[18px]" src={searchIcon} />
-							<span className="px-3 text-sm text-[#64748b]">
-								Buscar dentro da área...
-							</span>
-						</div>
-					</div>
-					<nav
-						aria-label="Navegação principal"
-						className="hidden items-center gap-6 text-sm font-medium md:flex"
-					>
-						<span className="text-[#0f172a]">Painel</span>
-						<span className="text-[#16a34a]">Explorar Áreas</span>
-						<span className="text-[#0f172a]">Salvos</span>
-					</nav>
-				</div>
-			</header>
-
 			<main className="mx-auto w-full max-w-[992px] px-6 py-8 md:px-12">
 				<div className="border-b border-[#e2e8f0] pb-8">
 					<Link
@@ -261,6 +320,20 @@ export default async function AreaArticlesPage({
 								href={`/areas/${areaSlug}/artigos/${article.id}`}
 								key={`${article.title}-${index}`}
 								keywords={article.keywords ?? []}
+								metadata={buildArticleMetadata({
+									publish_date:
+										articlesExtended[article.id]?.publish_date ?? "",
+									authors: articlesExtended[article.id]?.authors ?? [],
+									technologyTerms:
+										articleTermsById.get(article.id)?.technology ?? [],
+									environmentalTerms:
+										articleTermsById.get(article.id)?.environmental ?? [],
+								})}
+								showAbstract={false}
+								titleHref={buildPreferredArticleHref(
+									articlesExtended[article.id],
+									`/areas/${areaSlug}/artigos/${article.id}`,
+								)}
 								title={article.title}
 							/>
 						))

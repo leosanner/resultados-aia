@@ -14,6 +14,11 @@ export type ArticleExtend = Article & {
 		name: string;
 		affiliation_id: string[];
 	}[];
+	affiliation: { name: string; country: string; id: string }[];
+	publish_date: string;
+	doi_y: string;
+	doi_x: string;
+	id: string;
 };
 
 export type FrequencyTerms = {
@@ -93,7 +98,9 @@ const loadArticleData = async (
 	return obj as ArticleOutputFormat;
 };
 
-const loadArticleDataExtended = async (articleFileName: string) => {
+const loadArticleDataExtended = async (
+	articleFileName: string = "articles_extended.json",
+) => {
 	const pathFile = path.join(process.cwd(), "src", "data", articleFileName);
 	const content = await fs.readFile(pathFile, "utf-8");
 	const obj = JSON.parse(content);
@@ -111,7 +118,7 @@ export class ArticleModel {
 	}
 
 	async getArticlesExtended(): Promise<Record<number, ArticleExtend>> {
-		const articles = await loadArticleData("articles_extended.json");
+		return await loadArticleDataExtended();
 	}
 
 	async getArticleById(articleId: number) {

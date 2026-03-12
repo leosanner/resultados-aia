@@ -46,6 +46,26 @@ type TermsInstitutionsMapProps = {
 const DEFAULT_CENTER: [number, number] = [-46.6333, -23.5505];
 const DEFAULT_ZOOM = 1.8;
 const FALLBACK_AREA_COLOR = "#64748b";
+const SATELLITE_STYLE = {
+	version: 8,
+	sources: {
+		"esri-world-imagery": {
+			type: "raster",
+			tiles: [
+				"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+			],
+			tileSize: 256,
+			attribution: "Tiles © Esri",
+		},
+	},
+	layers: [
+		{
+			id: "esri-world-imagery-layer",
+			type: "raster",
+			source: "esri-world-imagery",
+		},
+	],
+} as const;
 
 function normalizeAreaLabel(label: string): string {
 	return label.trim().toLowerCase().replace(/\s+/g, " ");
@@ -78,6 +98,8 @@ export function TermsInstitutionsMap({
 	articlesWithMappedInstitutions,
 }: TermsInstitutionsMapProps) {
 	const mapRef = useRef<MapRef | null>(null);
+	const [mapTheme, setMapTheme] = useState<"light" | "dark">("light");
+	const [mapVisualMode, setMapVisualMode] = useState<"map" | "satellite">("map");
 	const [selectedPoint, setSelectedPoint] =
 		useState<InstitutionMapPoint | null>(null);
 	const pointsById = useMemo(
@@ -144,6 +166,10 @@ export function TermsInstitutionsMap({
 		0,
 		totalArticles - articlesWithMappedInstitutions,
 	);
+	const customStyles =
+		mapVisualMode === "satellite"
+			? { light: SATELLITE_STYLE, dark: SATELLITE_STYLE }
+			: undefined;
 
 	return (
 		<section className="mt-8 rounded-[16px] border border-[#dce9e1] bg-white p-5">
@@ -164,6 +190,76 @@ export function TermsInstitutionsMap({
 				<StatCard label="Instituições únicas" value={totalInstitutions} />
 				<StatCard label="Sem geolocalização" value={unmappedArticles} />
 			</div>
+			<div className="mt-4 flex items-center justify-between rounded-lg border border-[#dbe7df] bg-[#f8fafc] px-3 py-2">
+				<p className="text-xs font-semibold uppercase tracking-[0.8px] text-[#475569]">
+					Tema do mapa
+				</p>
+				<div
+					aria-label="Seletor de tema do mapa"
+					className="inline-flex rounded-md border border-[#cbd5e1] bg-white p-0.5"
+					role="group"
+				>
+					<button
+						aria-pressed={mapTheme === "light"}
+						className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors ${
+							mapTheme === "light"
+								? "bg-[#0f172a] text-white"
+								: "text-[#475569] hover:bg-[#f1f5f9]"
+						}`}
+						onClick={() => setMapTheme("light")}
+						type="button"
+					>
+						Claro
+					</button>
+					<button
+						aria-pressed={mapTheme === "dark"}
+						className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors ${
+							mapTheme === "dark"
+								? "bg-[#0f172a] text-white"
+								: "text-[#475569] hover:bg-[#f1f5f9]"
+						}`}
+						onClick={() => setMapTheme("dark")}
+						type="button"
+					>
+						Escuro
+					</button>
+				</div>
+			</div>
+			<div className="mt-2 flex items-center justify-between rounded-lg border border-[#dbe7df] bg-[#f8fafc] px-3 py-2">
+				<p className="text-xs font-semibold uppercase tracking-[0.8px] text-[#475569]">
+					Visualização
+				</p>
+				<div
+					aria-label="Seletor de visualização do mapa"
+					className="inline-flex rounded-md border border-[#cbd5e1] bg-white p-0.5"
+					role="group"
+				>
+					<button
+						aria-pressed={mapVisualMode === "map"}
+						className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors ${
+							mapVisualMode === "map"
+								? "bg-[#0f172a] text-white"
+								: "text-[#475569] hover:bg-[#f1f5f9]"
+						}`}
+						onClick={() => setMapVisualMode("map")}
+						type="button"
+					>
+						Mapa
+					</button>
+					<button
+						aria-pressed={mapVisualMode === "satellite"}
+						className={`rounded px-2.5 py-1 text-xs font-semibold transition-colors ${
+							mapVisualMode === "satellite"
+								? "bg-[#0f172a] text-white"
+								: "text-[#475569] hover:bg-[#f1f5f9]"
+						}`}
+						onClick={() => setMapVisualMode("satellite")}
+						type="button"
+					>
+						Satélite
+					</button>
+				</div>
+			</div>
 
 			{points.length > 0 ? (
 				<div className="mt-4 overflow-hidden rounded-xl border border-[#dbe7df]">
@@ -175,6 +271,8 @@ export function TermsInstitutionsMap({
 						maxZoom={6}
 						minZoom={1.3}
 						pitch={0}
+						styles={customStyles}
+						theme={mapTheme}
 						zoom={DEFAULT_ZOOM}
 					>
 						{points.map((point) => (
