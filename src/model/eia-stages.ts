@@ -27,6 +27,33 @@ export class EiaModel {
 		this.articleModel = new ArticleModel();
 	}
 
+	async getArticlesByStageWithPages(pageSize: number = -1) {
+		const articlesByStage = await this.getArticlesByStage();
+		if (pageSize <= 0) {
+			return articlesByStage;
+		}
+
+		const splitedContent: Record<string, Record<number, StageArticle[]>> = {};
+
+		for (const [key, value] of Object.entries(articlesByStage) as [
+			string,
+			StageArticle[],
+		][]) {
+			splitedContent[key] = splitIntoPages(value, pageSize);
+		}
+
+		function splitIntoPages(articles: StageArticle[], pageSize: number) {
+			const pages: Record<number, StageArticle[]> = {};
+			for (let start = 0, page = 1; start < articles.length; start += pageSize, page++) {
+				pages[page] = articles.slice(start, start + pageSize);
+			}
+
+			return pages;
+		}
+
+		return splitedContent;
+	}
+
 	async getArticlesByStage() {
 		const eiaStagesWithArticles = await loadEiaStages();
 
@@ -80,17 +107,18 @@ export class EiaModel {
 		articles: StageArticle[],
 		terms: { envTerm: EnvTerm[]; tecTerm: TecTerm[] },
 	) {
-		if (!terms.envTerm && !terms.tecTerm) {
+		const selectedEnvTerms = terms.envTerm ?? [];
+		const selectedTecTerms = terms.tecTerm ?? [];
+
+		// Sem filtros selecionados: retorna a lista original sem reduzir resultados.
+		if (selectedEnvTerms.length === 0 && selectedTecTerms.length === 0) {
 			return articles;
 		}
 
-		if (terms.envTerm.length === 0) {
-			terms.envTerm = [...envTerms];
-		}
-
-		if (terms.tecTerm.length === 0) {
-			terms.tecTerm = [...tecTerms];
-		}
+		const effectiveEnvTerms =
+			selectedEnvTerms.length > 0 ? selectedEnvTerms : [...envTerms];
+		const effectiveTecTerms =
+			selectedTecTerms.length > 0 ? selectedTecTerms : [...tecTerms];
 
 		const matchByArticle = await Promise.all(
 			articles.map(async (article) => {
@@ -110,8 +138,8 @@ export class EiaModel {
 				) as TecTerm[];
 
 				if (
-					envFrequencyTerms.some((val) => terms.envTerm.includes(val)) &&
-					tecFrequencyTerms.some((val) => terms.tecTerm.includes(val))
+					envFrequencyTerms.some((val) => effectiveEnvTerms.includes(val)) &&
+					tecFrequencyTerms.some((val) => effectiveTecTerms.includes(val))
 				) {
 					return true;
 				}

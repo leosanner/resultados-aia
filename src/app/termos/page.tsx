@@ -6,7 +6,6 @@ import { ArticlesYearLineChart } from "@/components/charts/articles-year-line-ch
 import { getToneColorByIndex } from "@/components/charts/chart-palettes";
 import { TermsInstitutionsMapClient } from "@/components/termos/terms-institutions-map-client";
 import { TermsBarChart } from "@/components/charts/terms-bar-chart";
-import { MainNavbar } from "@/components/layout/main-navbar";
 import institutionInformationData from "@/data/instituition_information.json";
 import { formatStageTitle, stageKeyToSlug } from "@/lib/area-utils";
 import {
@@ -462,8 +461,6 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e8f5ee_0%,_#f5f8f6_42%,_#ffffff_100%)] text-[#0f172a]">
-			<MainNavbar activePage="metodologia" showResultsBadge />
-
 			<main className="mx-auto w-full max-w-[992px] px-6 py-8 md:px-12">
 
 				<section className="mt-6 rounded-[18px] border border-[#dbe7df] bg-white/90 p-6 shadow-[0px_18px_34px_-28px_rgba(15,23,42,0.45)] backdrop-blur-sm">

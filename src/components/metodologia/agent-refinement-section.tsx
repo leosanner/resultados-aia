@@ -39,10 +39,10 @@ const RESULT_CARDS = [
 
 export function AgentRefinementSection() {
 	return (
-		<section className="border-t border-[#e2e8f0] bg-white px-6 py-16 md:py-24">
+		<section className="border-t border-[#cfe0d6] bg-[#f7fbf8] px-6 py-16 md:py-24">
 			<div className="mx-auto max-w-6xl">
 				<motion.h2
-					className="mb-6 text-center text-3xl tracking-[-0.8px] text-[#0f172a]"
+					className="mb-6 text-center text-3xl tracking-[-0.8px] text-[#1f2937]"
 					initial={{ opacity: 0, y: 20 }}
 					transition={{ duration: 0.45 }}
 					viewport={{ once: true }}
