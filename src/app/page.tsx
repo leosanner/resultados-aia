@@ -4,6 +4,7 @@ import { AnimatedButton } from "@/components/ui/animated-button";
 import { graphContent } from "@/infra/build-graphs";
 import { formatStageTitle, stageKeyToSlug } from "@/lib/area-utils";
 import { EiaModel } from "@/model/eia-stages";
+import Link from "next/link";
 
 type AreaCardStyle = {
 	badgeClass: string;
@@ -123,8 +124,7 @@ export default async function Home() {
 										<AnimatedButton
 											href={`/areas/${stageSlug}/estatisticas`}
 											label="Ver estatísticas"
-											accentClassName="bg-[#1F6F8B]"
-											textClassName="text-[#1F6F8B]"
+											tone="blue"
 										/>
 									</div>
 								</article>
@@ -162,24 +162,33 @@ export default async function Home() {
 			</main>
 
 			<footer className="border-t border-[#123629] bg-[#0b281f] px-6 py-12 sm:px-10 lg:px-20">
-				<div className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 text-sm text-[#d4e3da] md:flex-row md:items-center md:justify-between">
-					<p>
-						© 2026 Projeto Base de Pesquisa AIA. Acesso simplificado à pesquisa.
-					</p>
-					<nav
-						aria-label="Links do rodapé"
-						className="flex flex-wrap items-center gap-8"
-					>
-						<a className="transition-colors hover:text-white" href="#">
-							Documentação
-						</a>
-						<a className="transition-colors hover:text-white" href="#">
-							Acesso à API
-						</a>
-						<a className="transition-colors hover:text-white" href="#">
-							Privacidade
-						</a>
-					</nav>
+				<div className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 text-sm text-[#d4e3da] md:flex-row md:items-start md:justify-between">
+					<div>
+						<nav
+							aria-label="Mapa do site"
+							className="flex flex-wrap items-center gap-x-6 gap-y-2"
+						>
+							<Link className="text-white transition-colors hover:text-[#d4e3da]" href="/">
+								Início
+							</Link>
+							<Link
+								className="text-white transition-colors hover:text-[#d4e3da]"
+								href="/contextualizacao-geral"
+							>
+								Contextualização Geral
+							</Link>
+							<Link className="text-white transition-colors hover:text-[#d4e3da]" href="/metodologia">
+								Metodologia
+							</Link>
+							<Link className="text-white transition-colors hover:text-[#d4e3da]" href="/autores">
+								Autores
+							</Link>
+							<Link className="text-white transition-colors hover:text-[#d4e3da]" href="/termos">
+								Termos
+							</Link>
+						</nav>
+					</div>
+					<p>© 2026 Projeto Base de Pesquisa AIA.</p>
 				</div>
 			</footer>
 		</div>
