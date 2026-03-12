@@ -45,6 +45,31 @@ type TermsInstitutionsMapProps = {
 
 const DEFAULT_CENTER: [number, number] = [-46.6333, -23.5505];
 const DEFAULT_ZOOM = 1.8;
+const FALLBACK_AREA_COLOR = "#64748b";
+
+function normalizeAreaLabel(label: string): string {
+	return label.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function capitalizeFirstLetter(text: string): string {
+	const trimmed = text.trim();
+	if (!trimmed) return text;
+	return `${trimmed.charAt(0).toLocaleUpperCase("pt-BR")}${trimmed.slice(1)}`;
+}
+
+function hexToRgba(hexColor: string, alpha: number): string {
+	const hex = hexColor.replace("#", "");
+	if (!/^[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(hex)) {
+		return `rgba(100, 116, 139, ${alpha})`;
+	}
+
+	const normalized =
+		hex.length === 3 ? hex.split("").map((char) => `${char}${char}`).join("") : hex;
+	const r = Number.parseInt(normalized.slice(0, 2), 16);
+	const g = Number.parseInt(normalized.slice(2, 4), 16);
+	const b = Number.parseInt(normalized.slice(4, 6), 16);
+	return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 export function TermsInstitutionsMap({
 	points,
@@ -53,12 +78,18 @@ export function TermsInstitutionsMap({
 	articlesWithMappedInstitutions,
 }: TermsInstitutionsMapProps) {
 	const mapRef = useRef<MapRef | null>(null);
-	const [selectedPoint, setSelectedPoint] = useState<InstitutionMapPoint | null>(
-		null,
-	);
+	const [selectedPoint, setSelectedPoint] =
+		useState<InstitutionMapPoint | null>(null);
 	const pointsById = useMemo(
 		() => new globalThis.Map(points.map((point) => [point.id, point])),
 		[points],
+	);
+	const areaColorByLabel = useMemo(
+		() =>
+			new globalThis.Map(
+				areas.map((area) => [normalizeAreaLabel(area.label), area.color]),
+			),
+		[areas],
 	);
 
 	const activeSelectedPoint = selectedPoint
@@ -108,7 +139,6 @@ export function TermsInstitutionsMap({
 		);
 	}, [points]);
 
-	const topInstitutions = points.slice(0, 6);
 	const totalInstitutions = points.length;
 	const unmappedArticles = Math.max(
 		0,
@@ -127,7 +157,10 @@ export function TermsInstitutionsMap({
 
 			<div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
 				<StatCard label="Artigos filtrados" value={totalArticles} />
-				<StatCard label="Com afiliação mapeada" value={articlesWithMappedInstitutions} />
+				<StatCard
+					label="Com afiliação mapeada"
+					value={articlesWithMappedInstitutions}
+				/>
 				<StatCard label="Instituições únicas" value={totalInstitutions} />
 				<StatCard label="Sem geolocalização" value={unmappedArticles} />
 			</div>
@@ -137,7 +170,7 @@ export function TermsInstitutionsMap({
 					<Map
 						ref={mapRef}
 						center={DEFAULT_CENTER}
-						className="h-[440px] w-full"
+						className="h-[520px] w-full md:h-[620px]"
 						dragRotate={false}
 						maxZoom={6}
 						minZoom={1.3}
@@ -183,19 +216,47 @@ export function TermsInstitutionsMap({
 									</p>
 									{activeSelectedPoint.articles.length > 0 ? (
 										<ul className="space-y-2 text-xs text-[#334155]">
-											{activeSelectedPoint.articles.slice(0, 4).map((article) => (
-												<li
-													className="rounded-md border border-[#e2e8f0] bg-[#f8fafc] px-2 py-1.5"
-													key={article.id}
-												>
-													<p className="font-semibold text-[#0f172a]">
-														{article.title}
-													</p>
-													<p className="mt-0.5 text-[11px] text-[#475569]">
-														Área AIA: {article.stageLabel}
-													</p>
-												</li>
-											))}
+											{activeSelectedPoint.articles
+												.slice(0, 4)
+												.map((article) => {
+													const stageLabels = article.stageLabel
+														.split("/")
+														.map((label) => label.trim())
+														.filter(Boolean);
+
+													return (
+														<li
+															className="rounded-md border border-[#e2e8f0] bg-[#f8fafc] px-2 py-1.5"
+															key={article.id}
+														>
+															<p className="font-semibold text-[#0f172a]">
+																{capitalizeFirstLetter(article.title)}
+															</p>
+															<div className="mt-1 flex flex-wrap gap-1">
+																{stageLabels.map((stageLabel) => {
+																	const color =
+																		areaColorByLabel.get(
+																			normalizeAreaLabel(stageLabel),
+																		) ?? FALLBACK_AREA_COLOR;
+
+																	return (
+																		<span
+																			className="rounded-full border px-2 py-0.5 text-[10px] font-semibold"
+																			key={`${article.id}-${stageLabel}`}
+																			style={{
+																				backgroundColor: hexToRgba(color, 0.14),
+																				borderColor: hexToRgba(color, 0.35),
+																				color,
+																			}}
+																		>
+																			{stageLabel}
+																		</span>
+																	);
+																})}
+															</div>
+														</li>
+													);
+												})}
 										</ul>
 									) : null}
 								</div>
@@ -228,40 +289,6 @@ export function TermsInstitutionsMap({
 								/>
 								{area.label} ({area.count})
 							</span>
-						))}
-					</div>
-				</div>
-			) : null}
-
-			{topInstitutions.length > 0 ? (
-				<div className="mt-5">
-					<p className="text-xs font-bold uppercase tracking-[1px] text-[#475569]">
-						Instituições com mais artigos na seleção
-					</p>
-					<div className="mt-2 flex flex-wrap gap-2">
-						{topInstitutions.map((institution) => (
-							<button
-								className="inline-flex items-center gap-2 rounded-full border border-[#dbe7df] bg-white px-3 py-1 text-xs font-semibold text-[#334155]"
-								key={institution.id}
-								onClick={() => setSelectedPoint(institution)}
-								type="button"
-							>
-								<span
-									aria-hidden
-									className="h-2.5 w-2.5 rounded-full"
-									style={{ backgroundColor: institution.color }}
-								/>
-								<span>{institution.name}</span>
-								<span
-									className="rounded-full px-2 py-0.5 text-[10px]"
-									style={{
-										backgroundColor: `${institution.color}22`,
-										color: institution.color,
-									}}
-								>
-									{institution.articleCount}
-								</span>
-							</button>
 						))}
 					</div>
 				</div>

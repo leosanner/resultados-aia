@@ -1,10 +1,19 @@
 import { filterOcurrencies } from "@/utils/ocurrencies";
 import fs from "fs/promises";
 import path from "path";
+
 export type Article = {
 	title: string;
 	abstract: string;
 	keywords: string[];
+};
+
+export type ArticleExtend = Article & {
+	authors: {
+		id: string;
+		name: string;
+		affiliation_id: string[];
+	}[];
 };
 
 export type FrequencyTerms = {
@@ -74,12 +83,22 @@ const loadFrequencyTerms = async () => {
 
 export type ArticleOutputFormat = Record<number, Article>;
 
-const loadArticleData = async (): Promise<Record<number, Article>> => {
-	const pathFile = path.join(process.cwd(), "src", "data", "articles.json");
+const loadArticleData = async (
+	articleFileName: string = "articles.json",
+): Promise<Record<number, Article>> => {
+	const pathFile = path.join(process.cwd(), "src", "data", articleFileName);
 	const content = await fs.readFile(pathFile, "utf-8");
 	const obj = JSON.parse(content);
 
 	return obj as ArticleOutputFormat;
+};
+
+const loadArticleDataExtended = async (articleFileName: string) => {
+	const pathFile = path.join(process.cwd(), "src", "data", articleFileName);
+	const content = await fs.readFile(pathFile, "utf-8");
+	const obj = JSON.parse(content);
+
+	return obj as Record<number, ArticleExtend>;
 };
 
 export class ArticleModel {
@@ -89,6 +108,10 @@ export class ArticleModel {
 
 	async getArticles(): Promise<Record<number, Article>> {
 		return await loadArticleData();
+	}
+
+	async getArticlesExtended(): Promise<Record<number, ArticleExtend>> {
+		const articles = await loadArticleData("articles_extended.json");
 	}
 
 	async getArticleById(articleId: number) {
