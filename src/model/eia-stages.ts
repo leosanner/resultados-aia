@@ -147,4 +147,78 @@ export class EiaModel {
 		}
 		return ft;
 	}
+
+	async getAuthorsByStage() {
+		// {eia_stage:{authorId: {authorName, publications}}}
+
+		const articlesExtended = await this.articleModel.getArticlesExtended();
+
+		const articlesIdByStage: Record<string, number[]> = Object.entries(
+			await this.getArticlesByStage(),
+		).reduce<Record<string, number[]>>((currentDict, [key, value]) => {
+			const stageArticleIds = value.map((val) => val.id);
+			currentDict[key] = stageArticleIds;
+
+			return currentDict;
+		}, {});
+
+		const authorsByStage: Record<
+			string,
+			Record<string, { authorName: string; publications: number[] }>
+		> = {};
+
+		for (const [articleId, articleContent] of Object.entries(
+			articlesExtended,
+		)) {
+			const articleRelatedAreas = findIdInAreas(
+				Number(articleId),
+				articlesIdByStage,
+			);
+
+			if (articleRelatedAreas.length === 0) {
+				continue;
+			}
+
+			for (const area of articleRelatedAreas) {
+				if (!(area in authorsByStage)) {
+					authorsByStage[area] = {};
+				}
+
+				if (!articleContent.authors) {
+					continue;
+				}
+
+				for (const author of articleContent.authors) {
+					if (!(author.id in authorsByStage[area])) {
+						authorsByStage[area][author.id] = {
+							authorName: author.name,
+							publications: [],
+						};
+					}
+
+					if (
+						!authorsByStage[area][author.id].publications.includes(
+							Number(articleId),
+						)
+					) {
+						authorsByStage[area][author.id].publications.push(
+							Number(articleId),
+						);
+					}
+				}
+			}
+		}
+
+		return authorsByStage;
+	}
 }
+
+const findIdInAreas = (id: number, content: Record<string, number[]>) => {
+	const areas: string[] = [];
+	for (const [key, value] of Object.entries(content)) {
+		if (value.includes(id)) {
+			areas.push(key);
+		}
+	}
+	return areas;
+};
