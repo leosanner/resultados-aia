@@ -76,9 +76,12 @@ export default async function Home() {
 							<img alt="" className="h-4 w-4" src={logoIcon} />
 						</div>
 						<div className="leading-tight">
-							<p className="text-xl font-extrabold tracking-[-0.5px] text-white">
+							<Link
+								href={"/"}
+								className="text-xl font-extrabold tracking-[-0.5px] text-white"
+							>
 								Explorador AIA
-							</p>
+							</Link>
 							<p className="text-[10px] font-bold uppercase tracking-[1px] text-[#7dd3a8]">
 								Base de Pesquisa
 							</p>
@@ -91,9 +94,9 @@ export default async function Home() {
 					>
 						<Link
 							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"
-							href="/"
+							href="/contextualizacao-geral"
 						>
-							Biblioteca
+							Contextualização Geral
 						</Link>
 						<Link
 							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"

@@ -437,9 +437,9 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 					>
 						<Link
 							className="text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white"
-							href="/"
+							href="/contextualizacao-geral"
 						>
-							Biblioteca
+							Contextualização Geral
 						</Link>
 						<Link
 							className="text-sm font-medium text-white"
