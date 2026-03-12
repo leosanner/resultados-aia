@@ -1,5 +1,5 @@
-import { ArticlesYearLineChart } from "@/components/charts/articles-year-line-chart";
-import { TermsBarChart } from "@/components/charts/terms-bar-chart";
+import { ArticlesYearLineChartClient } from "@/components/charts/articles-year-line-chart-client";
+import { TermsBarChartClient } from "@/components/charts/terms-bar-chart-client";
 import { TermsInstitutionsMapClient } from "@/components/termos/terms-institutions-map-client";
 import institutionInformationData from "@/data/instituition_information.json";
 import { formatStageTitle, slugToStageKey } from "@/lib/area-utils";
@@ -301,7 +301,7 @@ export default async function AreaStatisticsPage({ params }: PageProps) {
 						Publicações por ano para esta área de AIA.
 					</p>
 					<div className="mt-4">
-						<ArticlesYearLineChart items={yearlyArticlesTrend} />
+						<ArticlesYearLineChartClient items={yearlyArticlesTrend} />
 					</div>
 				</section>
 
@@ -311,7 +311,7 @@ export default async function AreaStatisticsPage({ params }: PageProps) {
 							Termos de tecnologia
 						</h2>
 						<div className="mt-4">
-							<TermsBarChart items={technologyTerms} tone="blue" />
+							<TermsBarChartClient items={technologyTerms} tone="blue" />
 						</div>
 					</article>
 
@@ -320,7 +320,7 @@ export default async function AreaStatisticsPage({ params }: PageProps) {
 							Termos ambientais
 						</h2>
 						<div className="mt-4">
-							<TermsBarChart items={environmentalTerms} tone="green" />
+							<TermsBarChartClient items={environmentalTerms} tone="green" />
 						</div>
 					</article>
 				</section>
