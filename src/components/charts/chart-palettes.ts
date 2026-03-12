@@ -12,14 +12,14 @@ const GREEN_PALETTE = [
 ];
 
 const BLUE_PALETTE = [
-	"#0ea5e9",
-	"#3b82f6",
-	"#6366f1",
-	"#8b5cf6",
-	"#ec4899",
-	"#f43f5e",
-	"#f97316",
-	"#22c55e",
+	"#1d4ed8",
+	"#b91c1c",
+	"#0f766e",
+	"#a16207",
+	"#7c3aed",
+	"#be185d",
+	"#0369a1",
+	"#166534",
 ];
 
 export function getTonePalette(tone: ChartTone) {
