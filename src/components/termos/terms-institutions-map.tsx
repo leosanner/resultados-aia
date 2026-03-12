@@ -354,6 +354,10 @@ export function TermsInstitutionsMap({
 																	);
 																})}
 															</div>
+															{(article.technologyTerms ?? []).length > 0 ||
+															(article.environmentalTerms ?? []).length > 0 ? (
+																<div className="my-1 border-t border-[#dbe7df]" />
+															) : null}
 															{(article.technologyTerms ?? []).length > 0 ? (
 																<div className="mt-1 flex flex-wrap gap-1">
 																	{(article.technologyTerms ?? []).map((term) => (
