@@ -84,6 +84,12 @@ export function formatTermLabel(text: string) {
 		.join(" ");
 }
 
+export function capitalizeFirstLetter(text: string) {
+	const trimmedStart = text.trimStart();
+	if (!trimmedStart) return text;
+	return `${trimmedStart.charAt(0).toUpperCase()}${trimmedStart.slice(1)}`;
+}
+
 function buildArticleFingerprint(article: Article) {
 	return JSON.stringify({
 		title: article.title,
@@ -221,7 +227,7 @@ function buildUniqueExportRows(
 
 	return Array.from(exportMap.values()).map(
 		({ record, stageTitles }): TermsSearchExportRow => ({
-			area_aia_relacionada: stageTitles.join("; "),
+			area_aia_relacionada: stageTitles.join("\n"),
 			termos_busca_tecnologia: selectedTecTerms
 				.map(formatTermLabel)
 				.join("; "),
@@ -230,7 +236,7 @@ function buildUniqueExportRows(
 				.join("; "),
 			data: record.publicationDate,
 			autores: record.authorsLabel,
-			titulo: record.article.title,
+			titulo: capitalizeFirstLetter(record.article.title),
 			link: record.preferredLink,
 			fwci: record.fwci,
 		}),

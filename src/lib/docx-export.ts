@@ -155,16 +155,29 @@ function buildTextRuns(value: string, bold: boolean = false) {
 		.join("");
 }
 
+function buildParagraph({
+	content,
+}: {
+	content: string;
+}) {
+	return `
+		<w:p>
+			<w:pPr>
+				<w:spacing w:after="80" w:line="300" w:lineRule="auto"/>
+			</w:pPr>
+			${content}
+		</w:p>
+	`;
+}
+
 function buildCell({
-	text,
 	width,
 	fill,
-	bold = false,
+	content,
 }: {
-	text: string;
 	width: number;
 	fill: string;
-	bold?: boolean;
+	content: string;
 }) {
 	return `
 		<w:tc>
@@ -179,14 +192,36 @@ function buildCell({
 				</w:tcMar>
 				<w:vAlign w:val="center"/>
 			</w:tcPr>
-			<w:p>
-				<w:pPr>
-					<w:spacing w:after="80" w:line="300" w:lineRule="auto"/>
-				</w:pPr>
-				${buildTextRuns(text, bold)}
-			</w:p>
+			${content}
 		</w:tc>
 	`;
+}
+
+function buildHyperlinkRun({
+	text,
+	relationshipId,
+}: {
+	text: string;
+	relationshipId: string;
+}) {
+	return `
+		<w:hyperlink r:id="${relationshipId}">
+			<w:r>
+				<w:rPr>
+					<w:color w:val="1D4ED8"/>
+					<w:u w:val="single"/>
+				</w:rPr>
+				<w:t xml:space="preserve">${escapeXml(text)}</w:t>
+			</w:r>
+		</w:hyperlink>
+	`;
+}
+
+function getLinkLabel(link: string) {
+	if (/doi\.org\//i.test(link)) {
+		return link.replace(/^https?:\/\/(dx\.)?doi\.org\//i, "DOI: ");
+	}
+	return link;
 }
 
 function buildRow(
@@ -194,17 +229,17 @@ function buildRow(
 	rowIndex: number,
 	columnWidths: number[],
 	isHeader: boolean,
+	buildCellContent: (value: string, columnIndex: number, isHeader: boolean) => string,
 ) {
-	const fill = isHeader ? "2563EB" : rowIndex % 2 === 0 ? "EFF6FF" : "FFFFFF";
+	const fill = isHeader ? "D1D5DB" : rowIndex % 2 === 0 ? "F3F4F6" : "FFFFFF";
 	return `
 		<w:tr>
 			${values
 				.map((value, index) =>
 					buildCell({
-						text: value,
 						width: columnWidths[index],
 						fill,
-						bold: isHeader,
+						content: buildCellContent(value, index, isHeader),
 					}),
 				)
 				.join("")}
@@ -232,22 +267,51 @@ function buildDocumentXml(rows: TermsSearchExportRow[]) {
 		{ label: "FWCI", key: "fwci", width: 900 },
 	] as const;
 	const widths = columns.map((column) => column.width);
+	const hyperlinkRelationships: Array<{ id: string; target: string }> = [];
+	let hyperlinkCount = 0;
+	const buildCellContent = (
+		value: string,
+		columnIndex: number,
+		isHeader: boolean,
+	) => {
+		if (isHeader) {
+			return buildParagraph({ content: buildTextRuns(value, true) });
+		}
+
+		const column = columns[columnIndex];
+		if (column.key === "link" && value) {
+			hyperlinkCount += 1;
+			const relationshipId = `rIdHyperlink${hyperlinkCount}`;
+			hyperlinkRelationships.push({ id: relationshipId, target: value });
+			return buildParagraph({
+				content: buildHyperlinkRun({
+					text: getLinkLabel(value),
+					relationshipId,
+				}),
+			});
+		}
+
+		return buildParagraph({ content: buildTextRuns(value, false) });
+	};
 	const headerRow = buildRow(
 		columns.map((column) => column.label),
 		0,
 		widths,
 		true,
+		buildCellContent,
 	);
 	const bodyRows = rows.map((row, index) =>
 		buildRow(
-			columns.map((column) => row[column.key] ?? ""),
+				columns.map((column) => row[column.key] ?? ""),
 			index,
 			widths,
 			false,
+			buildCellContent,
 		),
 	);
 
-	return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+	return {
+		documentXml: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:o="urn:schemas-microsoft-com:office:office"
@@ -296,10 +360,21 @@ function buildDocumentXml(rows: TermsSearchExportRow[]) {
 			<w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="708" w:footer="708" w:gutter="0"/>
 		</w:sectPr>
 	</w:body>
-</w:document>`;
+</w:document>`,
+		relationshipsXml: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+	${hyperlinkRelationships
+		.map(
+			(relationship) =>
+				`<Relationship Id="${relationship.id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="${escapeXml(relationship.target)}" TargetMode="External"/>`,
+		)
+		.join("")}
+</Relationships>`,
+	};
 }
 
 export function serializeTermsSearchRowsToDocx(rows: TermsSearchExportRow[]) {
+	const { documentXml, relationshipsXml } = buildDocumentXml(rows);
 	const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 	<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
@@ -315,6 +390,7 @@ export function serializeTermsSearchRowsToDocx(rows: TermsSearchExportRow[]) {
 	return buildZip([
 		{ name: "[Content_Types].xml", data: contentTypes },
 		{ name: "_rels/.rels", data: rootRels },
-		{ name: "word/document.xml", data: buildDocumentXml(rows) },
+		{ name: "word/document.xml", data: documentXml },
+		{ name: "word/_rels/document.xml.rels", data: relationshipsXml },
 	]);
 }
