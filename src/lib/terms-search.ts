@@ -17,7 +17,7 @@ export type TermsSearchParams = {
 };
 
 export type TermsSearchExportRow = {
-	etapa_aia: string;
+	area_aia_relacionada: string;
 	termos_busca_tecnologia: string;
 	termos_busca_ambientais: string;
 	data: string;
@@ -165,24 +165,76 @@ function escapeCsvCell(value: string) {
 }
 
 export function serializeTermsSearchRowsToCsv(rows: TermsSearchExportRow[]) {
-	const header: Array<keyof TermsSearchExportRow> = [
-		"etapa_aia",
-		"termos_busca_tecnologia",
-		"termos_busca_ambientais",
-		"data",
-		"autores",
-		"titulo",
-		"link",
-		"fwci",
+	const header: Array<{
+		key: keyof TermsSearchExportRow;
+		label: string;
+	}> = [
+		{ key: "area_aia_relacionada", label: "Área de AIA relacionada" },
+		{ key: "termos_busca_tecnologia", label: "termos_busca_tecnologia" },
+		{ key: "termos_busca_ambientais", label: "termos_busca_ambientais" },
+		{ key: "data", label: "data" },
+		{ key: "autores", label: "autores" },
+		{ key: "titulo", label: "titulo" },
+		{ key: "link", label: "link" },
+		{ key: "fwci", label: "fwci" },
 	];
 	const lines = [
-		header.join(","),
+		header.map((item) => item.label).join(","),
 		...rows.map((row) =>
-			header.map((key) => escapeCsvCell(row[key] ?? "")).join(","),
+			header.map((item) => escapeCsvCell(row[item.key] ?? "")).join(","),
 		),
 	];
 
 	return `\uFEFF${lines.join("\n")}`;
+}
+
+function buildUniqueExportRows(
+	groups: TermsSearchGroup[],
+	selectedTecTerms: string[],
+	selectedEnvTerms: string[],
+) {
+	const exportMap = new Map<
+		number,
+		{
+			record: TermsSearchArticleRecord;
+			stageTitles: string[];
+		}
+	>();
+
+	for (const group of groups) {
+		for (const articleRecord of group.articles) {
+			const current = exportMap.get(articleRecord.article.id);
+
+			if (!current) {
+				exportMap.set(articleRecord.article.id, {
+					record: articleRecord,
+					stageTitles: [group.stageTitle],
+				});
+				continue;
+			}
+
+			if (!current.stageTitles.includes(group.stageTitle)) {
+				current.stageTitles.push(group.stageTitle);
+			}
+		}
+	}
+
+	return Array.from(exportMap.values()).map(
+		({ record, stageTitles }): TermsSearchExportRow => ({
+			area_aia_relacionada: stageTitles.join("; "),
+			termos_busca_tecnologia: selectedTecTerms
+				.map(formatTermLabel)
+				.join("; "),
+			termos_busca_ambientais: selectedEnvTerms
+				.map(formatTermLabel)
+				.join("; "),
+			data: record.publicationDate,
+			autores: record.authorsLabel,
+			titulo: record.article.title,
+			link: record.preferredLink,
+			fwci: record.fwci,
+		}),
+	);
 }
 
 export async function getTermsSearchResults(
@@ -308,17 +360,10 @@ export async function getTermsSearchResults(
 		.filter((group) => group.articles.length > 0)
 		.sort((a, b) => b.articles.length - a.articles.length);
 
-	const exportRows = groups.flatMap((group) =>
-		group.articles.map((record) => ({
-			etapa_aia: group.stageTitle,
-			termos_busca_tecnologia: selectedTecTerms.map(formatTermLabel).join("; "),
-			termos_busca_ambientais: selectedEnvTerms.map(formatTermLabel).join("; "),
-			data: record.publicationDate,
-			autores: record.authorsLabel,
-			titulo: record.article.title,
-			link: record.preferredLink,
-			fwci: record.fwci,
-		})),
+	const exportRows = buildUniqueExportRows(
+		groups,
+		selectedTecTerms,
+		selectedEnvTerms,
 	);
 
 	const yearlyCountByPublicationYear = new Map<number, number>();

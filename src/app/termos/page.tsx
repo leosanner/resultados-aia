@@ -359,12 +359,18 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				) : null}
 
 				{hasSelectedTerms && totalResults > 0 ? (
-					<section className="mt-4 flex justify-end">
+					<section className="mt-4 flex flex-wrap justify-end gap-3">
+						<Link
+							className="inline-flex items-center rounded-full border border-[#bfdbfe] bg-white px-5 py-3 text-sm font-bold uppercase tracking-[0.8px] text-[#1d4ed8] shadow-[0px_16px_30px_-18px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#eff6ff]"
+							href={`/termos/download?${downloadQuery}&format=csv`}
+						>
+							Baixar CSV
+						</Link>
 						<Link
 							className="inline-flex items-center rounded-full bg-[#2563eb] px-5 py-3 text-sm font-bold uppercase tracking-[0.8px] text-white shadow-[0px_16px_30px_-18px_rgba(37,99,235,0.75)] transition-colors hover:bg-[#1d4ed8]"
-							href={`/termos/download?${downloadQuery}`}
+							href={`/termos/download?${downloadQuery}&format=docx`}
 						>
-							Baixar artigos em CSV
+							Baixar DOCX
 						</Link>
 					</section>
 				) : null}
