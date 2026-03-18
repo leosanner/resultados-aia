@@ -2,24 +2,22 @@ import {
 	ArticleCard,
 	type ArticleMetadata,
 } from "@/components/articles/article-card";
-import { ArticlesYearLineChart } from "@/components/charts/articles-year-line-chart";
+import { ArticlesYearLineChartClient } from "@/components/charts/articles-year-line-chart-client";
 import { getToneColorByIndex } from "@/components/charts/chart-palettes";
 import { TermsInstitutionsMapClient } from "@/components/termos/terms-institutions-map-client";
-import { TermsBarChart } from "@/components/charts/terms-bar-chart";
+import { TermsBarChartClient } from "@/components/charts/terms-bar-chart-client";
 import institutionInformationData from "@/data/instituition_information.json";
-import { formatStageTitle, stageKeyToSlug } from "@/lib/area-utils";
 import {
-	ArticleModel,
-	type Article,
-	type EnvTerm,
-	type TecTerm,
-} from "@/model/article";
-import { EiaModel, type StageArticle } from "@/model/eia-stages";
-import { filterOcurrencies } from "@/utils/ocurrencies";
+	buildTermsDownloadQuery,
+	formatTermLabel,
+	getTermsSearchResults,
+	type TermsSearchArticleRecord,
+} from "@/lib/terms-search";
 import type {
 	AreaLegendItem,
 	InstitutionMapPoint,
 } from "@/components/termos/terms-institutions-map";
+import Link from "next/link";
 
 type PageProps = {
 	searchParams: Promise<{
@@ -30,45 +28,14 @@ type PageProps = {
 	}>;
 };
 
-function formatTermLabel(text: string) {
-	return text
-		.split(" ")
-		.filter(Boolean)
-		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-		.join(" ");
-}
-
-function toArray(value: string | string[] | undefined) {
-	if (!value) return [];
-	return Array.isArray(value) ? value : [value];
-}
-
-function normalizeTerms(values: string[]) {
-	return Array.from(
-		new Set(values.map((value) => value.trim().toLowerCase()).filter(Boolean)),
-	);
-}
-
-function buildArticleFingerprint(article: Article) {
-	return JSON.stringify({
-		title: article.title,
-		abstract: article.abstract,
-		keywords: article.keywords,
-	});
-}
-
 type ExtendedArticleRecord = {
-	title?: string;
-	json_title?: string;
+	authors?: { name?: string | null }[];
+	["authorships.institutions.id"]?: string | string[] | null;
 	publish_date?: string | null;
 	publication_year?: number | string | null;
-	doi_x?: string | null;
-	doi_y?: string | null;
-	source?: string | null;
-	["primary_location.source.display_name"]?: string | null;
-	cited_by_count?: number | string | null;
-	language?: string | null;
-	["authorships.institutions.id"]?: string | string[] | null;
+	fwci?: number | string | null;
+	title?: string;
+	json_title?: string;
 };
 
 type InstitutionInformationRecord = {
@@ -97,11 +64,6 @@ function isValidOpenAlexInstitutionId(value: string) {
 	return /^https:\/\/openalex\.org\/I\d+$/i.test(value.trim());
 }
 
-function summarizeTerms(terms: string[], maxItems: number = 3) {
-	if (terms.length <= maxItems) return terms;
-	return [...terms.slice(0, maxItems), `+${terms.length - maxItems}`];
-}
-
 type BarChartItem = {
 	label: string;
 	value: number;
@@ -116,135 +78,47 @@ function hexToRgba(hex: string, alpha: number) {
 	return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function buildArticleMetadata(
-	record: ExtendedArticleRecord | undefined,
-): ArticleMetadata[] {
-	if (!record) return [];
-
-	const publicationDate =
-		typeof record.publish_date === "string" ? record.publish_date.trim() : "";
-	const publicationYear =
-		typeof record.publication_year === "number"
-			? String(record.publication_year)
-			: typeof record.publication_year === "string"
-				? record.publication_year.trim()
-				: "";
-	const sourceName =
-		typeof record["primary_location.source.display_name"] === "string"
-			? record["primary_location.source.display_name"].trim()
-			: typeof record.source === "string"
-				? record.source.trim()
-				: "";
-	const doiRaw =
-		typeof record.doi_x === "string" && record.doi_x.trim()
-			? record.doi_x.trim()
-			: typeof record.doi_y === "string"
-				? record.doi_y.replace(/^https?:\/\/doi\.org\//i, "").trim()
-				: "";
-	const citedBy =
-		typeof record.cited_by_count === "number"
-			? String(record.cited_by_count)
-			: typeof record.cited_by_count === "string"
-				? record.cited_by_count.trim()
-				: "";
-	const language =
-		typeof record.language === "string" ? record.language.trim() : "";
-
+function buildArticleMetadata(record: TermsSearchArticleRecord): ArticleMetadata[] {
 	return [
-		publicationDate ? { label: "Data", value: publicationDate } : null,
-		!publicationDate && publicationYear
-			? { label: "Ano", value: publicationYear }
+		record.publicationDate ? { label: "Data", value: record.publicationDate } : null,
+		record.authorsLabel ? { label: "Autores", value: record.authorsLabel } : null,
+		record.technologyTerms.length > 0
+			? { label: "Tecnologia", value: record.technologyTerms.join(", ") }
 			: null,
-		sourceName ? { label: "Fonte", value: sourceName } : null,
-		doiRaw ? { label: "DOI", value: doiRaw } : null,
-		citedBy ? { label: "Citações", value: citedBy } : null,
-		language ? { label: "Idioma", value: language } : null,
+		record.environmentalTerms.length > 0
+			? { label: "Ambientais", value: record.environmentalTerms.join(", ") }
+			: null,
+		record.fwci ? { label: "FWCI", value: record.fwci } : null,
 	].filter((item): item is ArticleMetadata => Boolean(item));
 }
 
 export default async function TermArticlesPage({ searchParams }: PageProps) {
 	const currentSearchParams = await searchParams;
-	const selectedTecTerms = normalizeTerms(toArray(currentSearchParams.tec));
-	const selectedEnvTerms = normalizeTerms(toArray(currentSearchParams.env));
-	let totalResults = 0;
-
-	// Backward compatibility with /termos?term=...&type=...
-	if (selectedTecTerms.length === 0 && selectedEnvTerms.length === 0) {
-		const legacyTerm = toArray(currentSearchParams.term)[0]
-			?.trim()
-			.toLowerCase();
-		const legacyType = toArray(currentSearchParams.type)[0];
-		if (legacyTerm) {
-			if (legacyType === "env") {
-				selectedEnvTerms.push(legacyTerm);
-			} else {
-				selectedTecTerms.push(legacyTerm);
-			}
-		}
-	}
-
-	const hasSelectedTerms =
-		selectedTecTerms.length > 0 || selectedEnvTerms.length > 0;
-	const eiaModel = new EiaModel();
-	const articleModel = new ArticleModel();
-	const articlesByStage = await eiaModel.getArticlesByStage();
-	const articlesExtendedRaw = await articleModel.getArticlesExtended();
-	const matchingArticleIds = new Set<number>();
-
-	if (hasSelectedTerms) {
-		const filteredArticles = await articleModel.filterArticlesByTerms({
-			env: selectedEnvTerms as EnvTerm[],
-			tec: selectedTecTerms as TecTerm[],
-		});
-		totalResults = filteredArticles.length;
-		const filteredByFingerprint = filteredArticles.reduce<
-			Record<string, number>
-		>((current, article) => {
-			const fingerprint = buildArticleFingerprint(article);
-			current[fingerprint] = (current[fingerprint] ?? 0) + 1;
-			return current;
-		}, {});
-		const allArticles = await articleModel.getArticles();
-
-		for (const [articleId, article] of Object.entries(allArticles)) {
-			const fingerprint = buildArticleFingerprint(article);
-			if ((filteredByFingerprint[fingerprint] ?? 0) > 0) {
-				matchingArticleIds.add(Number(articleId));
-				filteredByFingerprint[fingerprint] -= 1;
-			}
-		}
-	}
-
-	const groupedResults = Object.entries(articlesByStage).map(
-		([stageKey, articles]) => {
-			const stageArticles = hasSelectedTerms
-				? articles.filter((article) => matchingArticleIds.has(article.id))
-				: ([] as StageArticle[]);
-
-			return {
-				stageKey,
-				articles: stageArticles,
-			};
-		},
-	);
-	const groupsWithResults = groupedResults
-		.filter((group) => group.articles.length > 0)
-		.sort((a, b) => b.articles.length - a.articles.length);
+	const {
+		selectedTecTerms,
+		selectedEnvTerms,
+		hasSelectedTerms,
+		totalResults,
+		matchingArticleIds,
+		groups,
+		yearlyArticlesTrend,
+		articlesExtended,
+	} = await getTermsSearchResults(currentSearchParams);
 	const tone = "blue" as const;
-	const groupsWithColors = groupsWithResults.map((group, index) => ({
+	const groupsWithColors = groups.map((group, index) => ({
 		...group,
 		color: getToneColorByIndex(tone, index),
 	}));
-	const chartItems: BarChartItem[] = groupsWithResults.map((group) => ({
-		label: formatStageTitle(group.stageKey),
+	const chartItems: BarChartItem[] = groups.map((group) => ({
+		label: group.stageTitle,
 		value: group.articles.length,
 	}));
 	const articleStagesById = new Map<number, string[]>();
-	for (const group of groupedResults) {
+	for (const group of groups) {
 		for (const article of group.articles) {
-			const currentStages = articleStagesById.get(article.id) ?? [];
+			const currentStages = articleStagesById.get(article.article.id) ?? [];
 			currentStages.push(group.stageKey);
-			articleStagesById.set(article.id, currentStages);
+			articleStagesById.set(article.article.id, currentStages);
 		}
 	}
 	const stageColorByKey = new Map(
@@ -252,12 +126,19 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 	);
 	const areaLegend: AreaLegendItem[] = groupsWithColors.map((group) => ({
 		stageKey: group.stageKey,
-		label: formatStageTitle(group.stageKey),
+		label: group.stageTitle,
 		color: group.color,
 		count: group.articles.length,
 	}));
-	const articlesExtended =
-		articlesExtendedRaw as unknown as Record<string, ExtendedArticleRecord>;
+	const downloadQuery = buildTermsDownloadQuery({
+		tec: selectedTecTerms,
+		env: selectedEnvTerms,
+	});
+	const articleRecordsById = new Map(
+		groups.flatMap((group) =>
+			group.articles.map((article) => [article.article.id, article] as const),
+		),
+	);
 	const institutionsById =
 		institutionInformationData as Record<string, InstitutionInformationRecord>;
 	const institutionAccumulator = new Map<
@@ -278,41 +159,13 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 		}
 	>();
 	const articlesWithMappedInstitutions = new Set<number>();
-	type ArticleTermsSummary = {
-		technologyTerms: string[];
-		environmentalTerms: string[];
-	};
-	const articleTermsEntries: Array<[number, ArticleTermsSummary]> =
-		await Promise.all(
-			Array.from(matchingArticleIds).map(async (articleId) => {
-				const articleFt = await articleModel.getArticleFrequencyTerms(articleId);
-				if (!articleFt) {
-					return [
-						articleId,
-						{
-							technologyTerms: [] as string[],
-							environmentalTerms: [] as string[],
-						},
-					];
-				}
-
-				const technologyTerms = summarizeTerms(
-					Object.keys(filterOcurrencies(articleFt.tec)).map(formatTermLabel),
-				);
-				const environmentalTerms = summarizeTerms(
-					Object.keys(filterOcurrencies(articleFt.env)).map(formatTermLabel),
-				);
-
-				return [articleId, { technologyTerms, environmentalTerms }];
-			}),
-		);
-	const articleTermsById = new Map<number, ArticleTermsSummary>(
-		articleTermsEntries,
-	);
 
 	for (const articleId of matchingArticleIds) {
-		const record = articlesExtended[String(articleId)];
-		if (!record) continue;
+		const record = articlesExtended[String(articleId)] as
+			| ExtendedArticleRecord
+			| undefined;
+		const articleRecord = articleRecordsById.get(articleId);
+		if (!record || !articleRecord) continue;
 
 		const institutionIds = toStringArray(record["authorships.institutions.id"]);
 		let hasInstitutionForCurrentArticle = false;
@@ -334,15 +187,13 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 			const articleTitle =
 				record.title ?? record.json_title ?? `Artigo ${articleId}`;
 			const stageLabels =
-				(articleStagesById.get(articleId) ?? []).map((stageKey) =>
-					formatStageTitle(stageKey),
+				articleStagesById.get(articleId)?.map(
+					(stageKey) =>
+						groups.find((group) => group.stageKey === stageKey)?.stageTitle ??
+						stageKey,
 				) ?? [];
 			const normalizedStageLabels =
 				stageLabels.length > 0 ? stageLabels : ["Área não classificada"];
-			const articleTerms = articleTermsById.get(articleId) ?? {
-				technologyTerms: [],
-				environmentalTerms: [],
-			};
 
 			if (!current) {
 				const stageCounts = new Map<string, number>();
@@ -359,8 +210,8 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 							{
 								title: articleTitle,
 								stageLabels: normalizedStageLabels,
-								technologyTerms: articleTerms.technologyTerms,
-								environmentalTerms: articleTerms.environmentalTerms,
+								technologyTerms: articleRecord.technologyTerms,
+								environmentalTerms: articleRecord.environmentalTerms,
 							},
 						],
 					]),
@@ -374,8 +225,8 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				current.articleDetails.set(articleId, {
 					title: articleTitle,
 					stageLabels: normalizedStageLabels,
-					technologyTerms: articleTerms.technologyTerms,
-					environmentalTerms: articleTerms.environmentalTerms,
+					technologyTerms: articleRecord.technologyTerms,
+					environmentalTerms: articleRecord.environmentalTerms,
 				});
 			}
 			for (const stageKey of articleStagesById.get(articleId) ?? []) {
@@ -421,7 +272,8 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 					}))
 					.slice(0, 6),
 				dominantAreaLabel: dominantStageKey
-					? formatStageTitle(dominantStageKey)
+					? (groups.find((group) => group.stageKey === dominantStageKey)
+							?.stageTitle ?? dominantStageKey)
 					: "Área não classificada",
 				color: dominantStageKey
 					? (stageColorByKey.get(dominantStageKey) ?? "#0ea5e9")
@@ -431,33 +283,6 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 	);
 
 	institutionMapPoints.sort((a, b) => b.articleCount - a.articleCount);
-	const yearlyCountByPublicationYear = new Map<number, number>();
-	for (const articleId of matchingArticleIds) {
-		const publicationYearRaw =
-			articlesExtended[String(articleId)]?.publication_year;
-		const publicationYear =
-			typeof publicationYearRaw === "number"
-				? publicationYearRaw
-				: Number(publicationYearRaw);
-
-		if (
-			!Number.isInteger(publicationYear) ||
-			publicationYear < 1900 ||
-			publicationYear > 2100
-		) {
-			continue;
-		}
-
-		yearlyCountByPublicationYear.set(
-			publicationYear,
-			(yearlyCountByPublicationYear.get(publicationYear) ?? 0) + 1,
-		);
-	}
-	const yearlyArticlesTrend = Array.from(
-		yearlyCountByPublicationYear.entries(),
-	)
-		.sort((a, b) => a[0] - b[0])
-		.map(([year, total]) => ({ year, total }));
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e8f5ee_0%,_#f5f8f6_42%,_#ffffff_100%)] text-[#0f172a]">
@@ -533,6 +358,23 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 					</div>
 				) : null}
 
+				{hasSelectedTerms && totalResults > 0 ? (
+					<section className="mt-4 flex flex-wrap justify-end gap-3">
+						<Link
+							className="inline-flex items-center rounded-full border border-[#bfdbfe] bg-white px-5 py-3 text-sm font-bold uppercase tracking-[0.8px] text-[#1d4ed8] shadow-[0px_16px_30px_-18px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#eff6ff]"
+							href={`/termos/download?${downloadQuery}&format=csv`}
+						>
+							Baixar CSV
+						</Link>
+						<Link
+							className="inline-flex items-center rounded-full bg-[#2563eb] px-5 py-3 text-sm font-bold uppercase tracking-[0.8px] text-white shadow-[0px_16px_30px_-18px_rgba(37,99,235,0.75)] transition-colors hover:bg-[#1d4ed8]"
+							href={`/termos/download?${downloadQuery}&format=docx`}
+						>
+							Baixar DOCX
+						</Link>
+					</section>
+				) : null}
+
 				{hasSelectedTerms && chartItems.length > 0 ? (
 					<section className="mt-8 rounded-[16px] border border-[#dce9e1] bg-white p-5">
 						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
@@ -542,7 +384,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 							Quantidade de artigos encontrados em cada etapa da AIA.
 						</p>
 						<div className="mt-4">
-							<TermsBarChart items={chartItems} tone={tone} />
+							<TermsBarChartClient items={chartItems} tone={tone} />
 						</div>
 					</section>
 				) : null}
@@ -557,7 +399,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 							selecionados.
 						</p>
 						<div className="mt-4">
-							<ArticlesYearLineChart items={yearlyArticlesTrend} />
+							<ArticlesYearLineChartClient items={yearlyArticlesTrend} />
 						</div>
 					</section>
 				) : null}
@@ -574,8 +416,6 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				{hasSelectedTerms ? (
 					<section className="mt-8 space-y-5">
 						{groupsWithColors.map((group) => {
-							const areaSlug = stageKeyToSlug(group.stageKey);
-							const stageTitle = formatStageTitle(group.stageKey);
 							const subtleBackground = hexToRgba(group.color, 0.09);
 
 							return (
@@ -597,22 +437,21 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 													▸
 												</span>
 												<span>
-													{stageTitle} ({group.articles.length})
+													{group.stageTitle} ({group.articles.length})
 												</span>
 											</span>
 										</summary>
 										<div className="space-y-4 px-4 pb-4">
 											{group.articles.map((article) => (
 												<ArticleCard
-													abstract={article.abstract}
-													href={`/areas/${areaSlug}/artigos/${article.id}`}
-													key={`${group.stageKey}-${article.id}`}
-													keywords={article.keywords ?? []}
-													metadata={buildArticleMetadata(
-														articlesExtended[String(article.id)],
-													)}
+													abstract={article.article.abstract}
+													href={article.articleUrl}
+													key={`${group.stageKey}-${article.article.id}`}
+													keywords={article.article.keywords ?? []}
+													metadata={buildArticleMetadata(article)}
 													showAbstract={false}
-													title={article.title}
+													titleHref={article.preferredLink}
+													title={article.article.title}
 												/>
 											))}
 										</div>
