@@ -2,10 +2,10 @@ import {
 	ArticleCard,
 	type ArticleMetadata,
 } from "@/components/articles/article-card";
-import { ArticlesYearLineChart } from "@/components/charts/articles-year-line-chart";
+import { ArticlesYearLineChartClient } from "@/components/charts/articles-year-line-chart-client";
 import { getToneColorByIndex } from "@/components/charts/chart-palettes";
 import { TermsInstitutionsMapClient } from "@/components/termos/terms-institutions-map-client";
-import { TermsBarChart } from "@/components/charts/terms-bar-chart";
+import { TermsBarChartClient } from "@/components/charts/terms-bar-chart-client";
 import institutionInformationData from "@/data/instituition_information.json";
 import {
 	buildTermsDownloadQuery,
@@ -378,7 +378,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 							Quantidade de artigos encontrados em cada etapa da AIA.
 						</p>
 						<div className="mt-4">
-							<TermsBarChart items={chartItems} tone={tone} />
+							<TermsBarChartClient items={chartItems} tone={tone} />
 						</div>
 					</section>
 				) : null}
@@ -393,7 +393,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 							selecionados.
 						</p>
 						<div className="mt-4">
-							<ArticlesYearLineChart items={yearlyArticlesTrend} />
+							<ArticlesYearLineChartClient items={yearlyArticlesTrend} />
 						</div>
 					</section>
 				) : null}
