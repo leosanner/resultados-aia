@@ -152,6 +152,10 @@ export function formatFwci(value: number | string | null | undefined) {
 	return "";
 }
 
+function formatFwciForExport(value: string) {
+	return value.replace(".", ",");
+}
+
 export function buildTermsDownloadQuery({
 	tec,
 	env,
@@ -238,7 +242,7 @@ function buildUniqueExportRows(
 			autores: record.authorsLabel,
 			titulo: capitalizeFirstLetter(record.article.title),
 			link: record.preferredLink,
-			fwci: record.fwci,
+			fwci: formatFwciForExport(record.fwci),
 		}),
 	);
 }
