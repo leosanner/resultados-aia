@@ -157,13 +157,17 @@ function buildTextRuns(value: string, bold: boolean = false) {
 
 function buildParagraph({
 	content,
+	spacingAfter = 80,
+	lineHeight = 300,
 }: {
 	content: string;
+	spacingAfter?: number;
+	lineHeight?: number;
 }) {
 	return `
 		<w:p>
 			<w:pPr>
-				<w:spacing w:after="80" w:line="300" w:lineRule="auto"/>
+				<w:spacing w:after="${spacingAfter}" w:line="${lineHeight}" w:lineRule="auto"/>
 			</w:pPr>
 			${content}
 		</w:p>
@@ -174,10 +178,12 @@ function buildCell({
 	width,
 	fill,
 	content,
+	padding = 110,
 }: {
 	width: number;
 	fill: string;
 	content: string;
+	padding?: number;
 }) {
 	return `
 		<w:tc>
@@ -185,10 +191,10 @@ function buildCell({
 				<w:tcW w:w="${width}" w:type="dxa"/>
 				<w:shd w:val="clear" w:color="auto" w:fill="${fill}"/>
 				<w:tcMar>
-					<w:top w:w="110" w:type="dxa"/>
-					<w:left w:w="110" w:type="dxa"/>
-					<w:bottom w:w="110" w:type="dxa"/>
-					<w:right w:w="110" w:type="dxa"/>
+					<w:top w:w="${padding}" w:type="dxa"/>
+					<w:left w:w="${padding}" w:type="dxa"/>
+					<w:bottom w:w="${padding}" w:type="dxa"/>
+					<w:right w:w="${padding}" w:type="dxa"/>
 				</w:tcMar>
 				<w:vAlign w:val="center"/>
 			</w:tcPr>
@@ -227,7 +233,12 @@ function getLinkLabel(link: string) {
 function buildRow(
 	values: string[],
 	rowIndex: number,
-	columnWidths: number[],
+	columns: Array<{
+		width: number;
+		compactPadding?: number;
+		roomyPadding?: number;
+		isRoomy?: boolean;
+	}>,
 	isHeader: boolean,
 	buildCellContent: (value: string, columnIndex: number, isHeader: boolean) => string,
 ) {
@@ -237,8 +248,11 @@ function buildRow(
 			${values
 				.map((value, index) =>
 					buildCell({
-						width: columnWidths[index],
+						width: columns[index].width,
 						fill,
+						padding: columns[index].isRoomy
+							? (columns[index].roomyPadding ?? 180)
+							: (columns[index].compactPadding ?? 90),
 						content: buildCellContent(value, index, isHeader),
 					}),
 				)
@@ -249,22 +263,36 @@ function buildRow(
 
 function buildDocumentXml(rows: TermsSearchExportRow[]) {
 	const columns = [
-		{ label: "Área de AIA relacionada", key: "area_aia_relacionada", width: 2600 },
+		{
+			label: "Área de AIA relacionada",
+			key: "area_aia_relacionada",
+			width: 2800,
+			isRoomy: true,
+			roomyPadding: 190,
+		},
 		{
 			label: "Termos de busca tecnologia",
 			key: "termos_busca_tecnologia",
 			width: 2500,
+			compactPadding: 90,
 		},
 		{
 			label: "Termos de busca ambientais",
 			key: "termos_busca_ambientais",
 			width: 2500,
+			compactPadding: 90,
 		},
-		{ label: "Data", key: "data", width: 1200 },
-		{ label: "Autores", key: "autores", width: 2600 },
-		{ label: "Título", key: "titulo", width: 3400 },
-		{ label: "Link", key: "link", width: 3200 },
-		{ label: "FWCI", key: "fwci", width: 900 },
+		{ label: "Data", key: "data", width: 1200, compactPadding: 80 },
+		{ label: "Autores", key: "autores", width: 2400, compactPadding: 90 },
+		{
+			label: "Título",
+			key: "titulo",
+			width: 3900,
+			isRoomy: true,
+			roomyPadding: 210,
+		},
+		{ label: "Link", key: "link", width: 2800, compactPadding: 90 },
+		{ label: "FWCI", key: "fwci", width: 850, compactPadding: 80 },
 	] as const;
 	const widths = columns.map((column) => column.width);
 	const hyperlinkRelationships: Array<{ id: string; target: string }> = [];
@@ -279,6 +307,11 @@ function buildDocumentXml(rows: TermsSearchExportRow[]) {
 		}
 
 		const column = columns[columnIndex];
+		const paragraphOptions =
+			column.key === "area_aia_relacionada" || column.key === "titulo"
+				? { spacingAfter: 120, lineHeight: 360 }
+				: { spacingAfter: 60, lineHeight: 260 };
+
 		if (column.key === "link" && value) {
 			hyperlinkCount += 1;
 			const relationshipId = `rIdHyperlink${hyperlinkCount}`;
@@ -288,23 +321,37 @@ function buildDocumentXml(rows: TermsSearchExportRow[]) {
 					text: getLinkLabel(value),
 					relationshipId,
 				}),
+				...paragraphOptions,
 			});
 		}
 
-		return buildParagraph({ content: buildTextRuns(value, false) });
+		return buildParagraph({
+			content: buildTextRuns(value, false),
+			...paragraphOptions,
+		});
 	};
 	const headerRow = buildRow(
 		columns.map((column) => column.label),
 		0,
-		widths,
+		columns as unknown as Array<{
+			width: number;
+			compactPadding?: number;
+			roomyPadding?: number;
+			isRoomy?: boolean;
+		}>,
 		true,
 		buildCellContent,
 	);
 	const bodyRows = rows.map((row, index) =>
 		buildRow(
-				columns.map((column) => row[column.key] ?? ""),
+			columns.map((column) => row[column.key] ?? ""),
 			index,
-			widths,
+			columns as unknown as Array<{
+				width: number;
+				compactPadding?: number;
+				roomyPadding?: number;
+				isRoomy?: boolean;
+			}>,
 			false,
 			buildCellContent,
 		),
