@@ -78,6 +78,10 @@ function hexToRgba(hex: string, alpha: number) {
 	return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+function buildDownloadHref(format: "csv" | "docx", query: string) {
+	return query ? `/termos/download?${query}&format=${format}` : `/termos/download?format=${format}`;
+}
+
 function buildArticleMetadata(record: TermsSearchArticleRecord): ArticleMetadata[] {
 	return [
 		record.publicationDate ? { label: "Data", value: record.publicationDate } : null,
@@ -98,6 +102,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 		selectedTecTerms,
 		selectedEnvTerms,
 		hasSelectedTerms,
+		isShowingAllResults,
 		totalResults,
 		matchingArticleIds,
 		groups,
@@ -293,16 +298,20 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 						Filtro por termos
 					</p>
 					<h1 className="mt-2 text-3xl font-black tracking-[-0.8px] text-[#0f172a] md:text-4xl">
-						{hasSelectedTerms
+						{isShowingAllResults
+							? "Todos os resultados do grafo"
+							: hasSelectedTerms
 							? "Resultados por termos selecionados"
-							: "Selecione termos no grafo"}
+							: "Resultados por termos"}
 					</h1>
 					<p className="mt-2 text-base text-[#64748b]">
-						{hasSelectedTerms
+						{isShowingAllResults
+							? `${totalResults} artigos encontrados sem filtros aplicados.`
+							: hasSelectedTerms
 							? `${totalResults} artigos encontrados.`
-							: "Selecione termos no painel do grafo e use o botão para ver os artigos encontrados."}
+							: "Resultados carregados."}
 					</p>
-					{hasSelectedTerms ? (
+					{totalResults > 0 ? (
 						<div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
 							<div className="rounded-xl border border-[#bfdbfe] bg-[#eff6ff] px-4 py-3">
 								<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#1d4ed8]">
@@ -358,24 +367,24 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 					</div>
 				) : null}
 
-				{hasSelectedTerms && totalResults > 0 ? (
+				{totalResults > 0 ? (
 					<section className="mt-4 flex flex-wrap justify-end gap-3">
 						<Link
 							className="inline-flex items-center rounded-full border border-[#bfdbfe] bg-white px-5 py-3 text-sm font-bold uppercase tracking-[0.8px] text-[#1d4ed8] shadow-[0px_16px_30px_-18px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#eff6ff]"
-							href={`/termos/download?${downloadQuery}&format=csv`}
+							href={buildDownloadHref("csv", downloadQuery)}
 						>
 							Baixar CSV
 						</Link>
 						<Link
 							className="inline-flex items-center rounded-full bg-[#2563eb] px-5 py-3 text-sm font-bold uppercase tracking-[0.8px] text-white shadow-[0px_16px_30px_-18px_rgba(37,99,235,0.75)] transition-colors hover:bg-[#1d4ed8]"
-							href={`/termos/download?${downloadQuery}&format=docx`}
+							href={buildDownloadHref("docx", downloadQuery)}
 						>
 							Baixar DOCX
 						</Link>
 					</section>
 				) : null}
 
-				{hasSelectedTerms && chartItems.length > 0 ? (
+				{chartItems.length > 0 ? (
 					<section className="mt-8 rounded-[16px] border border-[#dce9e1] bg-white p-5">
 						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
 							Distribuição por etapa
@@ -389,14 +398,14 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 					</section>
 				) : null}
 
-				{hasSelectedTerms && totalResults > 0 ? (
+				{totalResults > 0 ? (
 					<section className="mt-8 rounded-[16px] border border-[#dce9e1] bg-white p-5">
 						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
 							Evolução anual de artigos
 						</h2>
 						<p className="mt-1 text-sm text-[#64748b]">
 							Quantidade de artigos publicados por ano para os termos
-							selecionados.
+							{isShowingAllResults ? " do grafo." : " selecionados."}
 						</p>
 						<div className="mt-4">
 							<ArticlesYearLineChartClient items={yearlyArticlesTrend} />
@@ -404,7 +413,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 					</section>
 				) : null}
 
-				{hasSelectedTerms && totalResults > 0 ? (
+				{totalResults > 0 ? (
 					<TermsInstitutionsMapClient
 						areas={areaLegend}
 						articlesWithMappedInstitutions={articlesWithMappedInstitutions.size}
@@ -413,7 +422,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 					/>
 				) : null}
 
-				{hasSelectedTerms ? (
+				{totalResults > 0 ? (
 					<section className="mt-8 space-y-5">
 						{groupsWithColors.map((group) => {
 							const subtleBackground = hexToRgba(group.color, 0.09);
@@ -462,7 +471,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 					</section>
 				) : null}
 
-				{hasSelectedTerms && totalResults === 0 ? (
+				{totalResults === 0 ? (
 					<section className="mt-8 rounded-[12px] border border-[#e2e8f0] bg-white p-6">
 						<h2 className="text-lg font-bold text-[#0f172a]">
 							Nenhum artigo encontrado
