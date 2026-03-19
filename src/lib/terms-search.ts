@@ -52,6 +52,7 @@ export type TermsSearchResults = {
 	selectedTecTerms: string[];
 	selectedEnvTerms: string[];
 	hasSelectedTerms: boolean;
+	isShowingAllResults: boolean;
 	totalResults: number;
 	matchingArticleIds: Set<number>;
 	groups: TermsSearchGroup[];
@@ -267,9 +268,11 @@ export async function getTermsSearchResults(
 
 	const hasSelectedTerms =
 		selectedTecTerms.length > 0 || selectedEnvTerms.length > 0;
+	const isShowingAllResults = !hasSelectedTerms;
 	const eiaModel = new EiaModel();
 	const articleModel = new ArticleModel();
 	const articlesByStage = await eiaModel.getArticlesByStage();
+	const allArticles = await articleModel.getArticles();
 	const articlesExtended =
 		(await articleModel.getArticlesExtended()) as Record<
 			string,
@@ -291,8 +294,6 @@ export async function getTermsSearchResults(
 			current[fingerprint] = (current[fingerprint] ?? 0) + 1;
 			return current;
 		}, {});
-		const allArticles = await articleModel.getArticles();
-
 		for (const [articleId, article] of Object.entries(allArticles)) {
 			const fingerprint = buildArticleFingerprint(article);
 			if ((filteredByFingerprint[fingerprint] ?? 0) > 0) {
@@ -300,6 +301,11 @@ export async function getTermsSearchResults(
 				filteredByFingerprint[fingerprint] -= 1;
 			}
 		}
+	} else {
+		for (const articleId of Object.keys(allArticles)) {
+			matchingArticleIds.add(Number(articleId));
+		}
+		totalResults = matchingArticleIds.size;
 	}
 
 	const articleTermsEntries: Array<
@@ -331,9 +337,9 @@ export async function getTermsSearchResults(
 
 	const groups = Object.entries(articlesByStage)
 		.map(([stageKey, articles]) => {
-			const stageArticles = hasSelectedTerms
-				? articles.filter((article) => matchingArticleIds.has(article.id))
-				: [];
+			const stageArticles = articles.filter((article) =>
+				matchingArticleIds.has(article.id),
+			);
 
 			const areaSlug = stageKeyToSlug(stageKey);
 			const stageTitle = formatStageTitle(stageKey);
@@ -406,6 +412,7 @@ export async function getTermsSearchResults(
 		selectedTecTerms,
 		selectedEnvTerms,
 		hasSelectedTerms,
+		isShowingAllResults,
 		totalResults,
 		matchingArticleIds,
 		groups,

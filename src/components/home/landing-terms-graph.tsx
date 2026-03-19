@@ -331,18 +331,12 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 
 	const clearFilters = () => setSelectedTopicIds([]);
 	const showFoundArticles = () => {
-		if (
-			selectedTermsByType.tec.length === 0 &&
-			selectedTermsByType.env.length === 0
-		) {
-			return;
-		}
-
 		const query = new URLSearchParams();
 		for (const term of selectedTermsByType.tec) query.append("tec", term);
 		for (const term of selectedTermsByType.env) query.append("env", term);
 
-		router.push(`/termos?${query.toString()}`);
+		const queryString = query.toString();
+		router.push(queryString ? `/termos?${queryString}` : "/termos");
 	};
 
 	const onNodeDragStop = (_: unknown, node: Node) => {
@@ -446,10 +440,6 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 					</div>
 					<button
 						className="rounded-full bg-[#16a34a] px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors enabled:hover:bg-[#15803d] disabled:cursor-not-allowed disabled:bg-[#86efac]"
-						disabled={
-							selectedTermsByType.tec.length === 0 &&
-							selectedTermsByType.env.length === 0
-						}
 						onClick={showFoundArticles}
 						type="button"
 					>
