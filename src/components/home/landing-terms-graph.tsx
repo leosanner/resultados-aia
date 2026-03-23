@@ -443,7 +443,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 						onClick={showFoundArticles}
 						type="button"
 					>
-						Mostrar artigos encontrados
+						Mostrar resultados
 					</button>
 				</div>
 			</div>
