@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Compass } from "lucide-react";
 
 type MainNavbarPage = "contextualizacao" | "metodologia" | "autores" | null;
 
@@ -9,10 +8,32 @@ type MainNavbarProps = {
 	showEntrarButton?: boolean;
 };
 
-function navItemClass(isActive: boolean) {
-	return isActive
-		? "text-sm font-medium text-white"
-		: "text-sm font-medium text-[#d6e5dd] transition-colors hover:text-white";
+function NavLink({
+	href,
+	isActive,
+	children,
+}: {
+	href: string;
+	isActive: boolean;
+	children: React.ReactNode;
+}) {
+	return (
+		<Link
+			href={href}
+			className={`group relative pb-1 text-lg font-bold tracking-tight transition-colors ${
+				isActive ? "text-[#00261a]" : "text-[#446554]/70 hover:text-[#00261a]"
+			}`}
+		>
+			{children}
+			<span
+				className={`absolute bottom-0 left-0 h-[2px] bg-[#f6be28] transition-transform duration-300 ease-out ${
+					isActive
+						? "w-full scale-x-100"
+						: "w-full origin-left scale-x-0 group-hover:scale-x-100"
+				}`}
+			/>
+		</Link>
+	);
 }
 
 export function MainNavbar({
@@ -21,56 +42,49 @@ export function MainNavbar({
 	showEntrarButton = false,
 }: MainNavbarProps) {
 	return (
-		<header className="w-full border-b border-[#173f2f] bg-[#0f1f19]/95 px-6 py-6 backdrop-blur-sm sm:px-10 lg:px-20 lg:py-8">
-			<div className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-4">
-				<div className="flex items-center gap-3">
-					<div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2ecc71]/20 ring-1 ring-[#28a745]/30">
-						<Compass aria-hidden className="h-4 w-4 text-[#7dd3a8]" />
-					</div>
-					<div className="leading-tight">
-						<Link
-							href={"/"}
-							className="text-xl font-extrabold tracking-[-0.5px] text-white"
-						>
-							Explorador AIA
-						</Link>
-						<p className="text-[10px] font-bold uppercase tracking-[1px] text-[#7dd3a8]">
-							Base de Pesquisa
-						</p>
-					</div>
-				</div>
+		<header className="sticky top-0 z-50 w-full bg-white/70 shadow-sm backdrop-blur-xl">
+			<div className="mx-auto flex h-20 w-full max-w-screen-2xl items-center justify-between px-8">
+				<Link
+					href="/"
+					className="text-2xl font-black tracking-tight text-[#00261a]"
+				>
+					Explorador AIA
+				</Link>
 
 				<nav
 					aria-label="Navegação principal"
 					className="hidden items-center gap-8 md:flex"
 				>
-					<Link
-						className={navItemClass(activePage === "contextualizacao")}
+					<NavLink
 						href="/contextualizacao-geral"
+						isActive={activePage === "contextualizacao"}
 					>
-						Contextualização Geral
-					</Link>
-					<Link
-						className={navItemClass(activePage === "metodologia")}
+						Contextualização
+					</NavLink>
+					<NavLink
 						href="/metodologia"
+						isActive={activePage === "metodologia"}
 					>
 						Metodologia
-					</Link>
-					<Link
-						className={navItemClass(activePage === "autores")}
+					</NavLink>
+					<NavLink
 						href="/autores"
+						isActive={activePage === "autores"}
 					>
 						Autores
-					</Link>
+					</NavLink>
 					{showResultsBadge ? (
-						<span className="rounded-full bg-[#2ecc71] px-5 py-2 text-sm font-semibold text-white">
+						<Link
+							href="/termos"
+							className="rounded-full bg-[#00261a] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#3b6756]"
+						>
 							Resultados
-						</span>
+						</Link>
 					) : null}
 					{showEntrarButton ? (
 						<button
 							aria-label="Entrar na plataforma"
-							className="hidden rounded-full bg-[#2ecc71] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#28a745]"
+							className="hidden rounded-full bg-[#00261a] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#3b6756]"
 							type="button"
 						>
 							Entrar
