@@ -58,12 +58,26 @@ export type TermsSearchResults = {
 	groups: TermsSearchGroup[];
 	exportRows: TermsSearchExportRow[];
 	yearlyArticlesTrend: Array<{ year: number; total: number }>;
+	technologyTermsTrend: TermsSearchTrendSeries[];
+	environmentalTermsTrend: TermsSearchTrendSeries[];
+	areasTrend: TermsSearchTrendSeries[];
 	articlesExtended: Record<string, TermsExtendedArticleRecord>;
 };
 
 type TermsExtendedArticleRecord = ArticleExtend & {
 	fwci?: number | string | null;
 	publication_year?: number | string | null;
+};
+
+export type TermsSearchTrendPoint = {
+	year: number;
+	total: number;
+};
+
+export type TermsSearchTrendSeries = {
+	key: string;
+	label: string;
+	items: TermsSearchTrendPoint[];
 };
 
 function toArray(value: string | string[] | undefined) {
@@ -248,6 +262,45 @@ function buildUniqueExportRows(
 	);
 }
 
+function getValidPublicationYear(
+	value: number | string | null | undefined,
+): number | null {
+	const publicationYear =
+		typeof value === "number" ? value : Number(value);
+
+	if (
+		!Number.isInteger(publicationYear) ||
+		publicationYear < 1900 ||
+		publicationYear > 2100
+	) {
+		return null;
+	}
+
+	return publicationYear;
+}
+
+function buildTrendSeries(params: {
+	years: number[];
+	keys: string[];
+	labelByKey?: Map<string, string>;
+	countByKeyAndYear: Map<string, Map<number, number>>;
+}) {
+	const { years, keys, labelByKey, countByKeyAndYear } = params;
+
+	return keys.map((key) => {
+		const yearlyCounts = countByKeyAndYear.get(key) ?? new Map<number, number>();
+
+		return {
+			key,
+			label: labelByKey?.get(key) ?? key,
+			items: years.map((year) => ({
+				year,
+				total: yearlyCounts.get(year) ?? 0,
+			})),
+		} satisfies TermsSearchTrendSeries;
+	});
+}
+
 export async function getTermsSearchResults(
 	searchParams: TermsSearchParams,
 ): Promise<TermsSearchResults> {
@@ -323,11 +376,9 @@ export async function getTermsSearchResults(
 				];
 			}
 
-			const technologyTerms = summarizeTerms(
-				Object.keys(filterOcurrencies(articleFt.tec)).map(formatTermLabel),
-			);
-			const environmentalTerms = summarizeTerms(
-				Object.keys(filterOcurrencies(articleFt.env)).map(formatTermLabel),
+			const technologyTerms = normalizeTerms(Object.keys(filterOcurrencies(articleFt.tec)));
+			const environmentalTerms = normalizeTerms(
+				Object.keys(filterOcurrencies(articleFt.env)),
 			);
 
 			return [articleId, { technologyTerms, environmentalTerms }];
@@ -360,8 +411,12 @@ export async function getTermsSearchResults(
 					preferredLink: buildPreferredArticleHref(extended, articleUrl),
 					publicationDate: extended?.publish_date?.trim?.() ?? "",
 					authorsLabel: buildAuthorsLabel(extended?.authors),
-					technologyTerms: terms.technologyTerms,
-					environmentalTerms: terms.environmentalTerms,
+					technologyTerms: summarizeTerms(
+						terms.technologyTerms.map(formatTermLabel),
+					),
+					environmentalTerms: summarizeTerms(
+						terms.environmentalTerms.map(formatTermLabel),
+					),
 					fwci: formatFwci(extended?.fwci),
 				} satisfies TermsSearchArticleRecord;
 			});
@@ -383,30 +438,109 @@ export async function getTermsSearchResults(
 	);
 
 	const yearlyCountByPublicationYear = new Map<number, number>();
-	for (const articleId of matchingArticleIds) {
-		const publicationYearRaw = articlesExtended[String(articleId)]?.publication_year;
-		const publicationYear =
-			typeof publicationYearRaw === "number"
-				? publicationYearRaw
-				: Number(publicationYearRaw);
+	const availableTechnologyTerms = new Set<string>();
+	const availableEnvironmentalTerms = new Set<string>();
+	const yearlyTechnologyCounts = new Map<string, Map<number, number>>();
+	const yearlyEnvironmentalCounts = new Map<string, Map<number, number>>();
 
-		if (
-			!Number.isInteger(publicationYear) ||
-			publicationYear < 1900 ||
-			publicationYear > 2100
-		) {
-			continue;
-		}
+	for (const articleId of matchingArticleIds) {
+		const publicationYear = getValidPublicationYear(
+			articlesExtended[String(articleId)]?.publication_year,
+		);
+		if (publicationYear === null) continue;
 
 		yearlyCountByPublicationYear.set(
 			publicationYear,
 			(yearlyCountByPublicationYear.get(publicationYear) ?? 0) + 1,
 		);
+
+		const articleTerms = articleTermsById.get(articleId) ?? {
+			technologyTerms: [],
+			environmentalTerms: [],
+		};
+
+		for (const technologyTerm of articleTerms.technologyTerms) {
+			availableTechnologyTerms.add(technologyTerm);
+			const countsByYear =
+				yearlyTechnologyCounts.get(technologyTerm) ?? new Map<number, number>();
+			countsByYear.set(publicationYear, (countsByYear.get(publicationYear) ?? 0) + 1);
+			yearlyTechnologyCounts.set(technologyTerm, countsByYear);
+		}
+
+		for (const environmentalTerm of articleTerms.environmentalTerms) {
+			availableEnvironmentalTerms.add(environmentalTerm);
+			const countsByYear =
+				yearlyEnvironmentalCounts.get(environmentalTerm) ?? new Map<number, number>();
+			countsByYear.set(publicationYear, (countsByYear.get(publicationYear) ?? 0) + 1);
+			yearlyEnvironmentalCounts.set(environmentalTerm, countsByYear);
+		}
 	}
 
-	const yearlyArticlesTrend = Array.from(yearlyCountByPublicationYear.entries())
-		.sort((a, b) => a[0] - b[0])
-		.map(([year, total]) => ({ year, total }));
+	const years = Array.from(yearlyCountByPublicationYear.keys()).sort((a, b) => a - b);
+	const yearlyArticlesTrend = years.map((year) => ({
+		year,
+		total: yearlyCountByPublicationYear.get(year) ?? 0,
+	}));
+
+	const technologyTrendKeys =
+		selectedTecTerms.length > 0
+			? [...selectedTecTerms].sort((a, b) => a.localeCompare(b, "pt-BR"))
+			: Array.from(availableTechnologyTerms).sort((a, b) =>
+					a.localeCompare(b, "pt-BR"),
+				);
+	const environmentalTrendKeys =
+		selectedEnvTerms.length > 0
+			? [...selectedEnvTerms].sort((a, b) => a.localeCompare(b, "pt-BR"))
+			: Array.from(availableEnvironmentalTerms).sort((a, b) =>
+					a.localeCompare(b, "pt-BR"),
+				);
+
+	const termLabelByKey = new Map<string, string>();
+	for (const key of technologyTrendKeys) {
+		termLabelByKey.set(key, formatTermLabel(key));
+	}
+	for (const key of environmentalTrendKeys) {
+		termLabelByKey.set(key, formatTermLabel(key));
+	}
+
+	const areaCountByKeyAndYear = new Map<string, Map<number, number>>();
+	const areaLabelByKey = new Map<string, string>();
+	const allStageKeys = Object.keys(articlesByStage).sort((a, b) =>
+		formatStageTitle(a).localeCompare(formatStageTitle(b), "pt-BR"),
+	);
+
+	for (const stageKey of allStageKeys) {
+		areaLabelByKey.set(stageKey, formatStageTitle(stageKey));
+		const countsByYear = new Map<number, number>();
+		for (const article of articlesByStage[stageKey] ?? []) {
+			if (!matchingArticleIds.has(article.id)) continue;
+			const publicationYear = getValidPublicationYear(
+				articlesExtended[String(article.id)]?.publication_year,
+			);
+			if (publicationYear === null) continue;
+			countsByYear.set(publicationYear, (countsByYear.get(publicationYear) ?? 0) + 1);
+		}
+		areaCountByKeyAndYear.set(stageKey, countsByYear);
+	}
+
+	const technologyTermsTrend = buildTrendSeries({
+		years,
+		keys: technologyTrendKeys,
+		labelByKey: termLabelByKey,
+		countByKeyAndYear: yearlyTechnologyCounts,
+	});
+	const environmentalTermsTrend = buildTrendSeries({
+		years,
+		keys: environmentalTrendKeys,
+		labelByKey: termLabelByKey,
+		countByKeyAndYear: yearlyEnvironmentalCounts,
+	});
+	const areasTrend = buildTrendSeries({
+		years,
+		keys: allStageKeys,
+		labelByKey: areaLabelByKey,
+		countByKeyAndYear: areaCountByKeyAndYear,
+	});
 
 	return {
 		selectedTecTerms,
@@ -418,6 +552,9 @@ export async function getTermsSearchResults(
 		groups,
 		exportRows,
 		yearlyArticlesTrend,
+		technologyTermsTrend,
+		environmentalTermsTrend,
+		areasTrend,
 		articlesExtended,
 	};
 }

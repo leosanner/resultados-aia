@@ -2,8 +2,8 @@ import {
 	ArticleCard,
 	type ArticleMetadata,
 } from "@/components/articles/article-card";
-import { ArticlesYearLineChartClient } from "@/components/charts/articles-year-line-chart-client";
 import { getToneColorByIndex } from "@/components/charts/chart-palettes";
+import { TermsMultiLineChartClient } from "@/components/charts/terms-multi-line-chart-client";
 import { TermsInstitutionsMapClient } from "@/components/termos/terms-institutions-map-client";
 import { TermsBarChartClient } from "@/components/charts/terms-bar-chart-client";
 import institutionInformationData from "@/data/instituition_information.json";
@@ -106,7 +106,9 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 		totalResults,
 		matchingArticleIds,
 		groups,
-		yearlyArticlesTrend,
+		technologyTermsTrend,
+		environmentalTermsTrend,
+		areasTrend,
 		articlesExtended,
 	} = await getTermsSearchResults(currentSearchParams);
 	const tone = "blue" as const;
@@ -399,17 +401,72 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				) : null}
 
 				{totalResults > 0 ? (
-					<section className="mt-8 rounded-[16px] border border-[#dce9e1] bg-white p-5">
-						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
-							Evolução anual de artigos
-						</h2>
-						<p className="mt-1 text-sm text-[#64748b]">
-							Quantidade de artigos publicados por ano para os termos
-							{isShowingAllResults ? " do grafo." : " selecionados."}
-						</p>
-						<div className="mt-4">
-							<ArticlesYearLineChartClient items={yearlyArticlesTrend} />
+					<section className="mt-8 space-y-6">
+						<div className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
+							<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
+								Séries temporais por categoria
+							</h2>
+							<p className="mt-1 text-sm text-[#64748b]">
+								Cada linha representa um termo ou área dentro do conjunto de
+								artigos já filtrado no grafo.
+							</p>
 						</div>
+
+						<section className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
+							<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#0f4c81]">
+								Termos de tecnologia
+							</h3>
+							<p className="mt-1 text-sm text-[#64748b]">
+								{selectedTecTerms.length > 0
+									? "Linhas geradas apenas para os termos tecnológicos selecionados."
+									: "Nenhum termo tecnológico foi selecionado; o gráfico considera todos os termos tecnológicos presentes nos artigos filtrados."}
+							</p>
+							<div className="mt-4">
+								<TermsMultiLineChartClient
+									emptyMessage="Não há termos tecnológicos com ano de publicação válido nos artigos filtrados."
+									key={`technology-${technologyTermsTrend.map((item) => item.key).join("|")}`}
+									series={technologyTermsTrend}
+									tone="blue"
+								/>
+							</div>
+						</section>
+
+						<section className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
+							<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#166534]">
+								Termos ambientais
+							</h3>
+							<p className="mt-1 text-sm text-[#64748b]">
+								{selectedEnvTerms.length > 0
+									? "Linhas geradas apenas para os termos ambientais selecionados."
+									: "Nenhum termo ambiental foi selecionado; o gráfico considera todos os termos ambientais presentes nos artigos filtrados."}
+							</p>
+							<div className="mt-4">
+								<TermsMultiLineChartClient
+									emptyMessage="Não há termos ambientais com ano de publicação válido nos artigos filtrados."
+									key={`environmental-${environmentalTermsTrend.map((item) => item.key).join("|")}`}
+									series={environmentalTermsTrend}
+									tone="green"
+								/>
+							</div>
+						</section>
+
+						<section className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
+							<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#7c2d12]">
+								Áreas de AIA
+							</h3>
+							<p className="mt-1 text-sm text-[#64748b]">
+								Todas as áreas de AIA são consideradas, independentemente dos
+								termos selecionados no grafo.
+							</p>
+							<div className="mt-4">
+								<TermsMultiLineChartClient
+									emptyMessage="Não há anos válidos para montar a série temporal das áreas de AIA."
+									key={`areas-${areasTrend.map((item) => item.key).join("|")}`}
+									series={areasTrend}
+									tone="blue"
+								/>
+							</div>
+						</section>
 					</section>
 				) : null}
 
