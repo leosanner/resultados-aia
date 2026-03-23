@@ -244,7 +244,7 @@ export function TermsMultiLineChart({
 						slotProps={{
 							legend: {
 								direction: "horizontal",
-								position: { horizontal: "middle", vertical: "bottom" },
+								position: { horizontal: "center", vertical: "bottom" },
 							},
 						}}
 						sx={{
