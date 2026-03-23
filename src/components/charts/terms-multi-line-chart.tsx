@@ -105,8 +105,10 @@ export function TermsMultiLineChart({
 			});
 
 			const canvas = document.createElement("canvas");
+			const legendRows = Math.max(1, Math.ceil(filteredSeries.length / 3));
+			const legendHeight = 28 + legendRows * 22;
 			canvas.width = width * 2;
-			canvas.height = height * 2;
+			canvas.height = (height + legendHeight) * 2;
 
 			const context = canvas.getContext("2d");
 			if (!context) {
@@ -116,9 +118,33 @@ export function TermsMultiLineChart({
 
 			context.scale(2, 2);
 			context.fillStyle = "#ffffff";
-			context.fillRect(0, 0, width, height);
+			context.fillRect(0, 0, width, height + legendHeight);
 			context.drawImage(image, 0, 0, width, height);
 			URL.revokeObjectURL(svgUrl);
+
+			context.fillStyle = "#0f172a";
+			context.font = "600 12px sans-serif";
+			context.fillText("Legenda", 16, height + 24);
+
+			context.font = "12px sans-serif";
+			filteredSeries.forEach((item, index) => {
+				const column = index % 3;
+				const row = Math.floor(index / 3);
+				const x = 16 + column * Math.max(180, Math.floor((width - 32) / 3));
+				const y = height + 46 + row * 22;
+				const originalIndex = series.findIndex(
+					(candidate) => candidate.key === item.key,
+				);
+				const color = getToneColorByIndex(tone, originalIndex);
+
+				context.beginPath();
+				context.arc(x, y - 4, 4, 0, Math.PI * 2);
+				context.fillStyle = color;
+				context.fill();
+
+				context.fillStyle = "#334155";
+				context.fillText(item.label, x + 12, y);
+			});
 
 			const activeLabels = filteredSeries.map((item) => item.label).join("-");
 			const filenameBase =
