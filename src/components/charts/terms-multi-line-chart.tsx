@@ -203,12 +203,18 @@ export function TermsMultiLineChart({
 				</div>
 
 				<button
-					className="rounded-full border border-[#bfdbfe] bg-white px-3 py-1.5 text-xs font-semibold text-[#1d4ed8] transition-colors hover:bg-[#eff6ff] disabled:cursor-not-allowed disabled:opacity-60"
+					aria-label={isDownloading ? "Baixando gráfico" : "Baixar gráfico"}
+					className="ml-auto inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-full border border-[#334155] bg-[#1e293b] px-3 text-white transition-colors hover:bg-[#0f172a] disabled:cursor-not-allowed disabled:opacity-60"
 					disabled={filteredSeries.length === 0 || isDownloading}
 					onClick={downloadChart}
 					type="button"
 				>
-					{isDownloading ? "Baixando..." : "Baixar gráfico"}
+					<span className="text-xs font-semibold leading-none">
+						{isDownloading ? "Baixando" : "Baixar Gráfico"}
+					</span>
+					<span aria-hidden className="text-base leading-none">
+						{isDownloading ? "..." : "↓"}
+					</span>
 				</button>
 			</div>
 
