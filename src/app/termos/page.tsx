@@ -424,6 +424,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 							<div className="mt-4">
 								<TermsMultiLineChartClient
 									emptyMessage="Não há termos tecnológicos com ano de publicação válido nos artigos filtrados."
+									key={`technology-${technologyTermsTrend.map((item) => item.key).join("|")}`}
 									series={technologyTermsTrend}
 									tone="blue"
 								/>
@@ -442,6 +443,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 							<div className="mt-4">
 								<TermsMultiLineChartClient
 									emptyMessage="Não há termos ambientais com ano de publicação válido nos artigos filtrados."
+									key={`environmental-${environmentalTermsTrend.map((item) => item.key).join("|")}`}
 									series={environmentalTermsTrend}
 									tone="green"
 								/>
@@ -459,6 +461,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 							<div className="mt-4">
 								<TermsMultiLineChartClient
 									emptyMessage="Não há anos válidos para montar a série temporal das áreas de AIA."
+									key={`areas-${areasTrend.map((item) => item.key).join("|")}`}
 									series={areasTrend}
 									tone="blue"
 								/>
