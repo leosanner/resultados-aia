@@ -39,10 +39,10 @@ const RESULT_CARDS = [
 
 export function AgentRefinementSection() {
 	return (
-		<section className="border-t border-[#cfe0d6] bg-[#f7fbf8] px-6 py-16 md:py-24">
-			<div className="mx-auto max-w-6xl">
+		<section className="px-8 pt-24 pb-14">
+			<div className="mx-auto max-w-screen-2xl">
 				<motion.h2
-					className="mb-6 text-center text-3xl tracking-[-0.8px] text-[#1f2937]"
+					className="mb-6 text-center text-3xl font-bold text-[#00261a]"
 					initial={{ opacity: 0, y: 20 }}
 					transition={{ duration: 0.45 }}
 					viewport={{ once: true }}
@@ -52,7 +52,7 @@ export function AgentRefinementSection() {
 				</motion.h2>
 
 				<motion.p
-					className="mx-auto mb-10 max-w-4xl text-center text-base leading-relaxed text-[#334155]"
+					className="mx-auto mb-10 max-w-4xl text-center text-base leading-relaxed text-[#414944]"
 					initial={{ opacity: 0, y: 16 }}
 					transition={{ delay: 0.08, duration: 0.45 }}
 					viewport={{ once: true }}
@@ -71,7 +71,7 @@ export function AgentRefinementSection() {
 				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 					{RESULT_CARDS.map((card, index) => (
 						<motion.article
-							className={`rounded-xl border ${card.borderClass} ${card.bgClass} p-5 shadow-[0_12px_24px_-20px_rgba(15,23,42,0.75)]`}
+							className={`rounded-xl border ${card.borderClass} ${card.bgClass} p-6 shadow-[0_24px_40px_-4px_rgba(25,28,26,0.06)]`}
 							initial={{ opacity: 0, y: 18 }}
 							key={card.label}
 							transition={{ delay: index * 0.07, duration: 0.4 }}

@@ -7,7 +7,7 @@ import { AgentRefinementSection } from "@/components/metodologia/agent-refinemen
 
 export default function MetodologiaPage() {
 	return (
-		<div className="min-h-screen bg-[#e8efe9] text-[#1f2937]">
+		<div className="min-h-screen bg-[#f7faf5] text-[#191c1a]">
 			<main>
 				<HeroSection />
 				<MethodologyOverview />

@@ -6,10 +6,10 @@ import { VennDiagram } from "./venn-diagram";
 
 export function VisualDiagrams() {
 	return (
-		<section className="border-t border-[#cfe0d6] bg-[#f7fbf8] px-6 py-16 md:py-24">
-			<div className="mx-auto max-w-6xl">
+		<section className="px-8 pt-24 pb-14">
+			<div className="mx-auto max-w-screen-2xl">
 				<motion.h2
-					className="mb-12 text-center text-3xl tracking-[-0.8px] text-[#1f2937]"
+					className="mb-12 text-center text-3xl font-bold text-[#00261a]"
 					initial={{ opacity: 0, y: 20 }}
 					transition={{ duration: 0.45 }}
 					viewport={{ once: true }}
@@ -20,13 +20,13 @@ export function VisualDiagrams() {
 
 				<div className="grid gap-8 lg:grid-cols-2">
 					<motion.article
-						className="overflow-hidden rounded-xl border border-[#cfe0d6] bg-white p-6 shadow-[0_14px_28px_-20px_rgba(15,23,42,0.7)]"
+						className="overflow-hidden rounded-xl border border-[#d0ddd5] bg-white p-8 shadow-[0_24px_40px_-4px_rgba(25,28,26,0.06)]"
 						initial={{ opacity: 0, x: -24 }}
 						transition={{ duration: 0.5 }}
 						viewport={{ once: true }}
 						whileInView={{ opacity: 1, x: 0 }}
 					>
-						<h3 className="mb-4 text-xl font-semibold text-[#1f2937]">
+						<h3 className="mb-4 text-xl font-semibold text-[#00261a]">
 							Intersecção: Scopus vs OpenAlex
 						</h3>
 						<p className="mb-6 text-sm leading-relaxed text-[#556070]">
@@ -35,7 +35,7 @@ export function VisualDiagrams() {
 							registros representa o conjunto consolidado para análise
 							posterior.
 						</p>
-						<div className="overflow-hidden rounded-lg border border-[#e5ece8] bg-[#f7fbf8] p-4">
+						<div className="overflow-hidden rounded-lg border border-[#d0ddd5] bg-[#f7fbf8] p-4">
 							<VennDiagram />
 						</div>
 						<div className="mt-4 grid grid-cols-3 gap-4 text-center">
@@ -61,13 +61,13 @@ export function VisualDiagrams() {
 					</motion.article>
 
 					<motion.article
-						className="overflow-hidden rounded-xl border border-[#cfe0d6] bg-white p-6 shadow-[0_14px_28px_-20px_rgba(15,23,42,0.7)]"
+						className="overflow-hidden rounded-xl border border-[#d0ddd5] bg-white p-8 shadow-[0_24px_40px_-4px_rgba(25,28,26,0.06)]"
 						initial={{ opacity: 0, x: 24 }}
 						transition={{ duration: 0.5 }}
 						viewport={{ once: true }}
 						whileInView={{ opacity: 1, x: 0 }}
 					>
-						<h3 className="mb-4 text-xl font-semibold text-[#1f2937]">
+						<h3 className="mb-4 text-xl font-semibold text-[#00261a]">
 							Fluxograma do pipeline
 						</h3>
 						<p className="mb-6 text-sm leading-relaxed text-[#556070]">

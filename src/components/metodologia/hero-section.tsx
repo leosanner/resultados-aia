@@ -2,34 +2,87 @@
 
 import { motion } from "framer-motion";
 
+function AnimatedDotGrid() {
+	return (
+		<div className="absolute inset-0 overflow-hidden">
+			<div
+				className="absolute inset-0 opacity-15"
+				style={{
+					backgroundImage:
+						"radial-gradient(circle at 2px 2px, #beedd7 1px, transparent 0)",
+					backgroundSize: "40px 40px",
+				}}
+			/>
+			<motion.div
+				className="absolute -inset-[50%] opacity-25"
+				style={{
+					background:
+						"radial-gradient(ellipse 600px 400px at center, #2ECC71, transparent 70%)",
+				}}
+				animate={{
+					x: ["0%", "40%", "10%", "0%"],
+					y: ["0%", "20%", "-15%", "0%"],
+				}}
+				transition={{
+					duration: 20,
+					repeat: Infinity,
+					ease: "easeInOut",
+				}}
+			/>
+		</div>
+	);
+}
+
+function AccentBar() {
+	return (
+		<motion.div
+			className="h-[3px] rounded-full bg-[#f6be28]"
+			initial={{ width: 0 }}
+			animate={{ width: 80 }}
+			transition={{ delay: 0.6, duration: 0.7, ease: "easeOut" }}
+		/>
+	);
+}
+
 export function HeroSection() {
 	return (
-		<section className="relative overflow-hidden border-b border-[#bdd6c5] bg-[linear-gradient(180deg,_#0a5e30_0%,_#0C7C3C_100%)] px-6 py-20 md:py-28">
-			<motion.div
-				animate={{ opacity: 1, y: 0 }}
-				className="mx-auto max-w-5xl"
-				initial={{ opacity: 0, y: 20 }}
-				transition={{ duration: 0.55 }}
-			>
-				<motion.h1
-					animate={{ opacity: 1, y: 0 }}
-					className="mb-6 text-5xl tracking-[-1.2px] text-white md:text-6xl"
-					initial={{ opacity: 0, y: 20 }}
-					transition={{ delay: 0.08, duration: 0.55 }}
-				>
-					Metodologia
-				</motion.h1>
-				<motion.p
-					animate={{ opacity: 1, y: 0 }}
-					className="max-w-3xl text-lg leading-relaxed text-[#d7ebdd] md:text-xl"
-					initial={{ opacity: 0, y: 20 }}
-					transition={{ delay: 0.16, duration: 0.55 }}
-				>
-					Pipeline de pesquisa utilizado para transformar um conjunto massivo de
-					publicações acadêmicas em uma seleção refinada e relevante para Avaliação de
-					Impacto Ambiental (AIA).
-				</motion.p>
-			</motion.div>
+		<section className="relative flex min-h-[460px] items-center overflow-hidden bg-[#0f3d2e]">
+			<AnimatedDotGrid />
+
+			<div className="absolute inset-0 bg-gradient-to-br from-[#00261a] via-[#0f3d2e]/80 to-transparent" />
+
+			<div className="relative z-10 mx-auto w-full max-w-screen-2xl px-8 py-20">
+				<div className="max-w-3xl">
+					<motion.h1
+						className="text-5xl font-black leading-tight tracking-tighter text-white md:text-7xl"
+						initial={{ opacity: 0, y: 24 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.6, ease: "easeOut" }}
+					>
+						Metodologia
+					</motion.h1>
+
+					<motion.div
+						className="mt-6"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						transition={{ delay: 0.45, duration: 0.5 }}
+					>
+						<AccentBar />
+					</motion.div>
+
+					<motion.p
+						className="mt-5 max-w-2xl text-lg font-light leading-relaxed text-[#7ba894] md:text-xl"
+						initial={{ opacity: 0, y: 16 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ delay: 0.5, duration: 0.55, ease: "easeOut" }}
+					>
+						Pipeline de pesquisa utilizado para transformar um conjunto massivo de
+						publicações acadêmicas em uma seleção refinada e relevante para Avaliação de
+						Impacto Ambiental (AIA).
+					</motion.p>
+				</div>
+			</div>
 		</section>
 	);
 }

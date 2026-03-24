@@ -4,18 +4,18 @@ import { motion } from "framer-motion";
 
 export function MethodologyOverview() {
 	return (
-		<section className="bg-[#f3f8f4] px-6 py-16 md:py-20">
+		<section className="px-8 pt-24 pb-14">
 			<motion.div
-				className="mx-auto max-w-4xl rounded-2xl border border-[#cfe0d6] bg-white p-6 shadow-[0px_14px_28px_-24px_rgba(17,24,39,0.6)] md:p-8"
+				className="mx-auto max-w-screen-2xl rounded-xl border border-[#d0ddd5] bg-white p-8 shadow-[0_24px_40px_-4px_rgba(25,28,26,0.06)]"
 				initial={{ opacity: 0, y: 24 }}
 				transition={{ duration: 0.55 }}
 				viewport={{ margin: "-80px", once: true }}
 				whileInView={{ opacity: 1, y: 0 }}
 			>
-				<h2 className="mb-8 text-3xl tracking-[-0.8px] text-[#1f2937]">
+				<h2 className="mb-8 text-3xl font-bold text-[#00261a]">
 					Visão geral do processo
 				</h2>
-				<p className="text-lg leading-relaxed text-[#334155]">
+				<p className="text-lg leading-relaxed text-[#414944]">
 					O processo metodológico combinou buscas estruturadas em duas bases
 					acadêmicas (Scopus e OpenAlex) com termos de tecnologia e termos
 					ambientais relacionados ao contexto aplicado. A partir de um conjunto
