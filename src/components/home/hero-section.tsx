@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 function AnimatedDotGrid() {
 	return (
 		<div className="absolute inset-0 overflow-hidden">
+			{/* Base dot pattern */}
 			<div
 				className="absolute inset-0 opacity-15"
 				style={{
@@ -13,6 +14,7 @@ function AnimatedDotGrid() {
 					backgroundSize: "40px 40px",
 				}}
 			/>
+			{/* Sweep highlight that drifts across the grid */}
 			<motion.div
 				className="absolute -inset-[50%] opacity-25"
 				style={{
@@ -51,6 +53,7 @@ export function HeroSection() {
 
 			<div className="absolute inset-0 bg-gradient-to-br from-[#00261a] via-[#0f3d2e]/80 to-transparent" />
 
+
 			<div className="relative z-10 mx-auto w-full max-w-screen-2xl px-8 py-20">
 				<div className="max-w-3xl">
 					<motion.h1
@@ -59,7 +62,19 @@ export function HeroSection() {
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.6, ease: "easeOut" }}
 					>
-						Metodologia
+						Visão Geral das <br />
+						<motion.span
+							className="inline-block text-[#f6be28]"
+							initial={{ opacity: 0, y: 16 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{
+								delay: 0.2,
+								duration: 0.55,
+								ease: "easeOut",
+							}}
+						>
+							Etapas da AIA
+						</motion.span>
 					</motion.h1>
 
 					<motion.div
@@ -77,9 +92,7 @@ export function HeroSection() {
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.5, duration: 0.55, ease: "easeOut" }}
 					>
-						Pipeline de pesquisa utilizado para transformar um conjunto massivo de
-						publicações acadêmicas em uma seleção refinada e relevante para Avaliação de
-						Impacto Ambiental (AIA).
+						Explore pesquisas em Avaliação de Impacto Ambiental:
 					</motion.p>
 				</div>
 			</div>

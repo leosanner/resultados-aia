@@ -25,10 +25,10 @@ export function PipelineFlow() {
 	const [activeStage, setActiveStage] = useState<number | null>(null);
 
 	return (
-		<section className="bg-[#edf4ef] px-6 py-16 md:py-24">
-			<div className="mx-auto max-w-7xl">
+		<section className="px-8 pt-24 pb-14">
+			<div className="mx-auto max-w-screen-2xl">
 				<motion.h2
-					className="mb-4 text-center text-3xl tracking-[-0.8px] text-[#1f2937]"
+					className="mb-4 text-center text-3xl font-bold text-[#00261a]"
 					initial={{ opacity: 0, y: 20 }}
 					transition={{ duration: 0.45 }}
 					viewport={{ once: true }}
@@ -37,7 +37,7 @@ export function PipelineFlow() {
 					Pipeline de filtragem
 				</motion.h2>
 				<motion.p
-					className="mb-12 text-center text-[#556070]"
+					className="mb-12 text-center text-[#414944]"
 					initial={{ opacity: 0, y: 20 }}
 					transition={{ delay: 0.08, duration: 0.45 }}
 					viewport={{ once: true }}
@@ -56,7 +56,7 @@ export function PipelineFlow() {
 							return (
 								<div className="flex items-center" key={stage.id}>
 									<motion.button
-										className={`flex w-48 flex-col items-center rounded-xl border-2 ${stage.borderClass} ${stage.bgClass} p-6 text-left shadow-[0_10px_25px_-18px_rgba(15,23,42,0.55)] transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_30px_-20px_rgba(15,23,42,0.7)] ${isActive ? "ring-2 ring-[#0C7C3C]/25" : ""}`}
+										className={`flex w-48 flex-col items-center rounded-xl border-2 ${stage.borderClass} ${stage.bgClass} p-6 text-left shadow-[0_24px_40px_-4px_rgba(25,28,26,0.06)] transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_40px_-4px_rgba(25,28,26,0.12)] ${isActive ? "ring-2 ring-[#0C7C3C]/25" : ""}`}
 										initial={{ opacity: 0, scale: 0.9 }}
 										onMouseLeave={() => setActiveStage(null)}
 										onMouseMove={() => setActiveStage(stage.id)}
@@ -70,7 +70,7 @@ export function PipelineFlow() {
 										>
 											{iconLabel(stage.id)}
 										</div>
-										<h3 className="mb-2 text-center text-sm font-semibold text-[#1f2937]">
+										<h3 className="mb-2 text-center text-sm font-semibold text-[#00261a]">
 											{stage.shortTitle}
 										</h3>
 										<div
@@ -103,7 +103,7 @@ export function PipelineFlow() {
 									key={stage.id}
 								>
 									<motion.div
-										className={`flex w-full flex-col items-center rounded-xl border-2 ${stage.borderClass} ${stage.bgClass} p-6 shadow-[0_10px_25px_-18px_rgba(15,23,42,0.55)]`}
+										className={`flex w-full flex-col items-center rounded-xl border-2 ${stage.borderClass} ${stage.bgClass} p-6 shadow-[0_24px_40px_-4px_rgba(25,28,26,0.06)]`}
 										initial={{ opacity: 0, y: 20 }}
 										transition={{ delay: index * 0.08, duration: 0.35 }}
 										viewport={{ once: true }}
@@ -114,7 +114,7 @@ export function PipelineFlow() {
 										>
 											{iconLabel(stage.id)}
 										</div>
-										<h3 className="mb-2 text-center text-sm font-semibold text-[#1f2937]">
+										<h3 className="mb-2 text-center text-sm font-semibold text-[#00261a]">
 											{stage.shortTitle}
 										</h3>
 										<div

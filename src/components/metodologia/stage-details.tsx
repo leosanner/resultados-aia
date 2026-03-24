@@ -25,10 +25,10 @@ export function StageDetails() {
 	const [expandedStage, setExpandedStage] = useState<number | null>(null);
 
 	return (
-		<section className="border-t border-[#cfe0d6] bg-[#edf4ef] px-6 py-16 md:py-24">
-			<div className="mx-auto max-w-5xl">
+		<section className="px-8 pt-24 pb-14">
+			<div className="mx-auto max-w-screen-2xl">
 				<motion.h2
-					className="mb-12 text-center text-3xl tracking-[-0.8px] text-[#1f2937]"
+					className="mb-12 text-center text-3xl font-bold text-[#00261a]"
 					initial={{ opacity: 0, y: 20 }}
 					transition={{ duration: 0.45 }}
 					viewport={{ once: true }}
@@ -42,7 +42,7 @@ export function StageDetails() {
 						const expanded = expandedStage === stage.id;
 						return (
 							<motion.article
-								className={`overflow-hidden rounded-xl border ${stage.borderClass} ${stage.bgClass} shadow-[0_12px_26px_-20px_rgba(15,23,42,0.75)]`}
+								className={`overflow-hidden rounded-xl border ${stage.borderClass} ${stage.bgClass} shadow-[0_24px_40px_-4px_rgba(25,28,26,0.06)]`}
 								initial={{ opacity: 0, y: 20 }}
 								key={stage.id}
 								transition={{ delay: stage.id * 0.05, duration: 0.35 }}
@@ -62,13 +62,13 @@ export function StageDetails() {
 												{stageIcon(stage.id)}
 											</div>
 											<div className="flex-1">
-												<h3 className="mb-1 text-xl font-semibold text-[#1f2937]">{stage.title}</h3>
+												<h3 className="mb-1 text-xl font-semibold text-[#00261a]">{stage.title}</h3>
 												<p className="mb-3 text-sm text-[#556070]">{stage.subtitle}</p>
 												<div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
 													{stage.input ? (
 														<div>
 															<span className="text-[#64748b]">Entrada: </span>
-															<span className="font-mono text-[#334155]">{stage.input}</span>
+															<span className="font-mono text-[#414944]">{stage.input}</span>
 														</div>
 													) : null}
 													<div>
@@ -91,19 +91,19 @@ export function StageDetails() {
 								</button>
 
 								{expanded ? (
-									<div className="border-t border-[#d7e4dc] bg-white px-6 py-6">
+									<div className="border-t border-[#d0ddd5] bg-white px-6 py-6">
 										<div className="space-y-6">
 											<div>
 												<h4 className="mb-2 text-sm font-semibold uppercase tracking-[0.8px] text-[#64748b]">
 													O que foi feito
 												</h4>
-												<p className="leading-relaxed text-[#334155]">{stage.what}</p>
+												<p className="leading-relaxed text-[#414944]">{stage.what}</p>
 											</div>
 											<div>
 												<h4 className="mb-2 text-sm font-semibold uppercase tracking-[0.8px] text-[#64748b]">
 													Por que foi feito
 												</h4>
-												<p className="leading-relaxed text-[#334155]">{stage.why}</p>
+												<p className="leading-relaxed text-[#414944]">{stage.why}</p>
 											</div>
 											<div>
 												<h4 className="mb-3 text-sm font-semibold uppercase tracking-[0.8px] text-[#64748b]">
@@ -113,7 +113,7 @@ export function StageDetails() {
 													{stage.criteria.map((item) => (
 														<li className="flex items-start gap-3" key={item}>
 															<span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#94a3b8]" />
-															<span className="text-[#334155]">{item}</span>
+															<span className="text-[#414944]">{item}</span>
 														</li>
 													))}
 												</ul>

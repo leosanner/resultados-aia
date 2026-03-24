@@ -1,3 +1,4 @@
+import { HeroSection } from "@/components/home/hero-section";
 import { LandingTermsGraphClient } from "@/components/home/landing-terms-graph-client";
 import { graphContent } from "@/infra/build-graphs";
 import { formatStageTitle, stageKeyToSlug } from "@/lib/area-utils";
@@ -42,30 +43,7 @@ export default async function Home() {
 
 	return (
 		<div className="min-h-screen bg-[#f7faf5] text-[#191c1a]">
-			{/* Hero — full width */}
-			<section className="relative flex min-h-[460px] items-center overflow-hidden bg-[#0f3d2e]">
-				<div
-					className="absolute inset-0 opacity-20"
-					style={{
-						backgroundImage:
-							"radial-gradient(circle at 2px 2px, #beedd7 1px, transparent 0)",
-						backgroundSize: "40px 40px",
-					}}
-				/>
-				<div className="absolute inset-0 bg-gradient-to-br from-[#00261a] via-[#0f3d2e]/80 to-transparent" />
-				<div className="relative z-10 mx-auto w-full max-w-screen-2xl px-8 py-20">
-					<div className="max-w-3xl">
-						<h1 className="text-5xl font-black leading-tight tracking-tighter text-white md:text-7xl">
-							Visão Geral das{" "}
-							<br />
-							<span className="text-[#f6be28]">Etapas da AIA</span>
-						</h1>
-						<p className="mt-6 max-w-2xl text-lg font-light leading-relaxed text-[#7ba894] md:text-xl">
-							Explore pesquisas em Avaliação de Impacto Ambiental:
-						</p>
-					</div>
-				</div>
-			</section>
+			<HeroSection />
 
 			{/* Content container */}
 			<main className="mx-auto flex w-full max-w-screen-2xl flex-col gap-12 px-8 pb-14 pt-24 lg:gap-16">
@@ -84,7 +62,7 @@ export default async function Home() {
 						<div className="mb-16 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
 							<div className="max-w-xl">
 								<h2 className="text-3xl font-bold text-[#00261a]">
-									Arquivos por Categoria
+									Artigos por Categoria
 								</h2>
 								<p className="mt-2 text-[#446554]">
 									Selecione uma etapa para acessar as publicações
@@ -165,14 +143,22 @@ export default async function Home() {
 				) : null}
 
 				{graphData ? (
-					<section className="rounded-3xl border border-[#cfe0e9] bg-white p-6 shadow-[0px_16px_35px_-28px_rgba(17,17,17,0.3)] sm:p-8">
-						<h2 className="text-2xl font-extrabold tracking-[-0.4px] text-[#2B2B2B]">
-							Grafo de Artigos e Termos
-						</h2>
-						<p className="mt-2 text-sm text-[#31596c]">
-							Use a legenda abaixo do filtro para identificar as cores dos nós.
-						</p>
-						<div className="mt-6">
+					<section className="relative overflow-hidden rounded-3xl border border-[#d0ddd5] bg-gradient-to-br from-white via-white to-[#f0f7f2] p-6 shadow-[0_20px_50px_-16px_rgba(6,71,34,0.1)] sm:p-10">
+						<div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#2ECC71]/[0.04] blur-3xl" />
+						<div className="relative">
+							<div className="mb-8 flex items-end justify-between">
+								<div>
+									<p className="text-xs font-bold uppercase tracking-[1.5px] text-[#446554]">
+										Visualização interativa
+									</p>
+									<h2 className="mt-2 text-3xl font-extrabold tracking-[-0.5px] text-[#00261a]">
+										Grafo de Artigos e Termos
+									</h2>
+									<p className="mt-2 max-w-lg text-sm leading-relaxed text-[#556070]">
+										Selecione tópicos para filtrar conexões. Arraste os nós para reorganizar o layout.
+									</p>
+								</div>
+							</div>
 							<LandingTermsGraphClient graph={graphData} />
 						</div>
 					</section>
