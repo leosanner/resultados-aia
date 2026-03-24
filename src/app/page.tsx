@@ -1,3 +1,4 @@
+import { HeroSection } from "@/components/home/hero-section";
 import { LandingTermsGraphClient } from "@/components/home/landing-terms-graph-client";
 import { graphContent } from "@/infra/build-graphs";
 import { formatStageTitle, stageKeyToSlug } from "@/lib/area-utils";
@@ -42,30 +43,7 @@ export default async function Home() {
 
 	return (
 		<div className="min-h-screen bg-[#f7faf5] text-[#191c1a]">
-			{/* Hero — full width */}
-			<section className="relative flex min-h-[460px] items-center overflow-hidden bg-[#0f3d2e]">
-				<div
-					className="absolute inset-0 opacity-20"
-					style={{
-						backgroundImage:
-							"radial-gradient(circle at 2px 2px, #beedd7 1px, transparent 0)",
-						backgroundSize: "40px 40px",
-					}}
-				/>
-				<div className="absolute inset-0 bg-gradient-to-br from-[#00261a] via-[#0f3d2e]/80 to-transparent" />
-				<div className="relative z-10 mx-auto w-full max-w-screen-2xl px-8 py-20">
-					<div className="max-w-3xl">
-						<h1 className="text-5xl font-black leading-tight tracking-tighter text-white md:text-7xl">
-							Visão Geral das{" "}
-							<br />
-							<span className="text-[#f6be28]">Etapas da AIA</span>
-						</h1>
-						<p className="mt-6 max-w-2xl text-lg font-light leading-relaxed text-[#7ba894] md:text-xl">
-							Explore pesquisas em Avaliação de Impacto Ambiental:
-						</p>
-					</div>
-				</div>
-			</section>
+			<HeroSection />
 
 			{/* Content container */}
 			<main className="mx-auto flex w-full max-w-screen-2xl flex-col gap-12 px-8 pb-14 pt-24 lg:gap-16">
