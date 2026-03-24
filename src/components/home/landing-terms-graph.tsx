@@ -359,7 +359,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 						Filtrar por tópicos
 					</label>
 					<button
-						className="rounded-full border border-[#c0c8c3] bg-white px-3 py-1 text-xs font-semibold text-[#446554] transition-colors hover:border-[#00261a] hover:text-[#00261a]"
+						className="cursor-pointer rounded-full border border-[#c0c8c3] bg-white px-3 py-1 text-xs font-semibold text-[#446554] transition-colors hover:border-[#00261a] hover:text-[#00261a]"
 						onClick={clearFilters}
 						type="button"
 					>
@@ -384,7 +384,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 							{filteredTecTopics.map((topic) => (
 								<button
 									aria-pressed={selectedTopicSet.has(topic.id)}
-									className={`rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
+									className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
 										selectedTopicSet.has(topic.id)
 											? "border-[#0284c7] bg-[#0284c7] text-white shadow-[0_2px_8px_-2px_rgba(2,132,199,0.4)]"
 											: "border-[#bae6fd] bg-white text-[#0369a1] hover:border-[#0ea5e9] hover:shadow-sm"
@@ -407,7 +407,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 							{filteredEnvTopics.map((topic) => (
 								<button
 									aria-pressed={selectedTopicSet.has(topic.id)}
-									className={`rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
+									className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
 										selectedTopicSet.has(topic.id)
 											? "border-[#16a34a] bg-[#16a34a] text-white shadow-[0_2px_8px_-2px_rgba(22,163,74,0.4)]"
 											: "border-[#bbf7d0] bg-white text-[#166534] hover:border-[#22c55e] hover:shadow-sm"
@@ -463,7 +463,7 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 						</button>
 					</div>
 					<button
-						className="group/btn relative overflow-hidden rounded-full bg-[#00261a] px-5 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+						className="group/btn relative cursor-pointer overflow-hidden rounded-full bg-[#00261a] px-5 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors disabled:cursor-not-allowed disabled:opacity-40"
 						onClick={showFoundArticles}
 						type="button"
 					>
