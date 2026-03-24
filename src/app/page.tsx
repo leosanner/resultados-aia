@@ -62,7 +62,7 @@ export default async function Home() {
 						<div className="mb-16 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
 							<div className="max-w-xl">
 								<h2 className="text-3xl font-bold text-[#00261a]">
-									Arquivos por Categoria
+									Artigos por Categoria
 								</h2>
 								<p className="mt-2 text-[#446554]">
 									Selecione uma etapa para acessar as publicações
@@ -143,14 +143,22 @@ export default async function Home() {
 				) : null}
 
 				{graphData ? (
-					<section className="rounded-3xl border border-[#cfe0e9] bg-white p-6 shadow-[0px_16px_35px_-28px_rgba(17,17,17,0.3)] sm:p-8">
-						<h2 className="text-2xl font-extrabold tracking-[-0.4px] text-[#2B2B2B]">
-							Grafo de Artigos e Termos
-						</h2>
-						<p className="mt-2 text-sm text-[#31596c]">
-							Use a legenda abaixo do filtro para identificar as cores dos nós.
-						</p>
-						<div className="mt-6">
+					<section className="relative overflow-hidden rounded-3xl border border-[#d0ddd5] bg-gradient-to-br from-white via-white to-[#f0f7f2] p-6 shadow-[0_20px_50px_-16px_rgba(6,71,34,0.1)] sm:p-10">
+						<div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#2ECC71]/[0.04] blur-3xl" />
+						<div className="relative">
+							<div className="mb-8 flex items-end justify-between">
+								<div>
+									<p className="text-xs font-bold uppercase tracking-[1.5px] text-[#446554]">
+										Visualização interativa
+									</p>
+									<h2 className="mt-2 text-3xl font-extrabold tracking-[-0.5px] text-[#00261a]">
+										Grafo de Artigos e Termos
+									</h2>
+									<p className="mt-2 max-w-lg text-sm leading-relaxed text-[#556070]">
+										Selecione tópicos para filtrar conexões. Arraste os nós para reorganizar o layout.
+									</p>
+								</div>
+							</div>
 							<LandingTermsGraphClient graph={graphData} />
 						</div>
 					</section>

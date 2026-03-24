@@ -50,7 +50,9 @@ export function HeroSection() {
 	return (
 		<section className="relative flex min-h-[460px] items-center overflow-hidden bg-[#0f3d2e]">
 			<AnimatedDotGrid />
+
 			<div className="absolute inset-0 bg-gradient-to-br from-[#00261a] via-[#0f3d2e]/80 to-transparent" />
+
 
 			<div className="relative z-10 mx-auto w-full max-w-screen-2xl px-8 py-20">
 				<div className="max-w-3xl">

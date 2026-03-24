@@ -347,17 +347,19 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 	};
 
 	return (
-		<div className="space-y-4">
-			<div className="rounded-2xl border border-[#bfdcff] bg-[#eef6ff] p-4">
+		<div className="space-y-5">
+			{/* Filter panel */}
+			<div className="rounded-2xl border border-[#c8ddd0] bg-[#f4f9f5] p-5">
 				<div className="flex flex-wrap items-center justify-between gap-3">
 					<label
-						className="text-sm font-semibold text-[#0f172a]"
+						className="flex items-center gap-2 text-sm font-bold text-[#00261a]"
 						htmlFor="topic-filter"
 					>
+						<span className="material-symbols-outlined text-base text-[#446554]">filter_list</span>
 						Filtrar por tópicos
 					</label>
 					<button
-						className="rounded-full border border-[#a5b4fc] bg-white px-3 py-1 text-xs font-semibold text-[#4338ca] transition-colors hover:bg-[#eef2ff]"
+						className="rounded-full border border-[#c0c8c3] bg-white px-3 py-1 text-xs font-semibold text-[#446554] transition-colors hover:border-[#00261a] hover:text-[#00261a]"
 						onClick={clearFilters}
 						type="button"
 					>
@@ -365,73 +367,95 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 					</button>
 				</div>
 				<input
-					className="mt-3 w-full rounded-xl border border-[#bfdbfe] bg-white px-3 py-2 text-sm text-[#111111] outline-none ring-[#3b82f6] transition focus:ring-2"
+					className="mt-3 w-full rounded-xl border border-[#c8ddd0] bg-white px-4 py-2.5 text-sm text-[#191c1a] outline-none ring-[#2ECC71] transition placeholder:text-[#8a9b90] focus:border-[#2ECC71] focus:ring-2"
 					id="topic-filter"
 					onChange={(event) => setSearchTerm(event.target.value)}
 					placeholder="Buscar tópico..."
 					type="text"
 					value={searchTerm}
 				/>
-				<div className="mt-3 max-h-44 overflow-y-auto pr-1">
-					<p className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#0369a1]">
-						Tecnológicos
-					</p>
-					<div className="mt-2 flex flex-wrap gap-2">
-						{filteredTecTopics.map((topic) => (
-							<button
-								aria-pressed={selectedTopicSet.has(topic.id)}
-								className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-									selectedTopicSet.has(topic.id)
-										? "border-[#0284c7] bg-[#0284c7] text-white"
-										: "border-[#7dd3fc] bg-white text-[#0369a1] hover:bg-[#e0f2fe]"
-								}`}
-								key={topic.id}
-								onClick={() => toggleTopic(topic.id)}
-								type="button"
-							>
-								{topic.data.label ?? topic.id}
-							</button>
-						))}
+				<div className="mt-4 max-h-44 space-y-4 overflow-y-auto pr-1">
+					<div>
+						<p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.6px] text-[#0369a1]">
+							<span className="h-2 w-2 rounded-full bg-[#0ea5e9]" />
+							Tecnologias
+						</p>
+						<div className="mt-2 flex flex-wrap gap-2">
+							{filteredTecTopics.map((topic) => (
+								<button
+									aria-pressed={selectedTopicSet.has(topic.id)}
+									className={`rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
+										selectedTopicSet.has(topic.id)
+											? "border-[#0284c7] bg-[#0284c7] text-white shadow-[0_2px_8px_-2px_rgba(2,132,199,0.4)]"
+											: "border-[#bae6fd] bg-white text-[#0369a1] hover:border-[#0ea5e9] hover:shadow-sm"
+									}`}
+									key={topic.id}
+									onClick={() => toggleTopic(topic.id)}
+									type="button"
+								>
+									{topic.data.label ?? topic.id}
+								</button>
+							))}
+						</div>
 					</div>
-					<p className="mt-4 text-[11px] font-bold uppercase tracking-[0.4px] text-[#15803d]">
-						Ambientais
-					</p>
-					<div className="mt-2 flex flex-wrap gap-2">
-						{filteredEnvTopics.map((topic) => (
-							<button
-								aria-pressed={selectedTopicSet.has(topic.id)}
-								className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-									selectedTopicSet.has(topic.id)
-										? "border-[#16a34a] bg-[#16a34a] text-white"
-										: "border-[#86efac] bg-white text-[#166534] hover:bg-[#f0fdf4]"
-								}`}
-								key={topic.id}
-								onClick={() => toggleTopic(topic.id)}
-								type="button"
-							>
-								{topic.data.label ?? topic.id}
-							</button>
-						))}
+					<div>
+						<p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.6px] text-[#15803d]">
+							<span className="h-2 w-2 rounded-full bg-[#22c55e]" />
+							Ambientais
+						</p>
+						<div className="mt-2 flex flex-wrap gap-2">
+							{filteredEnvTopics.map((topic) => (
+								<button
+									aria-pressed={selectedTopicSet.has(topic.id)}
+									className={`rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
+										selectedTopicSet.has(topic.id)
+											? "border-[#16a34a] bg-[#16a34a] text-white shadow-[0_2px_8px_-2px_rgba(22,163,74,0.4)]"
+											: "border-[#bbf7d0] bg-white text-[#166534] hover:border-[#22c55e] hover:shadow-sm"
+									}`}
+									key={topic.id}
+									onClick={() => toggleTopic(topic.id)}
+									type="button"
+								>
+									{topic.data.label ?? topic.id}
+								</button>
+							))}
+						</div>
 					</div>
 				</div>
 			</div>
-			<div className="flex justify-end">
-				<div className="flex items-center gap-2">
-					<div className="inline-flex items-center gap-1 rounded-full border border-[#cbd5e1] bg-white px-2 py-1 text-xs font-semibold text-[#334155]">
+
+			{/* Controls bar */}
+			<div className="flex flex-wrap items-center justify-between gap-3">
+				<div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-[#446554]">
+					<span className="inline-flex items-center gap-2">
+						<span className="h-2.5 w-2.5 rounded-full border-2 border-[#0ea5e9] bg-[#e0f2fe]" />
+						Tecnologia
+					</span>
+					<span className="inline-flex items-center gap-2">
+						<span className="h-2.5 w-2.5 rounded-full border-2 border-[#22c55e] bg-[#f0fdf4]" />
+						Ambiental
+					</span>
+					<span className="inline-flex items-center gap-2">
+						<span className="h-2.5 w-2.5 rounded-full border-2 border-[#7c3aed] bg-[#f3e8ff]" />
+						Artigos
+					</span>
+				</div>
+				<div className="flex items-center gap-3">
+					<div className="inline-flex items-center gap-0.5 rounded-full border border-[#c8ddd0] bg-white px-1 py-0.5 text-xs font-semibold text-[#334155]">
 						<button
 							aria-label="Diminuir fonte dos nós"
-							className="rounded px-2 py-0.5 hover:bg-[#f1f5f9]"
+							className="rounded-full px-2 py-1 transition-colors hover:bg-[#f0f7f2]"
 							onClick={() => setFontScale((prev) => Math.max(0.8, prev - 0.1))}
 							type="button"
 						>
-							A-
+							A−
 						</button>
-						<span className="min-w-8 text-center text-[11px]">
+						<span className="min-w-8 text-center text-[11px] text-[#556070]">
 							{Math.round(fontScale * 100)}%
 						</span>
 						<button
 							aria-label="Aumentar fonte dos nós"
-							className="rounded px-2 py-0.5 hover:bg-[#f1f5f9]"
+							className="rounded-full px-2 py-1 transition-colors hover:bg-[#f0f7f2]"
 							onClick={() => setFontScale((prev) => Math.min(1.6, prev + 0.1))}
 							type="button"
 						>
@@ -439,30 +463,19 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 						</button>
 					</div>
 					<button
-						className="rounded-full bg-[#16a34a] px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors enabled:hover:bg-[#15803d] disabled:cursor-not-allowed disabled:bg-[#86efac]"
+						className="group/btn relative overflow-hidden rounded-full bg-[#00261a] px-5 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors disabled:cursor-not-allowed disabled:opacity-40"
 						onClick={showFoundArticles}
 						type="button"
 					>
-						Mostrar resultados
+						<span className="absolute inset-0 origin-left scale-x-0 bg-[#3b6756] transition-transform duration-300 ease-out group-hover/btn:scale-x-100" />
+						<span className="relative z-10">Mostrar resultados</span>
 					</button>
 				</div>
 			</div>
-			<div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#dbe6df] bg-white px-3 py-2 text-xs font-semibold text-[#334155]">
-				<span className="inline-flex items-center gap-2">
-					<span className="h-3 w-3 rounded-full bg-[#0ea5e9]" />
-					Termos de tecnologia
-				</span>
-				<span className="inline-flex items-center gap-2">
-					<span className="h-3 w-3 rounded-full bg-[#22c55e]" />
-					Termos ambientais
-				</span>
-				<span className="inline-flex items-center gap-2">
-					<span className="h-3 w-3 rounded-full bg-[#a855f7]" />
-					Número total de artigos
-				</span>
-			</div>
+
+			{/* Graph container */}
 			<div
-				className="w-full overflow-hidden rounded-3xl border border-[#cbd5e1] bg-[#f8fafc]"
+				className="w-full overflow-hidden rounded-2xl border border-[#c8ddd0] bg-[#fafcfb] shadow-[inset_0_2px_12px_-4px_rgba(6,71,34,0.06)]"
 				style={{ height: graphHeight }}
 			>
 				<ReactFlow
@@ -479,8 +492,8 @@ export function LandingTermsGraph({ graph }: LandingTermsGraphProps) {
 					proOptions={{ hideAttribution: true }}
 					selectNodesOnDrag={false}
 				>
-					<Background color="#dbe6f5" gap={16} size={1} />
-					<Controls className="rounded-lg border border-[#bfdbfe] bg-white shadow-lg" />
+					<Background color="#d0ddd5" gap={18} size={1} />
+					<Controls className="rounded-lg border border-[#c8ddd0] bg-white shadow-md" />
 				</ReactFlow>
 			</div>
 		</div>
