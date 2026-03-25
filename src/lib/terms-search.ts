@@ -7,7 +7,6 @@ import {
 	type TecTerm,
 } from "@/model/article";
 import { EiaModel, type StageArticle } from "@/model/eia-stages";
-import { filterOcurrencies } from "@/utils/ocurrencies";
 
 export type TermsSearchParams = {
 	tec?: string | string[];
@@ -365,21 +364,9 @@ export async function getTermsSearchResults(
 		[number, { technologyTerms: string[]; environmentalTerms: string[] }]
 	> = await Promise.all(
 		Array.from(matchingArticleIds).map(async (articleId) => {
-			const articleFt = await articleModel.getArticleFrequencyTerms(articleId);
-			if (!articleFt) {
-				return [
-					articleId,
-					{
-						technologyTerms: [] as string[],
-						environmentalTerms: [] as string[],
-					},
-				];
-			}
-
-			const technologyTerms = normalizeTerms(Object.keys(filterOcurrencies(articleFt.tec)));
-			const environmentalTerms = normalizeTerms(
-				Object.keys(filterOcurrencies(articleFt.env)),
-			);
+			const resolvedTerms = await articleModel.getResolvedArticleTerms(articleId);
+			const technologyTerms = normalizeTerms(resolvedTerms.technology);
+			const environmentalTerms = normalizeTerms(resolvedTerms.environmental);
 
 			return [articleId, { technologyTerms, environmentalTerms }];
 		}),

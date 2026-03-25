@@ -7,9 +7,9 @@ import {
 	FrequencyTerms,
 	TecTerm,
 	envTerms,
+	resolveArticleTerms,
 	tecTerms,
 } from "./article";
-import { filterOcurrencies } from "@/utils/ocurrencies";
 
 type FileOutputFormat = Record<string, number[]>;
 export type StageArticle = Article & { id: number };
@@ -119,23 +119,16 @@ export class EiaModel {
 			selectedEnvTerms.length > 0 ? selectedEnvTerms : [...envTerms];
 		const effectiveTecTerms =
 			selectedTecTerms.length > 0 ? selectedTecTerms : [...tecTerms];
+		const articlesFt = await this.articleModel.loadFrequencyTerms();
 
 		const matchByArticle = await Promise.all(
 			articles.map(async (article) => {
-				const articleFt = await this.articleModel.getArticleFrequencyTerms(
-					article.id,
+				const resolvedTerms = resolveArticleTerms(
+					article,
+					articlesFt[article.id],
 				);
-
-				if (!articleFt) {
-					return false;
-				}
-
-				const envFrequencyTerms = Object.keys(
-					filterOcurrencies(articleFt.env),
-				) as EnvTerm[];
-				const tecFrequencyTerms = Object.keys(
-					filterOcurrencies(articleFt.tec),
-				) as TecTerm[];
+				const envFrequencyTerms = resolvedTerms.environmental;
+				const tecFrequencyTerms = resolvedTerms.technology;
 
 				if (
 					envFrequencyTerms.some((val) => effectiveEnvTerms.includes(val)) &&
@@ -152,21 +145,21 @@ export class EiaModel {
 
 	async filterTermsFrequency(articlesStage: StageArticle[]) {
 		const ft: FrequencyTerms = { env: {}, tec: {} };
+		const articlesFt = await this.articleModel.loadFrequencyTerms();
 
 		for (const article of articlesStage) {
-			const articleFt = await this.articleModel.getArticleFrequencyTerms(
-				article.id,
+			const resolvedTerms = resolveArticleTerms(
+				article,
+				articlesFt[article.id],
 			);
-			const envFreq = filterOcurrencies(articleFt.env);
-			const tecFreq = filterOcurrencies(articleFt.tec);
 
-			for (const [key] of Object.entries(envFreq)) {
+			for (const key of resolvedTerms.environmental) {
 				if (!(key in ft.env)) {
 					ft.env[key] = 0;
 				}
 				ft.env[key] += 1;
 			}
-			for (const [key] of Object.entries(tecFreq)) {
+			for (const key of resolvedTerms.technology) {
 				if (!(key in ft.tec)) {
 					ft.tec[key] = 0;
 				}

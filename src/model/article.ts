@@ -26,6 +26,11 @@ export type FrequencyTerms = {
 	tec: Record<string, number>;
 };
 
+export type ResolvedArticleTerms = {
+	environmental: EnvTerm[];
+	technology: TecTerm[];
+};
+
 export const tecTerms = [
 	"Technological Innovation",
 	"Natural Language Processing",
@@ -86,6 +91,62 @@ const loadFrequencyTerms = async () => {
 	return data as Record<number, FrequencyTerms>;
 };
 
+function normalizeText(value: string) {
+	return value.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function resolveTermsFromContent<T extends readonly string[]>(
+	content: string,
+	explicitTerms: string[],
+	fallbackTerms: T,
+) {
+	const normalizedExplicitTerms = new Set(
+		explicitTerms.map((term) => normalizeText(term)).filter(Boolean),
+	);
+	const normalizedContent = normalizeText(content);
+
+	return fallbackTerms.filter((term) => {
+		const normalizedTerm = normalizeText(term);
+		if (normalizedExplicitTerms.has(normalizedTerm)) {
+			return true;
+		}
+
+		if (!normalizedContent) {
+			return false;
+		}
+
+		return normalizedContent.includes(normalizedTerm);
+	}) as T[number][];
+}
+
+export function resolveArticleTerms(
+	article: Article | undefined,
+	articleFt: FrequencyTerms | undefined,
+): ResolvedArticleTerms {
+	const searchableContent = [
+		article?.title ?? "",
+		article?.abstract ?? "",
+		Array.isArray(article?.keywords) ? article.keywords.join(" ") : "",
+	].join(" ");
+	const explicitEnvironmentalTerms = Object.keys(
+		filterOcurrencies(articleFt?.env ?? {}),
+	);
+	const explicitTechnologyTerms = Object.keys(filterOcurrencies(articleFt?.tec ?? {}));
+
+	return {
+		environmental: resolveTermsFromContent(
+			searchableContent,
+			explicitEnvironmentalTerms,
+			envTerms,
+		) as EnvTerm[],
+		technology: resolveTermsFromContent(
+			searchableContent,
+			explicitTechnologyTerms,
+			tecTerms,
+		) as TecTerm[],
+	};
+}
+
 export type ArticleOutputFormat = Record<number, Article>;
 
 const loadArticleData = async (
@@ -132,19 +193,34 @@ export class ArticleModel {
 		return articlesFt[articleId];
 	}
 
-	async filterArticlesByTerms(terms: { env: EnvTerm[]; tec: TecTerm[] }) {
-		const articlesFt = await this.loadFrequencyTerms();
-		const filteredArticles: Article[] = [];
+	async getResolvedArticleTerms(articleId: number): Promise<ResolvedArticleTerms> {
+		const [article, articleFt] = await Promise.all([
+			this.getArticleById(articleId),
+			this.getArticleFrequencyTerms(articleId),
+		]);
 
-		for (const [key, value] of Object.entries(articlesFt)) {
-			const environmentTerms = Object.keys(filterOcurrencies(value.env));
-			const technologicalTerms = Object.keys(filterOcurrencies(value.tec));
+		return resolveArticleTerms(article, articleFt);
+	}
+
+	async filterArticlesByTerms(terms: { env: EnvTerm[]; tec: TecTerm[] }) {
+		const filteredArticles: Article[] = [];
+		const [articles, articlesFt] = await Promise.all([
+			this.getArticles(),
+			this.loadFrequencyTerms(),
+		]);
+
+		for (const key of Object.keys(articles)) {
+			const articleId = Number(key);
+			const article = articles[articleId];
+			const resolvedTerms = resolveArticleTerms(article, articlesFt[articleId]);
+			const environmentTerms = resolvedTerms.environmental;
+			const technologicalTerms = resolvedTerms.technology;
 
 			if (
 				verifyTermsInsideOptions(environmentTerms, terms.env) ||
 				verifyTermsInsideOptions(technologicalTerms, terms.tec)
 			) {
-				filteredArticles.push(await this.getArticleById(Number(key)));
+				filteredArticles.push(article);
 			}
 		}
 

@@ -21,13 +21,6 @@ function formatTermName(term: string) {
 		.join(" ");
 }
 
-function getHighlightedTerms(terms: Record<string, number> | undefined) {
-	return Object.entries(terms ?? {})
-		.filter(([, amount]) => amount > 0)
-		.sort((a, b) => b[1] - a[1])
-		.map(([term]) => formatTermName(term));
-}
-
 export default async function ArticleDetailsPage({ params }: PageProps) {
 	const { areaSlug, articleId } = await params;
 	const stageKey = slugToStageKey(areaSlug);
@@ -39,10 +32,10 @@ export default async function ArticleDetailsPage({ params }: PageProps) {
 
 	const eiaModel = new EiaModel();
 	const articleModel = new ArticleModel();
-	const [articlesByStage, article, articleFrequencyTerms] = await Promise.all([
+	const [articlesByStage, article, resolvedArticleTerms] = await Promise.all([
 		eiaModel.getArticlesByStage(),
 		articleModel.getArticleById(parsedArticleId),
-		articleModel.getArticleFrequencyTerms(parsedArticleId),
+		articleModel.getResolvedArticleTerms(parsedArticleId),
 	]);
 
 	if (!(stageKey in articlesByStage) || !article) {
@@ -58,8 +51,8 @@ export default async function ArticleDetailsPage({ params }: PageProps) {
 	}
 
 	const keywords = article.keywords ?? [];
-	const technologyTerms = getHighlightedTerms(articleFrequencyTerms?.tec);
-	const environmentalTerms = getHighlightedTerms(articleFrequencyTerms?.env);
+	const technologyTerms = resolvedArticleTerms.technology.map(formatTermName);
+	const environmentalTerms = resolvedArticleTerms.environmental.map(formatTermName);
 	const stageName = formatStageTitle(stageKey);
 
 	return (
