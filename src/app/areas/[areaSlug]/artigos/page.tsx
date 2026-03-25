@@ -11,7 +11,6 @@ import {
 	Term,
 } from "@/model/article";
 import { EiaModel } from "@/model/eia-stages";
-import { filterOcurrencies } from "@/utils/ocurrencies";
 import { Leaf, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -198,19 +197,12 @@ export default async function AreaArticlesPage({
 	type ArticleTermsSummary = { technology: string[]; environmental: string[] };
 	const articleTermsEntries: Array<[number, ArticleTermsSummary]> = await Promise.all(
 		articles.map(async (article) => {
-			const articleFt = await articleModel.getArticleFrequencyTerms(article.id);
-			if (!articleFt) {
-				return [
-					article.id,
-					{ technology: [] as string[], environmental: [] as string[] },
-				];
-			}
-
+			const resolvedTerms = await articleModel.getResolvedArticleTerms(article.id);
 			const technology = summarizeTerms(
-				Object.keys(filterOcurrencies(articleFt.tec)).map(formatTermLabel),
+				resolvedTerms.technology.map(formatTermLabel),
 			);
 			const environmental = summarizeTerms(
-				Object.keys(filterOcurrencies(articleFt.env)).map(formatTermLabel),
+				resolvedTerms.environmental.map(formatTermLabel),
 			);
 
 			return [article.id, { technology, environmental }];
