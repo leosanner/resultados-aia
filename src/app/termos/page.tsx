@@ -4,8 +4,7 @@ import {
 } from "@/components/articles/article-card";
 import { getToneColorByIndex } from "@/components/charts/chart-palettes";
 import { TermsMultiLineChartClient } from "@/components/charts/terms-multi-line-chart-client";
-import { TermsInstitutionsMapClient } from "@/components/termos/terms-institutions-map-client";
-import { TermsBarChartClient } from "@/components/charts/terms-bar-chart-client";
+import { TermsArticlesMapClient } from "@/components/termos/terms-articles-map-client";
 import institutionInformationData from "@/data/instituition_information.json";
 import {
 	buildTermsDownloadQuery,
@@ -14,9 +13,9 @@ import {
 	type TermsSearchArticleRecord,
 } from "@/lib/terms-search";
 import type {
-	AreaLegendItem,
-	InstitutionMapPoint,
-} from "@/components/termos/terms-institutions-map";
+	ArticleMapPoint,
+	TechnologyLegendItem,
+} from "@/components/termos/terms-articles-map";
 import Link from "next/link";
 
 type PageProps = {
@@ -31,6 +30,7 @@ type PageProps = {
 type ExtendedArticleRecord = {
 	authors?: { name?: string | null }[];
 	["authorships.institutions.id"]?: string | string[] | null;
+	corresponding_institution_ids?: string | string[] | null;
 	publish_date?: string | null;
 	publication_year?: number | string | null;
 	fwci?: number | string | null;
@@ -64,19 +64,10 @@ function isValidOpenAlexInstitutionId(value: string) {
 	return /^https:\/\/openalex\.org\/I\d+$/i.test(value.trim());
 }
 
-type BarChartItem = {
-	label: string;
-	value: number;
-};
-
-function hexToRgba(hex: string, alpha: number) {
-	const normalized = hex.replace("#", "");
-	const parsed = Number.parseInt(normalized, 16);
-	const r = (parsed >> 16) & 255;
-	const g = (parsed >> 8) & 255;
-	const b = parsed & 255;
-	return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+const MULTI_TECH_COLOR = "#ec4899";
+const NO_TECH_COLOR = "#94a3b8";
+const MULTI_TECH_KEY = "__multi__";
+const NO_TECH_KEY = "__none__";
 
 function buildDownloadHref(format: "csv" | "docx", query: string) {
 	return query ? `/termos/download?${query}&format=${format}` : `/termos/download?format=${format}`;
@@ -104,82 +95,62 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 		hasSelectedTerms,
 		isShowingAllResults,
 		totalResults,
-		matchingArticleIds,
-		groups,
+		flatArticles,
 		technologyTermsTrend,
 		environmentalTermsTrend,
-		areasTrend,
 		articlesExtended,
 	} = await getTermsSearchResults(currentSearchParams);
-	const tone = "blue" as const;
-	const groupsWithColors = groups.map((group, index) => ({
-		...group,
-		color: getToneColorByIndex(tone, index),
-	}));
-	const chartItems: BarChartItem[] = groups.map((group) => ({
-		label: group.stageTitle,
-		value: group.articles.length,
-	}));
-	const articleStagesById = new Map<number, string[]>();
-	for (const group of groups) {
-		for (const article of group.articles) {
-			const currentStages = articleStagesById.get(article.article.id) ?? [];
-			currentStages.push(group.stageKey);
-			articleStagesById.set(article.article.id, currentStages);
-		}
-	}
-	const stageColorByKey = new Map(
-		groupsWithColors.map((group) => [group.stageKey, group.color]),
-	);
-	const areaLegend: AreaLegendItem[] = groupsWithColors.map((group) => ({
-		stageKey: group.stageKey,
-		label: group.stageTitle,
-		color: group.color,
-		count: group.articles.length,
-	}));
+
+	const availableTechnologyTerms = Array.from(
+		new Set(flatArticles.flatMap((record) => record.technologyTermsFull)),
+	).sort((a, b) => a.localeCompare(b, "pt-BR"));
+	const technologyColorByKey = new Map<string, string>();
+	availableTechnologyTerms.forEach((term, index) => {
+		technologyColorByKey.set(term, getToneColorByIndex("blue", index));
+	});
+
 	const downloadQuery = buildTermsDownloadQuery({
 		tec: selectedTecTerms,
 		env: selectedEnvTerms,
 	});
-	const articleRecordsById = new Map(
-		groups.flatMap((group) =>
-			group.articles.map((article) => [article.article.id, article] as const),
-		),
-	);
+
 	const institutionsById =
 		institutionInformationData as Record<string, InstitutionInformationRecord>;
-	const institutionAccumulator = new Map<
-		string,
-		{
-			institution: InstitutionInformationRecord;
-			articleIds: Set<number>;
-			articleDetails: Map<
-				number,
-				{
-					title: string;
-					stageLabels: string[];
-					technologyTerms: string[];
-					environmentalTerms: string[];
-				}
-			>;
-			stageCounts: Map<string, number>;
-		}
-	>();
+	const mapPoints: ArticleMapPoint[] = [];
 	const articlesWithMappedInstitutions = new Set<number>();
+	const technologyCountsByKey = new Map<string, number>();
 
-	for (const articleId of matchingArticleIds) {
-		const record = articlesExtended[String(articleId)] as
+	for (const record of flatArticles) {
+		const extended = articlesExtended[String(record.article.id)] as
 			| ExtendedArticleRecord
 			| undefined;
-		const articleRecord = articleRecordsById.get(articleId);
-		if (!record || !articleRecord) continue;
+		if (!extended) continue;
 
-		const institutionIds = toStringArray(record["authorships.institutions.id"]);
-		let hasInstitutionForCurrentArticle = false;
+		const institutionIds = toStringArray(
+			extended.corresponding_institution_ids,
+		);
+		let hasMapped = false;
 
+		const techFull = record.technologyTermsFull;
+		let pointColor: string;
+		let pointKey: string;
+		if (techFull.length === 0) {
+			pointColor = NO_TECH_COLOR;
+			pointKey = NO_TECH_KEY;
+		} else if (techFull.length === 1) {
+			pointKey = techFull[0];
+			pointColor = technologyColorByKey.get(techFull[0]) ?? NO_TECH_COLOR;
+		} else {
+			pointColor = MULTI_TECH_COLOR;
+			pointKey = MULTI_TECH_KEY;
+		}
+
+		const seenInstitutionIds = new Set<string>();
 		for (const rawInstitutionId of institutionIds) {
 			const institutionId = rawInstitutionId.trim();
 			if (!isValidOpenAlexInstitutionId(institutionId)) continue;
+			if (seenInstitutionIds.has(institutionId)) continue;
+			seenInstitutionIds.add(institutionId);
 
 			const institution = institutionsById[institutionId];
 			if (!institution || !institution.geo) continue;
@@ -189,107 +160,61 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				continue;
 			}
 
-			hasInstitutionForCurrentArticle = true;
-			const current = institutionAccumulator.get(institutionId);
-			const articleTitle =
-				record.title ?? record.json_title ?? `Artigo ${articleId}`;
-			const stageLabels =
-				articleStagesById.get(articleId)?.map(
-					(stageKey) =>
-						groups.find((group) => group.stageKey === stageKey)?.stageTitle ??
-						stageKey,
-				) ?? [];
-			const normalizedStageLabels =
-				stageLabels.length > 0 ? stageLabels : ["Área não classificada"];
-
-			if (!current) {
-				const stageCounts = new Map<string, number>();
-				for (const stageKey of articleStagesById.get(articleId) ?? []) {
-					stageCounts.set(stageKey, (stageCounts.get(stageKey) ?? 0) + 1);
-				}
-
-				institutionAccumulator.set(institutionId, {
-					institution,
-					articleIds: new Set([articleId]),
-					articleDetails: new Map([
-						[
-							articleId,
-							{
-								title: articleTitle,
-								stageLabels: normalizedStageLabels,
-								technologyTerms: articleRecord.technologyTerms,
-								environmentalTerms: articleRecord.environmentalTerms,
-							},
-						],
-					]),
-					stageCounts,
-				});
-				continue;
-			}
-
-			current.articleIds.add(articleId);
-			if (!current.articleDetails.has(articleId)) {
-				current.articleDetails.set(articleId, {
-					title: articleTitle,
-					stageLabels: normalizedStageLabels,
-					technologyTerms: articleRecord.technologyTerms,
-					environmentalTerms: articleRecord.environmentalTerms,
-				});
-			}
-			for (const stageKey of articleStagesById.get(articleId) ?? []) {
-				current.stageCounts.set(
-					stageKey,
-					(current.stageCounts.get(stageKey) ?? 0) + 1,
-				);
-			}
-		}
-
-		if (hasInstitutionForCurrentArticle) {
-			articlesWithMappedInstitutions.add(articleId);
-		}
-	}
-
-	const institutionMapPoints: InstitutionMapPoint[] = Array.from(
-		institutionAccumulator.entries(),
-	).map(
-		([
-			institutionId,
-			{ institution, articleIds, articleDetails, stageCounts },
-		]) => {
-			const dominantStageKey = Array.from(stageCounts.entries()).sort(
-				(a, b) => b[1] - a[1],
-			)[0]?.[0];
-
-			return {
-				id: institutionId,
-				name: institution.display_name,
+			hasMapped = true;
+			mapPoints.push({
+				id: `${record.article.id}-${institutionId}`,
+				articleId: record.article.id,
+				title: record.article.title,
+				institutionName: institution.display_name,
 				city: institution.geo?.city ?? null,
 				region: institution.geo?.region ?? null,
 				country: institution.geo?.country ?? institution.country_code ?? null,
-				latitude: institution.geo?.latitude ?? 0,
-				longitude: institution.geo?.longitude ?? 0,
-				articleCount: articleIds.size,
-				articles: Array.from(articleDetails.entries())
-					.map(([id, detail]) => ({
-						id,
-						title: detail.title,
-						stageLabel: detail.stageLabels.join(" / "),
-						technologyTerms: detail.technologyTerms,
-						environmentalTerms: detail.environmentalTerms,
-					}))
-					.slice(0, 6),
-				dominantAreaLabel: dominantStageKey
-					? (groups.find((group) => group.stageKey === dominantStageKey)
-							?.stageTitle ?? dominantStageKey)
-					: "Área não classificada",
-				color: dominantStageKey
-					? (stageColorByKey.get(dominantStageKey) ?? "#0ea5e9")
-					: "#0ea5e9",
-			};
-		},
-	);
+				latitude,
+				longitude,
+				technologyTerms: record.technologyTermsFull.map(formatTermLabel),
+				environmentalTerms: record.environmentalTermsFull.map(formatTermLabel),
+				color: pointColor,
+			});
+		}
 
-	institutionMapPoints.sort((a, b) => b.articleCount - a.articleCount);
+		if (hasMapped) {
+			articlesWithMappedInstitutions.add(record.article.id);
+			technologyCountsByKey.set(
+				pointKey,
+				(technologyCountsByKey.get(pointKey) ?? 0) + 1,
+			);
+		}
+	}
+
+	const technologyLegend: TechnologyLegendItem[] = [];
+	for (const term of availableTechnologyTerms) {
+		const count = technologyCountsByKey.get(term) ?? 0;
+		if (count === 0) continue;
+		technologyLegend.push({
+			key: term,
+			label: formatTermLabel(term),
+			color: technologyColorByKey.get(term) ?? NO_TECH_COLOR,
+			count,
+		});
+	}
+	const multiCount = technologyCountsByKey.get(MULTI_TECH_KEY) ?? 0;
+	if (multiCount > 0) {
+		technologyLegend.push({
+			key: MULTI_TECH_KEY,
+			label: "Múltiplas tecnologias",
+			color: MULTI_TECH_COLOR,
+			count: multiCount,
+		});
+	}
+	const noTechCount = technologyCountsByKey.get(NO_TECH_KEY) ?? 0;
+	if (noTechCount > 0) {
+		technologyLegend.push({
+			key: NO_TECH_KEY,
+			label: "Sem tecnologia",
+			color: NO_TECH_COLOR,
+			count: noTechCount,
+		});
+	}
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e8f5ee_0%,_#f5f8f6_42%,_#ffffff_100%)] text-[#0f172a]">
@@ -386,20 +311,6 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 					</section>
 				) : null}
 
-				{chartItems.length > 0 ? (
-					<section className="mt-8 rounded-[16px] border border-[#dce9e1] bg-white p-5">
-						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
-							Distribuição por etapa
-						</h2>
-						<p className="mt-1 text-sm text-[#64748b]">
-							Quantidade de artigos encontrados em cada etapa da AIA.
-						</p>
-						<div className="mt-4">
-							<TermsBarChartClient items={chartItems} tone={tone} />
-						</div>
-					</section>
-				) : null}
-
 				{totalResults > 0 ? (
 					<section className="mt-8 space-y-6">
 						<div className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
@@ -407,8 +318,8 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 								Séries temporais por categoria
 							</h2>
 							<p className="mt-1 text-sm text-[#64748b]">
-								Cada linha representa um termo ou área dentro do conjunto de
-								artigos já filtrado no grafo.
+								Cada linha representa um termo dentro do conjunto de artigos já
+								filtrado no grafo.
 							</p>
 						</div>
 
@@ -449,82 +360,32 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 								/>
 							</div>
 						</section>
-
-						<section className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
-							<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#7c2d12]">
-								Áreas de AIA
-							</h3>
-							<p className="mt-1 text-sm text-[#64748b]">
-								Todas as áreas de AIA são consideradas, independentemente dos
-								termos selecionados no grafo.
-							</p>
-							<div className="mt-4">
-								<TermsMultiLineChartClient
-									emptyMessage="Não há anos válidos para montar a série temporal das áreas de AIA."
-									key={`areas-${areasTrend.map((item) => item.key).join("|")}`}
-									series={areasTrend}
-									tone="blue"
-								/>
-							</div>
-						</section>
 					</section>
 				) : null}
 
 				{totalResults > 0 ? (
-					<TermsInstitutionsMapClient
-						areas={areaLegend}
+					<TermsArticlesMapClient
 						articlesWithMappedInstitutions={articlesWithMappedInstitutions.size}
-						points={institutionMapPoints}
+						points={mapPoints}
+						technologyLegend={technologyLegend}
 						totalArticles={totalResults}
 					/>
 				) : null}
 
 				{totalResults > 0 ? (
-					<section className="mt-8 space-y-5">
-						{groupsWithColors.map((group) => {
-							const subtleBackground = hexToRgba(group.color, 0.09);
-
-							return (
-								<section key={group.stageKey}>
-									<details
-										className="group rounded-[14px] bg-white shadow-[0px_14px_26px_-24px_rgba(15,23,42,0.35)]"
-										style={{ border: `1px solid ${hexToRgba(group.color, 0.4)}` }}
-									>
-										<summary
-											className="cursor-pointer list-none px-4 py-3.5 text-lg font-bold text-[#0f172a] marker:content-none"
-											style={{ backgroundColor: subtleBackground }}
-										>
-											<span className="inline-flex items-center gap-2.5">
-												<span
-													aria-hidden
-													className="inline-flex h-6 w-6 items-center justify-center rounded-full text-sm text-white transition-transform group-open:rotate-90"
-													style={{ backgroundColor: group.color }}
-												>
-													▸
-												</span>
-												<span>
-													{group.stageTitle} ({group.articles.length})
-												</span>
-											</span>
-										</summary>
-										<div className="space-y-4 px-4 pb-4">
-											{group.articles.map((article) => (
-												<ArticleCard
-													abstract={article.article.abstract}
-													href={article.articleUrl}
-													key={`${group.stageKey}-${article.article.id}`}
-													keywords={article.article.keywords ?? []}
-													metadata={buildArticleMetadata(article)}
-													showAbstract={false}
-													titleHref={article.preferredLink}
-													title={article.article.title}
-												/>
-											))}
-										</div>
-									</details>
-								</section>
-							);
-						})}
+					<section className="mt-8 space-y-4">
+						{flatArticles.map((article) => (
+							<ArticleCard
+								abstract={article.article.abstract}
+								href={article.articleUrl}
+								key={article.article.id}
+								keywords={article.article.keywords ?? []}
+								metadata={buildArticleMetadata(article)}
+								showAbstract={false}
+								titleHref={article.preferredLink}
+								title={article.article.title}
+							/>
+						))}
 					</section>
 				) : null}
 
