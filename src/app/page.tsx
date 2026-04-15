@@ -81,46 +81,68 @@ export default async function Home() {
 							</div>
 						</div>
 						<div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-							{techEntries.map(([tecTerm, total]) => {
+							{techEntries.map(([tecTerm, total], index) => {
 								const description = `Artigos que aplicam ${tecTerm} no contexto de AIA.`;
 								const techSlug = tecTermToSlug(tecTerm);
 								const iconName = TECH_ICONS[tecTerm] ?? "science";
 
 								return (
 									<article
-										className="flex min-h-[320px] flex-col justify-between rounded-xl bg-white p-8 shadow-[0_24px_40px_-4px_rgba(25,28,26,0.06)] transition-all duration-300 hover:-translate-y-2"
+										className="group relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-[#e6ece9] bg-white p-8 shadow-[0_24px_40px_-24px_rgba(25,28,26,0.08)] transition-[transform,box-shadow,border-color] duration-500 ease-out animate-in fade-in slide-in-from-bottom-4 hover:-translate-y-1 hover:border-[#cfe0d6] hover:shadow-[0_30px_60px_-20px_rgba(12,124,60,0.18),0_8px_20px_-8px_rgba(31,111,139,0.12)]"
 										key={tecTerm}
+										style={{
+											animationDelay: `${index * 55}ms`,
+											animationDuration: "520ms",
+											animationFillMode: "backwards",
+										}}
 									>
-										<div>
+										<span
+											aria-hidden
+											className="pointer-events-none absolute inset-x-0 top-0 h-[2px] origin-left scale-x-0 bg-gradient-to-r from-[#0C7C3C] via-[#1F6F8B] to-[#f6be28] transition-transform duration-700 ease-out group-hover:scale-x-100"
+										/>
+
+										<div className="relative">
 											<div className="mb-6 flex items-start justify-between">
-												<span className="material-symbols-outlined text-4xl text-[#446554]">
-													{iconName}
+												<span className="relative inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e9f5ed] ring-1 ring-inset ring-[#cfe0d6] transition-transform duration-500 ease-out group-hover:-rotate-3 group-hover:scale-105">
+													<span className="material-symbols-outlined text-[28px] text-[#0a6b34]">
+														{iconName}
+													</span>
 												</span>
-												<span className="rounded-full bg-[#f6be28] px-3 py-1 text-xs font-bold text-[#251a00]">
+												<span className="inline-flex items-center gap-1.5 rounded-full border border-[#d4a21f]/50 bg-[#f6be28] px-3 py-1 text-[11px] font-bold tracking-wide text-[#3f2e07] shadow-[0_4px_8px_-4px_rgba(234,179,8,0.45)]">
+													<span
+														aria-hidden
+														className="h-1.5 w-1.5 rounded-full bg-[#0C7C3C]"
+													/>
 													{formatTotal(total)} Artigos
 												</span>
 											</div>
-											<h3 className="mb-3 text-xl font-bold text-[#00261a]">
+											<h3 className="mb-3 text-xl font-bold text-[#00261a] transition-colors duration-300 group-hover:text-[#084a2f]">
 												{tecTerm}
 											</h3>
-											<p className="line-clamp-3 text-sm leading-relaxed text-[#414944]">
+											<p className="line-clamp-3 text-sm leading-relaxed text-[#556070]">
 												{description}
 											</p>
 										</div>
-										<div className="mt-8 flex gap-3">
+										<div className="relative mt-8 flex gap-3">
 											<a
 												href={`/tecnologias/${techSlug}/artigos`}
-												className="group/btn relative flex flex-1 items-center justify-center overflow-hidden rounded bg-[#00261a] px-4 py-2 text-center text-xs font-bold uppercase tracking-wider text-white"
+												className="group/btn relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-md bg-[#00261a] px-4 py-2.5 text-xs font-bold uppercase tracking-[0.08em] text-white"
 											>
-												<span className="absolute inset-0 origin-left scale-x-0 bg-[#3b6756] transition-transform duration-300 ease-out group-hover/btn:scale-x-100" />
+												<span className="absolute inset-0 origin-left scale-x-0 bg-[#0C7C3C] transition-transform duration-500 ease-out group-hover/btn:scale-x-100" />
 												<span className="relative z-10">Ver artigos</span>
+												<span
+													aria-hidden
+													className="material-symbols-outlined relative z-10 text-base leading-none transition-transform duration-300 group-hover/btn:translate-x-0.5"
+												>
+													arrow_forward
+												</span>
 											</a>
 											<a
 												href={`/tecnologias/${techSlug}/estatisticas`}
 												aria-label={`Estatísticas de ${tecTerm}`}
-												className="group/stats relative inline-flex items-center justify-center overflow-hidden rounded border border-[#00261a] bg-white px-3 py-2 text-[#00261a] transition-colors duration-300 hover:bg-[#00261a] hover:text-white"
+												className="group/stats inline-flex items-center justify-center rounded-md border border-[#d3dee2] bg-[#f7faf5] px-3 py-2.5 text-[#1F6F8B] transition-all duration-300 hover:-translate-y-px hover:border-[#1F6F8B] hover:bg-[#eff6ff] hover:shadow-[0_6px_14px_-6px_rgba(31,111,139,0.35)]"
 											>
-												<span className="material-symbols-outlined text-lg leading-none">
+												<span className="material-symbols-outlined text-lg leading-none transition-transform duration-300 group-hover/stats:scale-110">
 													bar_chart
 												</span>
 											</a>
