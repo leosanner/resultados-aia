@@ -115,6 +115,15 @@ export default async function Home() {
 												<span className="absolute inset-0 origin-left scale-x-0 bg-[#3b6756] transition-transform duration-300 ease-out group-hover/btn:scale-x-100" />
 												<span className="relative z-10">Ver artigos</span>
 											</a>
+											<a
+												href={`/tecnologias/${techSlug}/estatisticas`}
+												aria-label={`Estatísticas de ${tecTerm}`}
+												className="group/stats relative inline-flex items-center justify-center overflow-hidden rounded border border-[#00261a] bg-white px-3 py-2 text-[#00261a] transition-colors duration-300 hover:bg-[#00261a] hover:text-white"
+											>
+												<span className="material-symbols-outlined text-lg leading-none">
+													bar_chart
+												</span>
+											</a>
 										</div>
 									</article>
 								);
