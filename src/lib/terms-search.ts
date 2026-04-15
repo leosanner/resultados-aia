@@ -37,6 +37,8 @@ export type TermsSearchArticleRecord = {
 	authorsLabel: string;
 	technologyTerms: string[];
 	environmentalTerms: string[];
+	technologyTermsFull: string[];
+	environmentalTermsFull: string[];
 	fwci: string;
 };
 
@@ -55,11 +57,11 @@ export type TermsSearchResults = {
 	totalResults: number;
 	matchingArticleIds: Set<number>;
 	groups: TermsSearchGroup[];
+	flatArticles: TermsSearchArticleRecord[];
 	exportRows: TermsSearchExportRow[];
 	yearlyArticlesTrend: Array<{ year: number; total: number }>;
 	technologyTermsTrend: TermsSearchTrendSeries[];
 	environmentalTermsTrend: TermsSearchTrendSeries[];
-	areasTrend: TermsSearchTrendSeries[];
 	articlesExtended: Record<string, TermsExtendedArticleRecord>;
 };
 
@@ -404,6 +406,8 @@ export async function getTermsSearchResults(
 					environmentalTerms: summarizeTerms(
 						terms.environmentalTerms.map(formatTermLabel),
 					),
+					technologyTermsFull: terms.technologyTerms,
+					environmentalTermsFull: terms.environmentalTerms,
 					fwci: formatFwci(extended?.fwci),
 				} satisfies TermsSearchArticleRecord;
 			});
@@ -490,26 +494,6 @@ export async function getTermsSearchResults(
 		termLabelByKey.set(key, formatTermLabel(key));
 	}
 
-	const areaCountByKeyAndYear = new Map<string, Map<number, number>>();
-	const areaLabelByKey = new Map<string, string>();
-	const allStageKeys = Object.keys(articlesByStage).sort((a, b) =>
-		formatStageTitle(a).localeCompare(formatStageTitle(b), "pt-BR"),
-	);
-
-	for (const stageKey of allStageKeys) {
-		areaLabelByKey.set(stageKey, formatStageTitle(stageKey));
-		const countsByYear = new Map<number, number>();
-		for (const article of articlesByStage[stageKey] ?? []) {
-			if (!matchingArticleIds.has(article.id)) continue;
-			const publicationYear = getValidPublicationYear(
-				articlesExtended[String(article.id)]?.publication_year,
-			);
-			if (publicationYear === null) continue;
-			countsByYear.set(publicationYear, (countsByYear.get(publicationYear) ?? 0) + 1);
-		}
-		areaCountByKeyAndYear.set(stageKey, countsByYear);
-	}
-
 	const technologyTermsTrend = buildTrendSeries({
 		years,
 		keys: technologyTrendKeys,
@@ -522,11 +506,24 @@ export async function getTermsSearchResults(
 		labelByKey: termLabelByKey,
 		countByKeyAndYear: yearlyEnvironmentalCounts,
 	});
-	const areasTrend = buildTrendSeries({
-		years,
-		keys: allStageKeys,
-		labelByKey: areaLabelByKey,
-		countByKeyAndYear: areaCountByKeyAndYear,
+
+	const flatArticlesMap = new Map<number, TermsSearchArticleRecord>();
+	for (const group of groups) {
+		for (const articleRecord of group.articles) {
+			if (!flatArticlesMap.has(articleRecord.article.id)) {
+				flatArticlesMap.set(articleRecord.article.id, articleRecord);
+			}
+		}
+	}
+	const flatArticles = Array.from(flatArticlesMap.values()).sort((a, b) => {
+		const timeA = Date.parse(a.publicationDate);
+		const timeB = Date.parse(b.publicationDate);
+		const validA = Number.isFinite(timeA);
+		const validB = Number.isFinite(timeB);
+		if (validA && validB) return timeB - timeA;
+		if (validA) return -1;
+		if (validB) return 1;
+		return 0;
 	});
 
 	return {
@@ -537,11 +534,11 @@ export async function getTermsSearchResults(
 		totalResults,
 		matchingArticleIds,
 		groups,
+		flatArticles,
 		exportRows,
 		yearlyArticlesTrend,
 		technologyTermsTrend,
 		environmentalTermsTrend,
-		areasTrend,
 		articlesExtended,
 	};
 }
