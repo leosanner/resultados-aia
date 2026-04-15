@@ -5,6 +5,7 @@ import {
 import { getToneColorByIndex } from "@/components/charts/chart-palettes";
 import { TermsMultiLineChartClient } from "@/components/charts/terms-multi-line-chart-client";
 import { TermsArticlesMapClient } from "@/components/termos/terms-articles-map-client";
+import { TermsPageSizeSelect } from "@/components/termos/terms-page-size-select";
 import institutionInformationData from "@/data/instituition_information.json";
 import {
 	buildTermsDownloadQuery,
@@ -24,8 +25,13 @@ type PageProps = {
 		type?: string | string[];
 		tec?: string | string[];
 		env?: string | string[];
+		page?: string | string[];
+		pageSize?: string | string[];
 	}>;
 };
+
+const PAGE_SIZE_OPTIONS = [5, 10, 20, 30, 50] as const;
+type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number];
 
 type ExtendedArticleRecord = {
 	authors?: { name?: string | null }[];
@@ -73,6 +79,21 @@ function buildDownloadHref(format: "csv" | "docx", query: string) {
 	return query ? `/termos/download?${query}&format=${format}` : `/termos/download?format=${format}`;
 }
 
+function buildPaginationHref(
+	selectedTecTerms: string[],
+	selectedEnvTerms: string[],
+	page: number,
+	pageSize: number,
+) {
+	const query: Record<string, string | string[]> = {
+		page: String(page),
+		pageSize: String(pageSize),
+	};
+	if (selectedTecTerms.length > 0) query.tec = selectedTecTerms;
+	if (selectedEnvTerms.length > 0) query.env = selectedEnvTerms;
+	return { pathname: "/termos", query };
+}
+
 function buildArticleMetadata(record: TermsSearchArticleRecord): ArticleMetadata[] {
 	return [
 		record.publicationDate ? { label: "Data", value: record.publicationDate } : null,
@@ -100,6 +121,32 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 		environmentalTermsTrend,
 		articlesExtended,
 	} = await getTermsSearchResults(currentSearchParams);
+
+	const pageSizeRaw = Array.isArray(currentSearchParams.pageSize)
+		? currentSearchParams.pageSize[0]
+		: currentSearchParams.pageSize;
+	const requestedPageSize = Number(pageSizeRaw);
+	const selectedPageSize: PageSizeOption = PAGE_SIZE_OPTIONS.includes(
+		requestedPageSize as PageSizeOption,
+	)
+		? (requestedPageSize as PageSizeOption)
+		: 10;
+	const pageRaw = Array.isArray(currentSearchParams.page)
+		? currentSearchParams.page[0]
+		: currentSearchParams.page;
+	const requestedPage = Number(pageRaw);
+	const totalPages = Math.max(1, Math.ceil(totalResults / selectedPageSize));
+	const currentPage =
+		Number.isInteger(requestedPage) && requestedPage > 0
+			? Math.min(requestedPage, totalPages)
+			: 1;
+	const pageStart = (currentPage - 1) * selectedPageSize;
+	const paginatedArticles = flatArticles.slice(
+		pageStart,
+		pageStart + selectedPageSize,
+	);
+	const currentStartArticle = totalResults === 0 ? 0 : pageStart + 1;
+	const currentEndArticle = Math.min(pageStart + selectedPageSize, totalResults);
 
 	const availableTechnologyTerms = Array.from(
 		new Set(flatArticles.flatMap((record) => record.technologyTermsFull)),
@@ -373,8 +420,23 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				) : null}
 
 				{totalResults > 0 ? (
-					<section className="mt-8 space-y-4">
-						{flatArticles.map((article) => (
+					<section className="mt-8 rounded-[16px] border border-[#dbe7df] bg-white/90 p-5">
+						<div className="flex flex-wrap items-end justify-between gap-4">
+							<TermsPageSizeSelect
+								pageSizeOptions={PAGE_SIZE_OPTIONS}
+								selectedPageSize={selectedPageSize}
+							/>
+							<p className="text-sm font-semibold text-[#64748b]">
+								Mostrando {currentStartArticle}–{currentEndArticle} de{" "}
+								{totalResults} artigos
+							</p>
+						</div>
+					</section>
+				) : null}
+
+				{totalResults > 0 ? (
+					<section className="mt-4 space-y-4">
+						{paginatedArticles.map((article) => (
 							<ArticleCard
 								abstract={article.article.abstract}
 								href={article.articleUrl}
@@ -387,6 +449,51 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 							/>
 						))}
 					</section>
+				) : null}
+
+				{totalResults > 0 ? (
+					<nav
+						aria-label="Paginação de artigos"
+						className="mt-6 flex flex-wrap items-center justify-between gap-3"
+					>
+						<Link
+							scroll={false}
+							aria-disabled={currentPage <= 1}
+							className={`inline-flex rounded-md px-3 py-2 text-xs font-bold uppercase tracking-[0.8px] ${
+								currentPage <= 1
+									? "pointer-events-none border border-[#e2e8f0] bg-[#f1f5f9] text-[#94a3b8]"
+									: "border border-[#dbe7df] bg-white text-[#1d4ed8] hover:border-[#bfdbfe]"
+							}`}
+							href={buildPaginationHref(
+								selectedTecTerms,
+								selectedEnvTerms,
+								Math.max(1, currentPage - 1),
+								selectedPageSize,
+							)}
+						>
+							Anterior
+						</Link>
+						<p className="text-sm font-semibold text-[#64748b]">
+							Página {currentPage} de {totalPages}
+						</p>
+						<Link
+							scroll={false}
+							aria-disabled={currentPage >= totalPages}
+							className={`inline-flex rounded-md px-3 py-2 text-xs font-bold uppercase tracking-[0.8px] ${
+								currentPage >= totalPages
+									? "pointer-events-none border border-[#e2e8f0] bg-[#f1f5f9] text-[#94a3b8]"
+									: "border border-[#dbe7df] bg-white text-[#1d4ed8] hover:border-[#bfdbfe]"
+							}`}
+							href={buildPaginationHref(
+								selectedTecTerms,
+								selectedEnvTerms,
+								Math.min(totalPages, currentPage + 1),
+								selectedPageSize,
+							)}
+						>
+							Próxima
+						</Link>
+					</nav>
 				) : null}
 
 				{totalResults === 0 ? (
