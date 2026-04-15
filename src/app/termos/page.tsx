@@ -435,7 +435,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				) : null}
 
 				{totalResults > 0 ? (
-					<section className="mt-4 space-y-4">
+					<section className="mt-4 max-h-[70vh] min-h-[260px] space-y-4 overflow-y-auto rounded-[16px] border border-[#dbe7df] bg-white/90 p-4 shadow-[0px_18px_34px_-30px_rgba(15,23,42,0.45)]">
 						{paginatedArticles.map((article) => (
 							<ArticleCard
 								abstract={article.article.abstract}
