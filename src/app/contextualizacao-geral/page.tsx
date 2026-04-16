@@ -1,22 +1,20 @@
 import { ArticlesYearLineChart } from "@/components/charts/articles-year-line-chart";
 import { getToneColorByIndex } from "@/components/charts/chart-palettes";
-import { TermsBarChart } from "@/components/charts/terms-bar-chart";
-import { TermsInstitutionsMapClient } from "@/components/termos/terms-institutions-map-client";
+import { TermsMultiLineChartClient } from "@/components/charts/terms-multi-line-chart-client";
+import { TermsArticlesMapClient } from "@/components/termos/terms-articles-map-client";
 import institutionInformationData from "@/data/instituition_information.json";
-import { formatStageTitle } from "@/lib/area-utils";
-import { ArticleModel } from "@/model/article";
-import { EiaModel, type StageArticle } from "@/model/eia-stages";
-import { filterOcurrencies } from "@/utils/ocurrencies";
+import { formatTermLabel, getTermsSearchResults } from "@/lib/terms-search";
 import type {
-	AreaLegendItem,
-	InstitutionMapPoint,
-} from "@/components/termos/terms-institutions-map";
+	ArticleMapPoint,
+	TechnologyLegendItem,
+} from "@/components/termos/terms-articles-map";
 
 type ExtendedArticleRecord = {
+	["authorships.institutions.id"]?: string | string[] | null;
+	corresponding_institution_ids?: string | string[] | null;
+	publication_year?: number | string | null;
 	title?: string;
 	json_title?: string;
-	publication_year?: number | string | null;
-	["authorships.institutions.id"]?: string | string[] | null;
 };
 
 type InstitutionInformationRecord = {
@@ -31,38 +29,13 @@ type InstitutionInformationRecord = {
 	};
 };
 
-type BarChartItem = {
-	label: string;
-	value: number;
-};
-
-type AreaNarrativeCard = {
-	stageKey: string;
-	stageTitle: string;
-	totalArticles: number;
-	narrative: string;
-	yearlyTrend: Array<{ year: number; total: number }>;
-	topTechnologyTerms: BarChartItem[];
-	topEnvironmentalTerms: BarChartItem[];
-};
+const MULTI_TECH_COLOR = "#ec4899";
+const NO_TECH_COLOR = "#94a3b8";
+const MULTI_TECH_KEY = "__multi__";
+const NO_TECH_KEY = "__none__";
 
 function formatTotal(count: number) {
 	return new Intl.NumberFormat("pt-BR").format(count);
-}
-
-function formatTermLabel(text: string) {
-	return text
-		.split(" ")
-		.filter(Boolean)
-		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-		.join(" ");
-}
-
-function mapTermsToChart(terms: Record<string, number> | undefined): BarChartItem[] {
-	return Object.entries(terms ?? {})
-		.map(([label, value]) => ({ label: formatTermLabel(label), value }))
-		.sort((a, b) => b.value - a.value)
-		.filter((item) => item.value > 0);
 }
 
 function toStringArray(value: string | string[] | null | undefined) {
@@ -77,295 +50,135 @@ function isValidOpenAlexInstitutionId(value: string) {
 	return /^https:\/\/openalex\.org\/I\d+$/i.test(value.trim());
 }
 
-function summarizeTerms(terms: string[], maxItems: number = 3) {
-	if (terms.length <= maxItems) return terms;
-	return [...terms.slice(0, maxItems), `+${terms.length - maxItems}`];
-}
-
-function buildYearlyTrend(articleIds: Iterable<number>, records: Record<string, ExtendedArticleRecord>) {
-	const yearlyCountByPublicationYear = new Map<number, number>();
-	for (const articleId of articleIds) {
-		const publicationYearRaw = records[String(articleId)]?.publication_year;
-		const publicationYear =
-			typeof publicationYearRaw === "number"
-				? publicationYearRaw
-				: Number(publicationYearRaw);
-
-		if (
-			!Number.isInteger(publicationYear) ||
-			publicationYear < 1900 ||
-			publicationYear > 2100
-		) {
-			continue;
-		}
-
-		yearlyCountByPublicationYear.set(
-			publicationYear,
-			(yearlyCountByPublicationYear.get(publicationYear) ?? 0) + 1,
-		);
-	}
-
-	return Array.from(yearlyCountByPublicationYear.entries())
-		.sort((a, b) => a[0] - b[0])
-		.map(([year, total]) => ({ year, total }));
-}
-
-function buildNarrative(stageTitle: string, total: number, totalArticles: number, topTec: BarChartItem[], topEnv: BarChartItem[]) {
-	const share = totalArticles > 0 ? (total / totalArticles) * 100 : 0;
-	const topTecLabel = topTec[0]?.label ?? "sem destaque";
-	const topEnvLabel = topEnv[0]?.label ?? "sem destaque";
-	return `${stageTitle} concentra ${share.toFixed(1)}% da base (${formatTotal(total)} artigos), com maior presença de ${topTecLabel} e ${topEnvLabel}.`;
-}
-
 export default async function ContextualizacaoGeralPage() {
-	const eiaModel = new EiaModel();
-	const articleModel = new ArticleModel();
+	const termsResults = await getTermsSearchResults({});
 
-	const [articlesByStage, articlesExtendedRaw] = await Promise.all([
-		eiaModel.getArticlesByStage(),
-		articleModel.getArticlesExtended(),
-	]);
+	const {
+		flatArticles,
+		articlesExtended,
+		totalResults,
+		yearlyArticlesTrend,
+		technologyTermsTrend,
+		environmentalTermsTrend,
+		groups,
+	} = termsResults;
 
-	const articlesExtended =
-		articlesExtendedRaw as unknown as Record<string, ExtendedArticleRecord>;
+	const totalArticles = totalResults;
+	const totalAreas = groups.length;
+
+	const availableTechnologyTerms = Array.from(
+		new Set(flatArticles.flatMap((record) => record.technologyTermsFull)),
+	).sort((a, b) => a.localeCompare(b, "pt-BR"));
+	const technologyColorByKey = new Map<string, string>();
+	availableTechnologyTerms.forEach((term, index) => {
+		technologyColorByKey.set(term, getToneColorByIndex("blue", index));
+	});
+
 	const institutionsById =
 		institutionInformationData as Record<string, InstitutionInformationRecord>;
-
-	const sortedStageEntries = Object.entries(articlesByStage).sort(
-		(a, b) => b[1].length - a[1].length,
-	);
-	const allStageArticles: StageArticle[] = sortedStageEntries.flatMap(
-		([, articles]) => articles,
-	);
-	const allArticleIds = new Set(allStageArticles.map((article) => article.id));
-	const totalArticles = allArticleIds.size;
-	const totalAreas = sortedStageEntries.length;
-
-	const stageColorByKey = new Map(
-		sortedStageEntries.map(([stageKey], index) => [
-			stageKey,
-			getToneColorByIndex("blue", index),
-		]),
-	);
-	const areaLegend: AreaLegendItem[] = sortedStageEntries.map(
-		([stageKey, articles]) => ({
-			stageKey,
-			label: formatStageTitle(stageKey),
-			color: stageColorByKey.get(stageKey) ?? "#0ea5e9",
-			count: articles.length,
-		}),
-	);
-
-	const articleStagesById = new Map<number, string[]>();
-	for (const [stageKey, articles] of sortedStageEntries) {
-		for (const article of articles) {
-			const current = articleStagesById.get(article.id) ?? [];
-			current.push(stageKey);
-			articleStagesById.set(article.id, current);
-		}
-	}
-
-	const institutionAccumulator = new Map<
-		string,
-		{
-			institution: InstitutionInformationRecord;
-			articleIds: Set<number>;
-			articleDetails: Map<
-				number,
-				{
-					title: string;
-					stageLabels: string[];
-					technologyTerms: string[];
-					environmentalTerms: string[];
-				}
-			>;
-			stageCounts: Map<string, number>;
-		}
-	>();
+	const mapPoints: ArticleMapPoint[] = [];
 	const articlesWithMappedInstitutions = new Set<number>();
-	type ArticleTermsSummary = {
-		technologyTerms: string[];
-		environmentalTerms: string[];
-	};
-	const articleTermsEntries: Array<[number, ArticleTermsSummary]> =
-		await Promise.all(
-			Array.from(allArticleIds).map(async (articleId) => {
-				const articleFt = await articleModel.getArticleFrequencyTerms(articleId);
-				if (!articleFt) {
-					return [
-						articleId,
-						{
-							technologyTerms: [] as string[],
-							environmentalTerms: [] as string[],
-						},
-					];
-				}
+	const mappedInstitutionIds = new Set<string>();
+	const technologyCountsByKey = new Map<string, number>();
 
-				const technologyTerms = summarizeTerms(
-					Object.keys(filterOcurrencies(articleFt.tec)).map(formatTermLabel),
-				);
-				const environmentalTerms = summarizeTerms(
-					Object.keys(filterOcurrencies(articleFt.env)).map(formatTermLabel),
-				);
+	for (const record of flatArticles) {
+		const extended = articlesExtended[String(record.article.id)] as
+			| ExtendedArticleRecord
+			| undefined;
+		if (!extended) continue;
 
-				return [articleId, { technologyTerms, environmentalTerms }];
-			}),
-		);
-	const articleTermsById = new Map<number, ArticleTermsSummary>(
-		articleTermsEntries,
-	);
+		const institutionIds = toStringArray(extended.corresponding_institution_ids);
+		let hasMapped = false;
 
-	for (const articleId of allArticleIds) {
-		const record = articlesExtended[String(articleId)];
-		if (!record) continue;
+		const techFull = record.technologyTermsFull;
+		let pointColor: string;
+		let pointKey: string;
+		if (techFull.length === 0) {
+			pointColor = NO_TECH_COLOR;
+			pointKey = NO_TECH_KEY;
+		} else if (techFull.length === 1) {
+			pointKey = techFull[0];
+			pointColor = technologyColorByKey.get(techFull[0]) ?? NO_TECH_COLOR;
+		} else {
+			pointColor = MULTI_TECH_COLOR;
+			pointKey = MULTI_TECH_KEY;
+		}
 
-		const institutionIds = toStringArray(record["authorships.institutions.id"]);
-		let hasInstitutionForCurrentArticle = false;
-
+		const seenInstitutionIds = new Set<string>();
 		for (const rawInstitutionId of institutionIds) {
 			const institutionId = rawInstitutionId.trim();
 			if (!isValidOpenAlexInstitutionId(institutionId)) continue;
+			if (seenInstitutionIds.has(institutionId)) continue;
+			seenInstitutionIds.add(institutionId);
 
 			const institution = institutionsById[institutionId];
 			if (!institution || !institution.geo) continue;
+
 			const { latitude, longitude } = institution.geo;
 			if (typeof latitude !== "number" || typeof longitude !== "number") {
 				continue;
 			}
 
-			hasInstitutionForCurrentArticle = true;
-			const current = institutionAccumulator.get(institutionId);
-			const articleTitle = record.title ?? record.json_title ?? `Artigo ${articleId}`;
-			const stageLabels =
-				(articleStagesById.get(articleId) ?? []).map((stageKey) =>
-					formatStageTitle(stageKey),
-				) ?? [];
-			const normalizedStageLabels =
-				stageLabels.length > 0 ? stageLabels : ["Área não classificada"];
-			const articleTerms = articleTermsById.get(articleId) ?? {
-				technologyTerms: [],
-				environmentalTerms: [],
-			};
-
-			if (!current) {
-				const stageCounts = new Map<string, number>();
-				for (const stageKey of articleStagesById.get(articleId) ?? []) {
-					stageCounts.set(stageKey, (stageCounts.get(stageKey) ?? 0) + 1);
-				}
-
-				institutionAccumulator.set(institutionId, {
-					institution,
-					articleIds: new Set([articleId]),
-					articleDetails: new Map([
-						[
-							articleId,
-							{
-								title: articleTitle,
-								stageLabels: normalizedStageLabels,
-								technologyTerms: articleTerms.technologyTerms,
-								environmentalTerms: articleTerms.environmentalTerms,
-							},
-						],
-					]),
-					stageCounts,
-				});
-				continue;
-			}
-
-			current.articleIds.add(articleId);
-			if (!current.articleDetails.has(articleId)) {
-				current.articleDetails.set(articleId, {
-					title: articleTitle,
-					stageLabels: normalizedStageLabels,
-					technologyTerms: articleTerms.technologyTerms,
-					environmentalTerms: articleTerms.environmentalTerms,
-				});
-			}
-			for (const stageKey of articleStagesById.get(articleId) ?? []) {
-				current.stageCounts.set(
-					stageKey,
-					(current.stageCounts.get(stageKey) ?? 0) + 1,
-				);
-			}
+			hasMapped = true;
+			mappedInstitutionIds.add(institutionId);
+			mapPoints.push({
+				id: `${record.article.id}-${institutionId}`,
+				articleId: record.article.id,
+				title: record.article.title,
+				institutionName: institution.display_name,
+				city: institution.geo?.city ?? null,
+				region: institution.geo?.region ?? null,
+				country: institution.geo?.country ?? institution.country_code ?? null,
+				latitude,
+				longitude,
+				technologyTerms: record.technologyTermsFull.map(formatTermLabel),
+				environmentalTerms: record.environmentalTermsFull.map(formatTermLabel),
+				color: pointColor,
+			});
 		}
 
-		if (hasInstitutionForCurrentArticle) {
-			articlesWithMappedInstitutions.add(articleId);
+		if (hasMapped) {
+			articlesWithMappedInstitutions.add(record.article.id);
+			technologyCountsByKey.set(
+				pointKey,
+				(technologyCountsByKey.get(pointKey) ?? 0) + 1,
+			);
 		}
 	}
 
-	const institutionMapPoints: InstitutionMapPoint[] = Array.from(
-		institutionAccumulator.entries(),
-	).map(([institutionId, { institution, articleIds, articleDetails, stageCounts }]) => {
-		const dominantStageKey = Array.from(stageCounts.entries()).sort(
-			(a, b) => b[1] - a[1],
-		)[0]?.[0];
+	const technologyLegend: TechnologyLegendItem[] = [];
+	for (const term of availableTechnologyTerms) {
+		const count = technologyCountsByKey.get(term) ?? 0;
+		if (count === 0) continue;
+		technologyLegend.push({
+			key: term,
+			label: formatTermLabel(term),
+			color: technologyColorByKey.get(term) ?? NO_TECH_COLOR,
+			count,
+		});
+	}
+	const multiCount = technologyCountsByKey.get(MULTI_TECH_KEY) ?? 0;
+	if (multiCount > 0) {
+		technologyLegend.push({
+			key: MULTI_TECH_KEY,
+			label: "Múltiplas tecnologias",
+			color: MULTI_TECH_COLOR,
+			count: multiCount,
+		});
+	}
+	const noTechCount = technologyCountsByKey.get(NO_TECH_KEY) ?? 0;
+	if (noTechCount > 0) {
+		technologyLegend.push({
+			key: NO_TECH_KEY,
+			label: "Sem tecnologia",
+			color: NO_TECH_COLOR,
+			count: noTechCount,
+		});
+	}
 
-		return {
-			id: institutionId,
-			name: institution.display_name,
-			city: institution.geo?.city ?? null,
-			region: institution.geo?.region ?? null,
-			country: institution.geo?.country ?? institution.country_code ?? null,
-			latitude: institution.geo?.latitude ?? 0,
-			longitude: institution.geo?.longitude ?? 0,
-			articleCount: articleIds.size,
-			articles: Array.from(articleDetails.entries())
-				.map(([id, detail]) => ({
-					id,
-					title: detail.title,
-					stageLabel: detail.stageLabels.join(" / "),
-					technologyTerms: detail.technologyTerms,
-					environmentalTerms: detail.environmentalTerms,
-				}))
-				.slice(0, 6),
-			dominantAreaLabel: dominantStageKey
-				? formatStageTitle(dominantStageKey)
-				: "Área não classificada",
-			color: dominantStageKey
-				? (stageColorByKey.get(dominantStageKey) ?? "#0ea5e9")
-				: "#0ea5e9",
-		};
-	});
-	institutionMapPoints.sort((a, b) => b.articleCount - a.articleCount);
-
-	const overallYearlyTrend = buildYearlyTrend(allArticleIds, articlesExtended);
-	const coveredYears = overallYearlyTrend.map((item) => item.year);
+	const coveredYears = yearlyArticlesTrend.map((item) => item.year);
 	const minYear = coveredYears.length > 0 ? Math.min(...coveredYears) : null;
 	const maxYear = coveredYears.length > 0 ? Math.max(...coveredYears) : null;
-
-	const overallTerms = await eiaModel.filterTermsFrequency(allStageArticles);
-	const overallTechnologyTerms = mapTermsToChart(overallTerms.tec).slice(0, 10);
-	const overallEnvironmentalTerms = mapTermsToChart(overallTerms.env).slice(0, 10);
-
-	const areaNarratives: AreaNarrativeCard[] = await Promise.all(
-		sortedStageEntries.map(async ([stageKey, articles]) => {
-			const stageTitle = formatStageTitle(stageKey);
-			const termsSummary = await eiaModel.filterTermsFrequency(articles);
-			const topTechnologyTerms = mapTermsToChart(termsSummary.tec).slice(0, 6);
-			const topEnvironmentalTerms = mapTermsToChart(termsSummary.env).slice(0, 6);
-			const yearlyTrend = buildYearlyTrend(
-				articles.map((article) => article.id),
-				articlesExtended,
-			);
-
-			return {
-				stageKey,
-				stageTitle,
-				totalArticles: articles.length,
-				narrative: buildNarrative(
-					stageTitle,
-					articles.length,
-					totalArticles,
-					topTechnologyTerms,
-					topEnvironmentalTerms,
-				),
-				yearlyTrend,
-				topTechnologyTerms,
-				topEnvironmentalTerms,
-			};
-		}),
-	);
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e8f5ee_0%,_#f5f8f6_42%,_#ffffff_100%)] text-[#0f172a]">
@@ -380,7 +193,7 @@ export default async function ContextualizacaoGeralPage() {
 					<p className="mt-2 max-w-[820px] text-sm leading-6 text-[#4a5568]">
 						Esta seção resume os principais resultados do experimento, com foco
 						na distribuição espacial dos artigos, evolução temporal das
-						publicações e temas mais frequentes em cada área da AIA.
+						publicações e temas mais frequentes.
 					</p>
 					<div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
 						<SummaryCard label="Total de Artigos" value={formatTotal(totalArticles)} />
@@ -395,16 +208,16 @@ export default async function ContextualizacaoGeralPage() {
 						/>
 						<SummaryCard
 							label="Localizações Mapeadas"
-							value={formatTotal(institutionMapPoints.length)}
+							value={formatTotal(mappedInstitutionIds.size)}
 						/>
 					</div>
 				</section>
 
 				<section className="mt-8">
-					<TermsInstitutionsMapClient
-						areas={areaLegend}
+					<TermsArticlesMapClient
 						articlesWithMappedInstitutions={articlesWithMappedInstitutions.size}
-						points={institutionMapPoints}
+						points={mapPoints}
+						technologyLegend={technologyLegend}
 						totalArticles={totalArticles}
 					/>
 				</section>
@@ -418,92 +231,55 @@ export default async function ContextualizacaoGeralPage() {
 						anos.
 					</p>
 					<div className="mt-4">
-						<ArticlesYearLineChart items={overallYearlyTrend} />
+						<ArticlesYearLineChart items={yearlyArticlesTrend} />
 					</div>
 				</section>
 
-				<section className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-					<article className="rounded-2xl border border-[#dbe6df] bg-white p-5">
-						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#1d4ed8]">
-							Termos Tecnológicos Mais Frequentes
-						</h2>
-						<div className="mt-4">
-							<TermsBarChart items={overallTechnologyTerms} tone="blue" />
-						</div>
-					</article>
-					<article className="rounded-2xl border border-[#dbe6df] bg-white p-5">
-						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#15803d]">
-							Termos Ambientais Mais Frequentes
-						</h2>
-						<div className="mt-4">
-							<TermsBarChart items={overallEnvironmentalTerms} tone="green" />
-						</div>
-					</article>
-				</section>
-
 				<section className="mt-8 space-y-6">
-					<h2 className="text-2xl font-black tracking-[-0.5px] text-[#111111]">
-						Narrativa por Área
-					</h2>
-					{areaNarratives.map((area) => (
-						<article
-							className="rounded-2xl border border-[#dbe6df] bg-white p-5 shadow-[0px_8px_20px_-18px_rgba(15,23,42,0.35)]"
-							key={area.stageKey}
-						>
-							<div className="flex flex-wrap items-start justify-between gap-3">
-								<div>
-									<h3 className="text-xl font-black tracking-[-0.4px] text-[#0f172a]">
-										{area.stageTitle}
-									</h3>
-									<p className="mt-1 text-sm text-[#64748b]">{area.narrative}</p>
-								</div>
-								<span className="rounded-full bg-[#edf7f1] px-3 py-1 text-xs font-bold uppercase tracking-[0.6px] text-[#256f4f]">
-									{formatTotal(area.totalArticles)} artigos
-								</span>
-							</div>
+					<div className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
+						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
+							Séries temporais por categoria
+						</h2>
+						<p className="mt-1 text-sm text-[#64748b]">
+							Cada linha representa um termo dentro do conjunto completo de
+							artigos.
+						</p>
+					</div>
 
-							<div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-3">
-								<div className="xl:col-span-2">
-									<p className="mb-2 text-xs font-bold uppercase tracking-[0.9px] text-[#475569]">
-										Evolução temporal da área
-									</p>
-									<ArticlesYearLineChart items={area.yearlyTrend} />
-								</div>
-								<div className="space-y-4">
-									<div>
-										<p className="mb-2 text-xs font-bold uppercase tracking-[0.9px] text-[#1d4ed8]">
-											Principais termos de tecnologia
-										</p>
-										<div className="flex flex-wrap gap-2">
-											{area.topTechnologyTerms.map((term) => (
-												<span
-													className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-2.5 py-1 text-[11px] font-semibold text-[#1e3a8a]"
-													key={`${area.stageKey}-tec-${term.label}`}
-												>
-													{term.label} ({term.value})
-												</span>
-											))}
-										</div>
-									</div>
-									<div>
-										<p className="mb-2 text-xs font-bold uppercase tracking-[0.9px] text-[#15803d]">
-											Principais termos ambientais
-										</p>
-										<div className="flex flex-wrap gap-2">
-											{area.topEnvironmentalTerms.map((term) => (
-												<span
-													className="rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-2.5 py-1 text-[11px] font-semibold text-[#166534]"
-													key={`${area.stageKey}-env-${term.label}`}
-												>
-													{term.label} ({term.value})
-												</span>
-											))}
-										</div>
-									</div>
-								</div>
-							</div>
-						</article>
-					))}
+					<section className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
+						<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#0f4c81]">
+							Termos de tecnologia
+						</h3>
+						<p className="mt-1 text-sm text-[#64748b]">
+							Evolução anual dos termos tecnológicos identificados nos
+							artigos.
+						</p>
+						<div className="mt-4">
+							<TermsMultiLineChartClient
+								emptyMessage="Não há termos tecnológicos com ano de publicação válido nos artigos."
+								key={`technology-${technologyTermsTrend.map((item) => item.key).join("|")}`}
+								series={technologyTermsTrend}
+								tone="blue"
+							/>
+						</div>
+					</section>
+
+					<section className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
+						<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#166534]">
+							Termos ambientais
+						</h3>
+						<p className="mt-1 text-sm text-[#64748b]">
+							Evolução anual dos termos ambientais identificados nos artigos.
+						</p>
+						<div className="mt-4">
+							<TermsMultiLineChartClient
+								emptyMessage="Não há termos ambientais com ano de publicação válido nos artigos."
+								key={`environmental-${environmentalTermsTrend.map((item) => item.key).join("|")}`}
+								series={environmentalTermsTrend}
+								tone="green"
+							/>
+						</div>
+					</section>
 				</section>
 			</main>
 		</div>
