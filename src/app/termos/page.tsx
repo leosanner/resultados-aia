@@ -107,6 +107,23 @@ function buildPaginationHref(
 	return { pathname: "/termos", query };
 }
 
+function buildFiltersHref(
+	selectedTecTerms: string[],
+	selectedEnvTerms: string[],
+	pageSize: number,
+	sortBy: TermsSortBy,
+	sortOrder: TermsSortOrder,
+) {
+	const query: Record<string, string | string[]> = {
+		pageSize: String(pageSize),
+		sortBy,
+		sortOrder,
+	};
+	if (selectedTecTerms.length > 0) query.tec = selectedTecTerms;
+	if (selectedEnvTerms.length > 0) query.env = selectedEnvTerms;
+	return { pathname: "/termos", query };
+}
+
 function getSearchParamValue(value: string | string[] | undefined) {
 	return Array.isArray(value) ? value[0] : value;
 }
@@ -228,6 +245,15 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 		technologyColorByKey.set(term, getToneColorByIndex("blue", index));
 	});
 
+	const tecChipColorByTerm = new Map<string, string>();
+	technologyTermsTrend.forEach((item, index) => {
+		tecChipColorByTerm.set(item.key, getToneColorByIndex("blue", index));
+	});
+	const envChipColorByTerm = new Map<string, string>();
+	environmentalTermsTrend.forEach((item, index) => {
+		envChipColorByTerm.set(item.key, getToneColorByIndex("green", index));
+	});
+
 	const downloadQuery = buildTermsDownloadQuery({
 		tec: selectedTecTerms,
 		env: selectedEnvTerms,
@@ -337,9 +363,9 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e8f5ee_0%,_#f5f8f6_42%,_#ffffff_100%)] text-[#0f172a]">
-			<main className="mx-auto w-full max-w-[992px] px-6 py-8 md:px-12">
+			<main className="mx-auto w-full max-w-[992px] px-6 py-10 md:px-12">
 
-				<section className="mt-6 rounded-[18px] border border-[#dbe7df] bg-white/90 p-6 shadow-[0px_18px_34px_-28px_rgba(15,23,42,0.45)] backdrop-blur-sm">
+				<section className="mt-4">
 					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#7a8a9d]">
 						Filtro por termos
 					</p>
@@ -357,99 +383,259 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 							? `${totalResults} artigos encontrados.`
 							: "Resultados carregados."}
 					</p>
+
 					{totalResults > 0 ? (
-						<div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-							<div className="rounded-xl border border-[#bfdbfe] bg-[#eff6ff] px-4 py-3">
-								<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#1d4ed8]">
+						<dl className="mt-8 grid grid-cols-3 gap-4 md:gap-10">
+							<div className="border-l-[3px] border-[#0f172a] pl-4">
+								<dt className="text-[11px] font-bold uppercase tracking-[1px] text-[#7a8a9d]">
 									Total
-								</p>
-								<p className="mt-1 text-2xl font-black text-[#1e3a8a]">
+								</dt>
+								<dd className="mt-1 font-black tabular-nums tracking-[-1px] text-[#0f172a] text-4xl md:text-5xl">
 									{totalResults}
-								</p>
+								</dd>
 							</div>
-							<div className="rounded-xl border border-[#bae6fd] bg-[#ecfeff] px-4 py-3">
-								<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#0369a1]">
+							<div className="border-l-[3px] border-[#1d4ed8] pl-4">
+								<dt className="text-[11px] font-bold uppercase tracking-[1px] text-[#1d4ed8]">
 									Termos Tec
-								</p>
-								<p className="mt-1 text-2xl font-black text-[#0c4a6e]">
+								</dt>
+								<dd className="mt-1 font-black tabular-nums tracking-[-1px] text-[#1e3a8a] text-4xl md:text-5xl">
 									{selectedTecTerms.length}
-								</p>
+								</dd>
 							</div>
-							<div className="rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-3">
-								<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#15803d]">
+							<div className="border-l-[3px] border-[#15803d] pl-4">
+								<dt className="text-[11px] font-bold uppercase tracking-[1px] text-[#15803d]">
 									Termos Env
-								</p>
-								<p className="mt-1 text-2xl font-black text-[#14532d]">
+								</dt>
+								<dd className="mt-1 font-black tabular-nums tracking-[-1px] text-[#14532d] text-4xl md:text-5xl">
 									{selectedEnvTerms.length}
-								</p>
+								</dd>
 							</div>
+						</dl>
+					) : null}
+
+					{selectedTecTerms.length > 0 || selectedEnvTerms.length > 0 ? (
+						<div className="mt-8 rounded-[14px] border border-[#e2e8f0] bg-white/70 px-5 py-4 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-sm">
+							<div className="flex items-center justify-between gap-3">
+								<p className="flex items-baseline gap-2 text-[11px] font-bold uppercase tracking-[1.4px] text-[#334155]">
+									Termos selecionados
+									<span className="tabular-nums text-[#94a3b8]">
+										{selectedTecTerms.length + selectedEnvTerms.length}
+									</span>
+								</p>
+								<Link
+									scroll={false}
+									href={buildFiltersHref(
+										[],
+										[],
+										selectedPageSize,
+										selectedSortBy,
+										selectedSortOrder,
+									)}
+									className="group inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[1px] text-[#64748b] transition-colors hover:text-[#0f172a]"
+								>
+									<svg
+										aria-hidden="true"
+										className="h-3 w-3 transition-transform group-hover:rotate-90"
+										fill="none"
+										stroke="currentColor"
+										strokeLinecap="round"
+										strokeWidth="2.5"
+										viewBox="0 0 24 24"
+									>
+										<path d="M6 6l12 12M18 6L6 18" />
+									</svg>
+									Limpar tudo
+								</Link>
+							</div>
+
+							{selectedTecTerms.length > 0 ? (
+								<div className="mt-4">
+									<p className="text-[10px] font-bold uppercase tracking-[1.3px] text-[#1d4ed8]">
+										Tecnologia
+									</p>
+									<ul className="mt-2 flex flex-wrap gap-2">
+										{selectedTecTerms.map((term) => {
+											const color = tecChipColorByTerm.get(term) ?? "#1d4ed8";
+											return (
+												<li key={`tec-${term}`}>
+													<span
+														className="inline-flex items-stretch overflow-hidden rounded-[10px] border shadow-[0_1px_0_rgba(15,23,42,0.03)] transition-shadow hover:shadow-[0_2px_6px_rgba(15,23,42,0.08)]"
+														style={{
+															borderColor: `${color}55`,
+															backgroundColor: `${color}10`,
+														}}
+													>
+														<span
+															aria-hidden="true"
+															className="w-[4px] shrink-0"
+															style={{ backgroundColor: color }}
+														/>
+														<span
+															className="flex items-center px-3 py-1.5 text-[13px] font-semibold tracking-[-0.1px] text-[#0f172a]"
+														>
+															{formatTermLabel(term)}
+														</span>
+														<Link
+															scroll={false}
+															aria-label={`Remover filtro ${formatTermLabel(term)}`}
+															href={buildFiltersHref(
+																selectedTecTerms.filter((t) => t !== term),
+																selectedEnvTerms,
+																selectedPageSize,
+																selectedSortBy,
+																selectedSortOrder,
+															)}
+															className="flex items-center justify-center border-l border-[#0f172a]/5 px-2.5 text-[#94a3b8] transition-colors hover:bg-[rgba(15,23,42,0.05)] hover:text-[#0f172a]"
+														>
+															<svg
+																aria-hidden="true"
+																className="h-3 w-3"
+																fill="none"
+																stroke="currentColor"
+																strokeLinecap="round"
+																strokeWidth="2.5"
+																viewBox="0 0 24 24"
+															>
+																<path d="M6 6l12 12M18 6L6 18" />
+															</svg>
+														</Link>
+													</span>
+												</li>
+											);
+										})}
+									</ul>
+								</div>
+							) : null}
+
+							{selectedEnvTerms.length > 0 ? (
+								<div className="mt-4">
+									<p className="text-[10px] font-bold uppercase tracking-[1.3px] text-[#15803d]">
+										Ambiental
+									</p>
+									<ul className="mt-2 flex flex-wrap gap-2">
+										{selectedEnvTerms.map((term) => {
+											const color = envChipColorByTerm.get(term) ?? "#15803d";
+											return (
+												<li key={`env-${term}`}>
+													<span
+														className="inline-flex items-stretch overflow-hidden rounded-[10px] border shadow-[0_1px_0_rgba(15,23,42,0.03)] transition-shadow hover:shadow-[0_2px_6px_rgba(15,23,42,0.08)]"
+														style={{
+															borderColor: `${color}55`,
+															backgroundColor: `${color}10`,
+														}}
+													>
+														<span
+															aria-hidden="true"
+															className="w-[4px] shrink-0"
+															style={{ backgroundColor: color }}
+														/>
+														<span
+															className="flex items-center px-3 py-1.5 text-[13px] font-semibold tracking-[-0.1px] text-[#0f172a]"
+														>
+															{formatTermLabel(term)}
+														</span>
+														<Link
+															scroll={false}
+															aria-label={`Remover filtro ${formatTermLabel(term)}`}
+															href={buildFiltersHref(
+																selectedTecTerms,
+																selectedEnvTerms.filter((t) => t !== term),
+																selectedPageSize,
+																selectedSortBy,
+																selectedSortOrder,
+															)}
+															className="flex items-center justify-center border-l border-[#0f172a]/5 px-2.5 text-[#94a3b8] transition-colors hover:bg-[rgba(15,23,42,0.05)] hover:text-[#0f172a]"
+														>
+															<svg
+																aria-hidden="true"
+																className="h-3 w-3"
+																fill="none"
+																stroke="currentColor"
+																strokeLinecap="round"
+																strokeWidth="2.5"
+																viewBox="0 0 24 24"
+															>
+																<path d="M6 6l12 12M18 6L6 18" />
+															</svg>
+														</Link>
+													</span>
+												</li>
+											);
+										})}
+									</ul>
+								</div>
+							) : null}
+						</div>
+					) : null}
+
+					{totalResults > 0 ? (
+						<div className="mt-8 flex flex-wrap items-center gap-3">
+							<span className="text-[11px] font-bold uppercase tracking-[1.2px] text-[#064722]">
+								Exportar
+							</span>
+							<Link
+								className="group inline-flex items-center gap-2 rounded-[4px] border border-[#0C7C3C] bg-white px-4 py-2 text-sm font-bold tracking-[0.2px] text-[#064722] transition-colors hover:bg-[#0C7C3C] hover:text-white"
+								href={buildDownloadHref("csv", downloadQuery)}
+							>
+								<svg
+									aria-hidden="true"
+									className="h-4 w-4"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2.25"
+									viewBox="0 0 24 24"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										d="M12 4v12m0 0l-4-4m4 4l4-4M5 20h14"
+									/>
+								</svg>
+								CSV
+							</Link>
+							<Link
+								className="group inline-flex items-center gap-2 rounded-[4px] border border-[#064722] bg-[#0C7C3C] px-4 py-2 text-sm font-bold tracking-[0.2px] text-white transition-colors hover:bg-[#064722]"
+								href={buildDownloadHref("docx", downloadQuery)}
+							>
+								<svg
+									aria-hidden="true"
+									className="h-4 w-4"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2.25"
+									viewBox="0 0 24 24"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										d="M12 4v12m0 0l-4-4m4 4l4-4M5 20h14"
+									/>
+								</svg>
+								DOCX
+							</Link>
 						</div>
 					) : null}
 				</section>
 
-				{selectedTecTerms.length > 0 ? (
-					<div className="mt-4 flex flex-wrap gap-2">
-						{selectedTecTerms.map((term) => (
-							<span
-								className="inline-flex rounded-full border border-[#bfdbfe] bg-white px-3 py-1 text-xs font-semibold text-[#1e3a8a]"
-								key={`tec-${term}`}
-							>
-								Tec: {formatTermLabel(term)}
-							</span>
-						))}
-					</div>
-				) : null}
-
-				{selectedEnvTerms.length > 0 ? (
-					<div className="mt-2 flex flex-wrap gap-2">
-						{selectedEnvTerms.map((term) => (
-							<span
-								className="inline-flex rounded-full border border-[#bbf7d0] bg-white px-3 py-1 text-xs font-semibold text-[#166534]"
-								key={`env-${term}`}
-							>
-								Env: {formatTermLabel(term)}
-							</span>
-						))}
-					</div>
-				) : null}
-
 				{totalResults > 0 ? (
-					<section className="mt-4 flex flex-wrap justify-end gap-3">
-						<Link
-							className="inline-flex items-center rounded-full border border-[#bfdbfe] bg-white px-5 py-3 text-sm font-bold uppercase tracking-[0.8px] text-[#1d4ed8] shadow-[0px_16px_30px_-18px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#eff6ff]"
-							href={buildDownloadHref("csv", downloadQuery)}
-						>
-							Baixar CSV
-						</Link>
-						<Link
-							className="inline-flex items-center rounded-full bg-[#2563eb] px-5 py-3 text-sm font-bold uppercase tracking-[0.8px] text-white shadow-[0px_16px_30px_-18px_rgba(37,99,235,0.75)] transition-colors hover:bg-[#1d4ed8]"
-							href={buildDownloadHref("docx", downloadQuery)}
-						>
-							Baixar DOCX
-						</Link>
-					</section>
-				) : null}
-
-				{totalResults > 0 ? (
-					<section className="mt-8 space-y-6">
-						<div className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
+					<section className="mt-12 border-t border-[#e2e8f0] pt-8">
+						<div className="flex flex-wrap items-baseline justify-between gap-3">
 							<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
-								Séries temporais por categoria
+								Tendências temporais
 							</h2>
-							<p className="mt-1 text-sm text-[#64748b]">
-								Cada linha representa um termo dentro do conjunto de artigos já
-								filtrado no grafo.
+							<p className="text-xs text-[#64748b]">
+								Linhas por termo dentro do conjunto filtrado no grafo.
 							</p>
 						</div>
 
-						<section className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
+						<div className="mt-8">
 							<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#0f4c81]">
 								Termos de tecnologia
 							</h3>
-							<p className="mt-1 text-sm text-[#64748b]">
+							<p className="mt-1 text-xs text-[#64748b]">
 								{selectedTecTerms.length > 0
-									? "Linhas geradas apenas para os termos tecnológicos selecionados."
-									: "Nenhum termo tecnológico foi selecionado; o gráfico considera todos os termos tecnológicos presentes nos artigos filtrados."}
+									? "Apenas os termos tec selecionados."
+									: "Todos os termos tec dos artigos filtrados."}
 							</p>
 							<div className="mt-4">
 								<TermsMultiLineChartClient
@@ -459,16 +645,16 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 									tone="blue"
 								/>
 							</div>
-						</section>
+						</div>
 
-						<section className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
+						<div className="mt-10">
 							<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#166534]">
 								Termos ambientais
 							</h3>
-							<p className="mt-1 text-sm text-[#64748b]">
+							<p className="mt-1 text-xs text-[#64748b]">
 								{selectedEnvTerms.length > 0
-									? "Linhas geradas apenas para os termos ambientais selecionados."
-									: "Nenhum termo ambiental foi selecionado; o gráfico considera todos os termos ambientais presentes nos artigos filtrados."}
+									? "Apenas os termos ambientais selecionados."
+									: "Todos os termos ambientais dos artigos filtrados."}
 							</p>
 							<div className="mt-4">
 								<TermsMultiLineChartClient
@@ -478,7 +664,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 									tone="green"
 								/>
 							</div>
-						</section>
+						</div>
 					</section>
 				) : null}
 
@@ -492,7 +678,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				) : null}
 
 				{totalResults > 0 ? (
-					<section className="mt-8 rounded-[16px] border border-[#dbe7df] bg-white/90 p-5 shadow-[0px_18px_34px_-30px_rgba(15,23,42,0.45)]">
+					<section className="mt-12 border-t border-[#e2e8f0] pt-8">
 						<div className="flex flex-wrap items-end justify-between gap-4">
 							<div className="flex flex-wrap items-end gap-4">
 								<TermsPageSizeSelect
@@ -504,9 +690,12 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 									selectedSortOrder={selectedSortOrder}
 								/>
 							</div>
-							<p className="text-sm font-semibold underline decoration-[#1e3a8a] decoration-2 underline-offset-4 text-[#1e3a8a]">
-								Mostrando {currentStartArticle}–{currentEndArticle} de{" "}
-								{totalResults} artigos
+							<p className="text-sm font-semibold text-[#64748b]">
+								Mostrando{" "}
+								<span className="text-[#0f172a]">
+									{currentStartArticle}–{currentEndArticle}
+								</span>{" "}
+								de {totalResults} artigos
 							</p>
 						</div>
 
