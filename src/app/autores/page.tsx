@@ -1,37 +1,41 @@
-import { formatStageTitle } from "@/lib/area-utils";
-import { EiaModel } from "@/model/eia-stages";
-import { StageAuthorsCard } from "@/components/autores/stage-authors-card";
+import { ArticleModel } from "@/model/article";
+import { TechnologyAuthorsCard } from "@/components/autores/technology-authors-card";
 
-type AuthorByStage = {
+type AuthorByTechnology = {
 	authorId: string;
 	authorName: string;
 	publications: number[];
 };
 
 export default async function AuthorsPage() {
-	const eiaModel = new EiaModel();
-	const authorsByStage = await eiaModel.getAuthorsByStage();
+	const articleModel = new ArticleModel();
+	const authorsByTechnology = await articleModel.getAuthorsByTechnology();
 
-	const stages = Object.entries(authorsByStage)
-		.map(([stageKey, authors]) => {
+	const technologies = Object.entries(authorsByTechnology)
+		.map(([technologyKey, authors]) => {
 			const sortedAuthors = Object.entries(authors)
 				.map(([authorId, author]) => {
-					const uniquePublications = new Set(author.publications);
+					const uniquePublications = Array.from(new Set(author.publications));
 					return {
 						authorId,
 						authorName: author.authorName,
-						publications: Array.from(uniquePublications),
-					} as AuthorByStage;
+						publications: uniquePublications,
+					} as AuthorByTechnology;
 				})
 				.sort((a, b) => b.publications.length - a.publications.length);
 
+			const totalPublications = new Set(
+				sortedAuthors.flatMap((author) => author.publications),
+			).size;
+
 			return {
-				stageKey,
-				stageTitle: formatStageTitle(stageKey),
+				technologyKey,
+				technologyLabel: technologyKey,
 				authors: sortedAuthors,
+				totalPublications,
 			};
 		})
-		.sort((a, b) => b.authors.length - a.authors.length);
+		.sort((a, b) => b.totalPublications - a.totalPublications);
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#edf8f2_0%,_#f4f8f6_40%,_#ffffff_100%)] text-[#111111]">
@@ -41,20 +45,21 @@ export default async function AuthorsPage() {
 						Novo Painel
 					</p>
 					<h1 className="mt-2 text-4xl font-black tracking-[-1px] text-[#111111] md:text-5xl">
-						Autores por Área da AIA
+						Autores por Tecnologia
 					</h1>
 					<p className="mt-3 text-base text-[#4a5568]">
-						Ranking de autores por etapa, com total de publicações associadas.
+						Ranking de autores por tecnologia da string de busca, ordenados por
+						total de publicações.
 					</p>
 				</section>
 
 				<section className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-					{stages.map((stage) => (
-						<StageAuthorsCard
-							authors={stage.authors}
-							key={stage.stageKey}
-							stageKey={stage.stageKey}
-							stageTitle={stage.stageTitle}
+					{technologies.map((technology) => (
+						<TechnologyAuthorsCard
+							authors={technology.authors}
+							key={technology.technologyKey}
+							technologyKey={technology.technologyKey}
+							technologyLabel={technology.technologyLabel}
 						/>
 					))}
 				</section>

@@ -202,6 +202,69 @@ export class ArticleModel {
 		return resolveArticleTerms(article, articleFt);
 	}
 
+	async getAuthorsByTechnology(): Promise<
+		Record<TecTerm, Record<string, { authorName: string; publications: number[] }>>
+	> {
+		const [articlesExtended, articlesFt] = await Promise.all([
+			this.getArticlesExtended(),
+			this.loadFrequencyTerms(),
+		]);
+
+		const result: Record<
+			string,
+			Record<string, { authorName: string; publications: Set<number> }>
+		> = {};
+
+		for (const [articleIdKey, articleContent] of Object.entries(articlesExtended)) {
+			const articleId = Number(articleIdKey);
+			const article = {
+				title: articleContent.title,
+				abstract: articleContent.abstract,
+				keywords: articleContent.keywords,
+			};
+			const { technology } = resolveArticleTerms(article, articlesFt[articleId]);
+
+			if (technology.length === 0 || !articleContent.authors) {
+				continue;
+			}
+
+			for (const tecTerm of technology) {
+				if (!(tecTerm in result)) {
+					result[tecTerm] = {};
+				}
+
+				for (const author of articleContent.authors) {
+					if (!(author.id in result[tecTerm])) {
+						result[tecTerm][author.id] = {
+							authorName: author.name,
+							publications: new Set<number>(),
+						};
+					}
+					result[tecTerm][author.id].publications.add(articleId);
+				}
+			}
+		}
+
+		const finalResult: Record<
+			TecTerm,
+			Record<string, { authorName: string; publications: number[] }>
+		> = {} as Record<
+			TecTerm,
+			Record<string, { authorName: string; publications: number[] }>
+		>;
+
+		for (const [tecTerm, authors] of Object.entries(result)) {
+			finalResult[tecTerm as TecTerm] = Object.fromEntries(
+				Object.entries(authors).map(([authorId, { authorName, publications }]) => [
+					authorId,
+					{ authorName, publications: Array.from(publications) },
+				]),
+			);
+		}
+
+		return finalResult;
+	}
+
 	async filterArticlesByTerms(terms: { env: EnvTerm[]; tec: TecTerm[] }) {
 		const filteredArticles: Article[] = [];
 		const [articles, articlesFt] = await Promise.all([
