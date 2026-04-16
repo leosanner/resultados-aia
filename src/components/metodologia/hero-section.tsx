@@ -77,10 +77,24 @@ export function HeroSection() {
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.5, duration: 0.55, ease: "easeOut" }}
 					>
-						Pipeline de pesquisa utilizado para transformar um conjunto massivo de
-						publicações acadêmicas em uma seleção refinada e relevante para Avaliação de
-						Impacto Ambiental (AIA).
+						Pipeline em duas macroetapas: filtragem científica de um corpus massivo
+						para um conjunto refinado, seguida de síntese estruturada do conteúdo com
+						agente de IA supervisionado.
 					</motion.p>
+
+					<motion.div
+						className="mt-8 flex flex-wrap gap-3"
+						initial={{ opacity: 0, y: 12 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ delay: 0.7, duration: 0.5, ease: "easeOut" }}
+					>
+						<span className="rounded-full border border-[#2ECC71]/40 bg-[#0C7C3C]/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[1.5px] text-[#beedd7]">
+							I · Filtragem Científica
+						</span>
+						<span className="rounded-full border border-[#f6be28]/50 bg-[#f6be28]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[1.5px] text-[#f6be28]">
+							II · Síntese Assistida por IA
+						</span>
+					</motion.div>
 				</div>
 			</div>
 		</section>
