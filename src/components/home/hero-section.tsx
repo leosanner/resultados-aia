@@ -53,7 +53,6 @@ export function HeroSection() {
 
 			<div className="absolute inset-0 bg-gradient-to-br from-[#00261a] via-[#0f3d2e]/80 to-transparent" />
 
-
 			<div className="relative z-10 mx-auto w-full max-w-screen-2xl px-8 py-20">
 				<div className="max-w-3xl">
 					<motion.h1
@@ -62,7 +61,8 @@ export function HeroSection() {
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.6, ease: "easeOut" }}
 					>
-						Visão Geral das <br />
+						Tecnologias digitais
+						<br />
 						<motion.span
 							className="inline-block text-[#f6be28]"
 							initial={{ opacity: 0, y: 16 }}
@@ -73,7 +73,7 @@ export function HeroSection() {
 								ease: "easeOut",
 							}}
 						>
-							Etapas da AIA
+							associadas a AIA
 						</motion.span>
 					</motion.h1>
 
@@ -92,7 +92,8 @@ export function HeroSection() {
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.5, duration: 0.55, ease: "easeOut" }}
 					>
-						Explore pesquisas em Avaliação de Impacto Ambiental:
+						Explore artigos que utilizam tecnologias integradas no contexto de
+						avaliação de impacto ambiental
 					</motion.p>
 				</div>
 			</div>
