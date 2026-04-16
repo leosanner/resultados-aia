@@ -492,7 +492,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				) : null}
 
 				{totalResults > 0 ? (
-					<section className="mt-8 rounded-[16px] border border-[#dbe7df] bg-white/90 p-5">
+					<section className="mt-8 rounded-[16px] border border-[#dbe7df] bg-white/90 p-5 shadow-[0px_18px_34px_-30px_rgba(15,23,42,0.45)]">
 						<div className="flex flex-wrap items-end justify-between gap-4">
 							<div className="flex flex-wrap items-end gap-4">
 								<TermsPageSizeSelect
@@ -504,28 +504,26 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 									selectedSortOrder={selectedSortOrder}
 								/>
 							</div>
-							<p className="text-sm font-semibold text-[#64748b]">
+							<p className="text-sm font-semibold underline decoration-[#1e3a8a] decoration-2 underline-offset-4 text-[#1e3a8a]">
 								Mostrando {currentStartArticle}–{currentEndArticle} de{" "}
 								{totalResults} artigos
 							</p>
 						</div>
-					</section>
-				) : null}
 
-				{totalResults > 0 ? (
-					<section className="mt-4 max-h-[70vh] min-h-[260px] space-y-4 overflow-y-auto rounded-[16px] border border-[#dbe7df] bg-white/90 p-4 shadow-[0px_18px_34px_-30px_rgba(15,23,42,0.45)]">
-						{paginatedArticles.map((article) => (
-							<ArticleCard
-								abstract={article.article.abstract}
-								href={article.articleUrl}
-								key={article.article.id}
-								keywords={article.article.keywords ?? []}
-								metadata={buildArticleMetadata(article)}
-								showAbstract={false}
-								titleHref={article.preferredLink}
-								title={article.article.title}
-							/>
-						))}
+						<div className="mt-5 max-h-[70vh] min-h-[260px] space-y-4 overflow-y-auto pr-2">
+							{paginatedArticles.map((article) => (
+								<ArticleCard
+									abstract={article.article.abstract}
+									href={article.articleUrl}
+									key={article.article.id}
+									keywords={article.article.keywords ?? []}
+									metadata={buildArticleMetadata(article)}
+									showAbstract={false}
+									titleHref={article.preferredLink}
+									title={article.article.title}
+								/>
+							))}
+						</div>
 					</section>
 				) : null}
 
