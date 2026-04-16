@@ -6,6 +6,11 @@ import { getToneColorByIndex } from "@/components/charts/chart-palettes";
 import { TermsMultiLineChartClient } from "@/components/charts/terms-multi-line-chart-client";
 import { TermsArticlesMapClient } from "@/components/termos/terms-articles-map-client";
 import { TermsPageSizeSelect } from "@/components/termos/terms-page-size-select";
+import {
+	TermsSortSelect,
+	type TermsSortBy,
+	type TermsSortOrder,
+} from "@/components/termos/terms-sort-select";
 import institutionInformationData from "@/data/instituition_information.json";
 import {
 	buildTermsDownloadQuery,
@@ -27,11 +32,15 @@ type PageProps = {
 		env?: string | string[];
 		page?: string | string[];
 		pageSize?: string | string[];
+		sortBy?: string | string[];
+		sortOrder?: string | string[];
 	}>;
 };
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 30, 50] as const;
 type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number];
+const DEFAULT_SORT_BY: TermsSortBy = "publicationDate";
+const DEFAULT_SORT_ORDER: TermsSortOrder = "desc";
 
 type ExtendedArticleRecord = {
 	authors?: { name?: string | null }[];
@@ -84,14 +93,70 @@ function buildPaginationHref(
 	selectedEnvTerms: string[],
 	page: number,
 	pageSize: number,
+	sortBy: TermsSortBy,
+	sortOrder: TermsSortOrder,
 ) {
 	const query: Record<string, string | string[]> = {
 		page: String(page),
 		pageSize: String(pageSize),
+		sortBy,
+		sortOrder,
 	};
 	if (selectedTecTerms.length > 0) query.tec = selectedTecTerms;
 	if (selectedEnvTerms.length > 0) query.env = selectedEnvTerms;
 	return { pathname: "/termos", query };
+}
+
+function getSearchParamValue(value: string | string[] | undefined) {
+	return Array.isArray(value) ? value[0] : value;
+}
+
+function parseSortBy(value: string | string[] | undefined): TermsSortBy {
+	const sortBy = getSearchParamValue(value);
+	return sortBy === "fwci" || sortBy === "publicationDate"
+		? sortBy
+		: DEFAULT_SORT_BY;
+}
+
+function parseSortOrder(value: string | string[] | undefined): TermsSortOrder {
+	const sortOrder = getSearchParamValue(value);
+	return sortOrder === "asc" || sortOrder === "desc"
+		? sortOrder
+		: DEFAULT_SORT_ORDER;
+}
+
+function getArticleSortValue(
+	record: TermsSearchArticleRecord,
+	sortBy: TermsSortBy,
+) {
+	if (sortBy === "fwci") {
+		const fwci = Number(record.fwci);
+		return Number.isFinite(fwci) ? fwci : null;
+	}
+
+	const publicationTime = Date.parse(record.publicationDate);
+	return Number.isFinite(publicationTime) ? publicationTime : null;
+}
+
+function sortArticles(
+	articles: TermsSearchArticleRecord[],
+	sortBy: TermsSortBy,
+	sortOrder: TermsSortOrder,
+) {
+	const direction = sortOrder === "asc" ? 1 : -1;
+
+	return [...articles].sort((a, b) => {
+		const valueA = getArticleSortValue(a, sortBy);
+		const valueB = getArticleSortValue(b, sortBy);
+
+		if (valueA !== null && valueB !== null && valueA !== valueB) {
+			return (valueA - valueB) * direction;
+		}
+		if (valueA !== null && valueB === null) return -1;
+		if (valueA === null && valueB !== null) return 1;
+
+		return a.article.title.localeCompare(b.article.title, "pt-BR");
+	});
 }
 
 function buildArticleMetadata(record: TermsSearchArticleRecord): ArticleMetadata[] {
@@ -135,13 +200,20 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 		? currentSearchParams.page[0]
 		: currentSearchParams.page;
 	const requestedPage = Number(pageRaw);
+	const selectedSortBy = parseSortBy(currentSearchParams.sortBy);
+	const selectedSortOrder = parseSortOrder(currentSearchParams.sortOrder);
+	const sortedArticles = sortArticles(
+		flatArticles,
+		selectedSortBy,
+		selectedSortOrder,
+	);
 	const totalPages = Math.max(1, Math.ceil(totalResults / selectedPageSize));
 	const currentPage =
 		Number.isInteger(requestedPage) && requestedPage > 0
 			? Math.min(requestedPage, totalPages)
 			: 1;
 	const pageStart = (currentPage - 1) * selectedPageSize;
-	const paginatedArticles = flatArticles.slice(
+	const paginatedArticles = sortedArticles.slice(
 		pageStart,
 		pageStart + selectedPageSize,
 	);
@@ -420,34 +492,38 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				) : null}
 
 				{totalResults > 0 ? (
-					<section className="mt-8 rounded-[16px] border border-[#dbe7df] bg-white/90 p-5">
+					<section className="mt-8 rounded-[16px] border border-[#dbe7df] bg-white/90 p-5 shadow-[0px_18px_34px_-30px_rgba(15,23,42,0.45)]">
 						<div className="flex flex-wrap items-end justify-between gap-4">
-							<TermsPageSizeSelect
-								pageSizeOptions={PAGE_SIZE_OPTIONS}
-								selectedPageSize={selectedPageSize}
-							/>
-							<p className="text-sm font-semibold text-[#64748b]">
+							<div className="flex flex-wrap items-end gap-4">
+								<TermsPageSizeSelect
+									pageSizeOptions={PAGE_SIZE_OPTIONS}
+									selectedPageSize={selectedPageSize}
+								/>
+								<TermsSortSelect
+									selectedSortBy={selectedSortBy}
+									selectedSortOrder={selectedSortOrder}
+								/>
+							</div>
+							<p className="text-sm font-semibold underline decoration-[#1e3a8a] decoration-2 underline-offset-4 text-[#1e3a8a]">
 								Mostrando {currentStartArticle}–{currentEndArticle} de{" "}
 								{totalResults} artigos
 							</p>
 						</div>
-					</section>
-				) : null}
 
-				{totalResults > 0 ? (
-					<section className="mt-4 space-y-4">
-						{paginatedArticles.map((article) => (
-							<ArticleCard
-								abstract={article.article.abstract}
-								href={article.articleUrl}
-								key={article.article.id}
-								keywords={article.article.keywords ?? []}
-								metadata={buildArticleMetadata(article)}
-								showAbstract={false}
-								titleHref={article.preferredLink}
-								title={article.article.title}
-							/>
-						))}
+						<div className="mt-5 max-h-[70vh] min-h-[260px] space-y-4 overflow-y-auto pr-2">
+							{paginatedArticles.map((article) => (
+								<ArticleCard
+									abstract={article.article.abstract}
+									href={article.articleUrl}
+									key={article.article.id}
+									keywords={article.article.keywords ?? []}
+									metadata={buildArticleMetadata(article)}
+									showAbstract={false}
+									titleHref={article.preferredLink}
+									title={article.article.title}
+								/>
+							))}
+						</div>
 					</section>
 				) : null}
 
@@ -469,6 +545,8 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 								selectedEnvTerms,
 								Math.max(1, currentPage - 1),
 								selectedPageSize,
+								selectedSortBy,
+								selectedSortOrder,
 							)}
 						>
 							Anterior
@@ -489,6 +567,8 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 								selectedEnvTerms,
 								Math.min(totalPages, currentPage + 1),
 								selectedPageSize,
+								selectedSortBy,
+								selectedSortOrder,
 							)}
 						>
 							Próxima
