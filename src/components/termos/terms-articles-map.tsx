@@ -150,7 +150,7 @@ export function TermsArticlesMap({
 			: undefined;
 
 	return (
-		<section className="mt-8 rounded-[16px] border border-[#dce9e1] bg-white p-5">
+		<section className="mt-12 border-t border-[#e2e8f0] pt-8">
 			<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
 				Mapa de afiliações
 			</h2>
