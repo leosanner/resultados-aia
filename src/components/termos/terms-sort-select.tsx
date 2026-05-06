@@ -43,7 +43,7 @@ export function TermsSortSelect({
 			<label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.8px] text-[#64748b]">
 				Ordenar por
 				<select
-					className="h-10 min-w-44 rounded-md border border-[#dbe7df] bg-white px-2.5 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#2563eb] disabled:opacity-70"
+					className="h-10 min-w-44 rounded-md border border-[#cfe0d6] bg-white px-2.5 text-sm font-semibold text-[#1f2937] outline-none focus:border-[#0C7C3C] disabled:opacity-70"
 					disabled={isPending}
 					onChange={(event) => updateParam("sortBy", event.target.value)}
 					value={selectedSortBy}
@@ -59,7 +59,7 @@ export function TermsSortSelect({
 			<label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.8px] text-[#64748b]">
 				Ordem
 				<select
-					className="h-10 min-w-36 rounded-md border border-[#dbe7df] bg-white px-2.5 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#2563eb] disabled:opacity-70"
+					className="h-10 min-w-36 rounded-md border border-[#cfe0d6] bg-white px-2.5 text-sm font-semibold text-[#1f2937] outline-none focus:border-[#0C7C3C] disabled:opacity-70"
 					disabled={isPending}
 					onChange={(event) => updateParam("sortOrder", event.target.value)}
 					value={selectedSortOrder}

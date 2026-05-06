@@ -26,7 +26,7 @@ export function TermsPageSizeSelect({ pageSizeOptions, selectedPageSize }: Props
 		<label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.8px] text-[#64748b]">
 			Artigos por página
 			<select
-				className="h-10 min-w-28 rounded-md border border-[#dbe7df] bg-white px-2.5 text-sm font-semibold text-[#0f172a] outline-none focus:border-[#2563eb] disabled:opacity-70"
+				className="h-10 min-w-28 rounded-md border border-[#cfe0d6] bg-white px-2.5 text-sm font-semibold text-[#1f2937] outline-none focus:border-[#0C7C3C] disabled:opacity-70"
 				disabled={isPending}
 				onChange={handleChange}
 				value={String(selectedPageSize)}

@@ -245,15 +245,6 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 		technologyColorByKey.set(term, getToneColorByIndex("blue", index));
 	});
 
-	const tecChipColorByTerm = new Map<string, string>();
-	technologyTermsTrend.forEach((item, index) => {
-		tecChipColorByTerm.set(item.key, getToneColorByIndex("blue", index));
-	});
-	const envChipColorByTerm = new Map<string, string>();
-	environmentalTermsTrend.forEach((item, index) => {
-		envChipColorByTerm.set(item.key, getToneColorByIndex("green", index));
-	});
-
 	const downloadQuery = buildTermsDownloadQuery({
 		tec: selectedTecTerms,
 		env: selectedEnvTerms,
@@ -360,23 +351,23 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 			count: noTechCount,
 		});
 	}
+	const selectedTermsCount = selectedTecTerms.length + selectedEnvTerms.length;
 
 	return (
-		<div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e8f5ee_0%,_#f5f8f6_42%,_#ffffff_100%)] text-[#0f172a]">
-			<main className="mx-auto w-full max-w-[992px] px-6 py-10 md:px-12">
-
-				<section className="mt-4">
-					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#7a8a9d]">
+		<div className="min-h-screen bg-[#e4ece7] text-[#1f2937]">
+			<main className="mx-auto w-full max-w-[992px] px-6 py-8 md:px-12">
+				<section className="rounded-2xl border border-[#d7e4dc] bg-white p-6 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
+					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#64748b]">
 						Filtro por termos
 					</p>
-					<h1 className="mt-2 text-3xl font-black tracking-[-0.8px] text-[#0f172a] md:text-4xl">
+					<h1 className="mt-2 text-4xl font-black tracking-[-0.9px] text-[#1f2937]">
 						{isShowingAllResults
 							? "Todos os resultados do grafo"
 							: hasSelectedTerms
 							? "Resultados por termos selecionados"
 							: "Resultados por termos"}
 					</h1>
-					<p className="mt-2 text-base text-[#64748b]">
+					<p className="mt-2 text-base font-medium text-[#556070]">
 						{isShowingAllResults
 							? `${totalResults} artigos encontrados sem filtros aplicados.`
 							: hasSelectedTerms
@@ -385,257 +376,198 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 					</p>
 
 					{totalResults > 0 ? (
-						<dl className="mt-8 grid grid-cols-3 gap-4 md:gap-10">
-							<div className="border-l-[3px] border-[#0f172a] pl-4">
-								<dt className="text-[11px] font-bold uppercase tracking-[1px] text-[#7a8a9d]">
+						<div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+							<div className="rounded-xl border border-[#cfe0d6] bg-[#f8fbf9] px-4 py-3">
+								<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#556070]">
 									Total
-								</dt>
-								<dd className="mt-1 font-black tabular-nums tracking-[-1px] text-[#0f172a] text-4xl md:text-5xl">
-									{totalResults}
-								</dd>
-							</div>
-							<div className="border-l-[3px] border-[#1d4ed8] pl-4">
-								<dt className="text-[11px] font-bold uppercase tracking-[1px] text-[#1d4ed8]">
-									Termos Tec
-								</dt>
-								<dd className="mt-1 font-black tabular-nums tracking-[-1px] text-[#1e3a8a] text-4xl md:text-5xl">
-									{selectedTecTerms.length}
-								</dd>
-							</div>
-							<div className="border-l-[3px] border-[#15803d] pl-4">
-								<dt className="text-[11px] font-bold uppercase tracking-[1px] text-[#15803d]">
-									Termos Env
-								</dt>
-								<dd className="mt-1 font-black tabular-nums tracking-[-1px] text-[#14532d] text-4xl md:text-5xl">
-									{selectedEnvTerms.length}
-								</dd>
-							</div>
-						</dl>
-					) : null}
-
-					{selectedTecTerms.length > 0 || selectedEnvTerms.length > 0 ? (
-						<div className="mt-8 rounded-[14px] border border-[#e2e8f0] bg-white/70 px-5 py-4 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-sm">
-							<div className="flex items-center justify-between gap-3">
-								<p className="flex items-baseline gap-2 text-[11px] font-bold uppercase tracking-[1.4px] text-[#334155]">
-									Termos selecionados
-									<span className="tabular-nums text-[#94a3b8]">
-										{selectedTecTerms.length + selectedEnvTerms.length}
-									</span>
 								</p>
-								<Link
-									scroll={false}
-									href={buildFiltersHref(
-										[],
-										[],
-										selectedPageSize,
-										selectedSortBy,
-										selectedSortOrder,
-									)}
-									className="group inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[1px] text-[#64748b] transition-colors hover:text-[#0f172a]"
-								>
-									<svg
-										aria-hidden="true"
-										className="h-3 w-3 transition-transform group-hover:rotate-90"
-										fill="none"
-										stroke="currentColor"
-										strokeLinecap="round"
-										strokeWidth="2.5"
-										viewBox="0 0 24 24"
-									>
-										<path d="M6 6l12 12M18 6L6 18" />
-									</svg>
-									Limpar tudo
-								</Link>
+								<p className="mt-1 text-2xl font-black text-[#1f2937]">
+									{totalResults}
+								</p>
 							</div>
-
-							{selectedTecTerms.length > 0 ? (
-								<div className="mt-4">
-									<p className="text-[10px] font-bold uppercase tracking-[1.3px] text-[#1d4ed8]">
-										Tecnologia
-									</p>
-									<ul className="mt-2 flex flex-wrap gap-2">
-										{selectedTecTerms.map((term) => {
-											const color = tecChipColorByTerm.get(term) ?? "#1d4ed8";
-											return (
-												<li key={`tec-${term}`}>
-													<span
-														className="inline-flex items-stretch overflow-hidden rounded-[10px] border shadow-[0_1px_0_rgba(15,23,42,0.03)] transition-shadow hover:shadow-[0_2px_6px_rgba(15,23,42,0.08)]"
-														style={{
-															borderColor: `${color}55`,
-															backgroundColor: `${color}10`,
-														}}
-													>
-														<span
-															aria-hidden="true"
-															className="w-[4px] shrink-0"
-															style={{ backgroundColor: color }}
-														/>
-														<span
-															className="flex items-center px-3 py-1.5 text-[13px] font-semibold tracking-[-0.1px] text-[#0f172a]"
-														>
-															{formatTermLabel(term)}
-														</span>
-														<Link
-															scroll={false}
-															aria-label={`Remover filtro ${formatTermLabel(term)}`}
-															href={buildFiltersHref(
-																selectedTecTerms.filter((t) => t !== term),
-																selectedEnvTerms,
-																selectedPageSize,
-																selectedSortBy,
-																selectedSortOrder,
-															)}
-															className="flex items-center justify-center border-l border-[#0f172a]/5 px-2.5 text-[#94a3b8] transition-colors hover:bg-[rgba(15,23,42,0.05)] hover:text-[#0f172a]"
-														>
-															<svg
-																aria-hidden="true"
-																className="h-3 w-3"
-																fill="none"
-																stroke="currentColor"
-																strokeLinecap="round"
-																strokeWidth="2.5"
-																viewBox="0 0 24 24"
-															>
-																<path d="M6 6l12 12M18 6L6 18" />
-															</svg>
-														</Link>
-													</span>
-												</li>
-											);
-										})}
-									</ul>
-								</div>
-							) : null}
-
-							{selectedEnvTerms.length > 0 ? (
-								<div className="mt-4">
-									<p className="text-[10px] font-bold uppercase tracking-[1.3px] text-[#15803d]">
-										Ambiental
-									</p>
-									<ul className="mt-2 flex flex-wrap gap-2">
-										{selectedEnvTerms.map((term) => {
-											const color = envChipColorByTerm.get(term) ?? "#15803d";
-											return (
-												<li key={`env-${term}`}>
-													<span
-														className="inline-flex items-stretch overflow-hidden rounded-[10px] border shadow-[0_1px_0_rgba(15,23,42,0.03)] transition-shadow hover:shadow-[0_2px_6px_rgba(15,23,42,0.08)]"
-														style={{
-															borderColor: `${color}55`,
-															backgroundColor: `${color}10`,
-														}}
-													>
-														<span
-															aria-hidden="true"
-															className="w-[4px] shrink-0"
-															style={{ backgroundColor: color }}
-														/>
-														<span
-															className="flex items-center px-3 py-1.5 text-[13px] font-semibold tracking-[-0.1px] text-[#0f172a]"
-														>
-															{formatTermLabel(term)}
-														</span>
-														<Link
-															scroll={false}
-															aria-label={`Remover filtro ${formatTermLabel(term)}`}
-															href={buildFiltersHref(
-																selectedTecTerms,
-																selectedEnvTerms.filter((t) => t !== term),
-																selectedPageSize,
-																selectedSortBy,
-																selectedSortOrder,
-															)}
-															className="flex items-center justify-center border-l border-[#0f172a]/5 px-2.5 text-[#94a3b8] transition-colors hover:bg-[rgba(15,23,42,0.05)] hover:text-[#0f172a]"
-														>
-															<svg
-																aria-hidden="true"
-																className="h-3 w-3"
-																fill="none"
-																stroke="currentColor"
-																strokeLinecap="round"
-																strokeWidth="2.5"
-																viewBox="0 0 24 24"
-															>
-																<path d="M6 6l12 12M18 6L6 18" />
-															</svg>
-														</Link>
-													</span>
-												</li>
-											);
-										})}
-									</ul>
-								</div>
-							) : null}
-						</div>
-					) : null}
-
-					{totalResults > 0 ? (
-						<div className="mt-8 flex flex-wrap items-center gap-3">
-							<span className="text-[11px] font-bold uppercase tracking-[1.2px] text-[#064722]">
-								Exportar
-							</span>
-							<Link
-								className="group inline-flex items-center gap-2 rounded-[4px] border border-[#0C7C3C] bg-white px-4 py-2 text-sm font-bold tracking-[0.2px] text-[#064722] transition-colors hover:bg-[#0C7C3C] hover:text-white"
-								href={buildDownloadHref("csv", downloadQuery)}
-							>
-								<svg
-									aria-hidden="true"
-									className="h-4 w-4"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2.25"
-									viewBox="0 0 24 24"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										d="M12 4v12m0 0l-4-4m4 4l4-4M5 20h14"
-									/>
-								</svg>
-								CSV
-							</Link>
-							<Link
-								className="group inline-flex items-center gap-2 rounded-[4px] border border-[#064722] bg-[#0C7C3C] px-4 py-2 text-sm font-bold tracking-[0.2px] text-white transition-colors hover:bg-[#064722]"
-								href={buildDownloadHref("docx", downloadQuery)}
-							>
-								<svg
-									aria-hidden="true"
-									className="h-4 w-4"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2.25"
-									viewBox="0 0 24 24"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										d="M12 4v12m0 0l-4-4m4 4l4-4M5 20h14"
-									/>
-								</svg>
-								DOCX
-							</Link>
+							<div className="rounded-xl border border-[#bfdbfe] bg-[#eff6ff] px-4 py-3">
+								<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#1d4ed8]">
+									Termos Tec
+								</p>
+								<p className="mt-1 text-2xl font-black text-[#1e3a8a]">
+									{selectedTecTerms.length}
+								</p>
+							</div>
+							<div className="rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-3">
+								<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#15803d]">
+									Termos Env
+								</p>
+								<p className="mt-1 text-2xl font-black text-[#14532d]">
+									{selectedEnvTerms.length}
+								</p>
+							</div>
 						</div>
 					) : null}
 				</section>
 
+				{selectedTermsCount > 0 ? (
+					<section className="mt-6 rounded-[12px] border border-[#cfe0d6] bg-white p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
+						<div className="flex flex-wrap items-start justify-between gap-3">
+							<div>
+								<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#085E2E]">
+									Termos selecionados
+								</h2>
+								<p className="mt-1 text-sm text-[#556070]">
+									{selectedTermsCount} filtros ativos nos resultados do grafo.
+								</p>
+							</div>
+							<Link
+								scroll={false}
+								className="text-xs font-bold uppercase tracking-[1px] text-[#0C7C3C] hover:text-[#085E2E]"
+								href={buildFiltersHref(
+									[],
+									[],
+									selectedPageSize,
+									selectedSortBy,
+									selectedSortOrder,
+								)}
+							>
+								Limpar filtros
+							</Link>
+						</div>
+
+						{selectedTecTerms.length > 0 ? (
+							<div className="mt-4">
+								<h3 className="text-xs font-bold uppercase tracking-[0.9px] text-[#1d4ed8]">
+									Termos de tecnologia
+								</h3>
+								<ul className="mt-3 flex flex-wrap gap-2">
+									{selectedTecTerms.map((term) => (
+										<li key={`tec-${term}`}>
+											<span className="inline-flex items-center gap-2 rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1 text-[11px] font-semibold text-[#1e3a8a]">
+												<span>Tec: {formatTermLabel(term)}</span>
+												<Link
+													scroll={false}
+													aria-label={`Remover filtro ${formatTermLabel(term)}`}
+													className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-[#1d4ed8] transition-colors hover:bg-[#dbeafe]"
+													href={buildFiltersHref(
+														selectedTecTerms.filter(
+															(selectedTerm) => selectedTerm !== term,
+														),
+														selectedEnvTerms,
+														selectedPageSize,
+														selectedSortBy,
+														selectedSortOrder,
+													)}
+												>
+													<svg
+														aria-hidden="true"
+														className="h-3 w-3"
+														fill="none"
+														stroke="currentColor"
+														strokeLinecap="round"
+														strokeWidth="2.5"
+														viewBox="0 0 24 24"
+													>
+														<path d="M6 6l12 12M18 6L6 18" />
+													</svg>
+												</Link>
+											</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						) : null}
+
+						{selectedEnvTerms.length > 0 ? (
+							<div className="mt-4">
+								<h3 className="text-xs font-bold uppercase tracking-[0.9px] text-[#15803d]">
+									Termos ambientais
+								</h3>
+								<ul className="mt-3 flex flex-wrap gap-2">
+									{selectedEnvTerms.map((term) => (
+										<li key={`env-${term}`}>
+											<span className="inline-flex items-center gap-2 rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-1 text-[11px] font-semibold text-[#166534]">
+												<span>Env: {formatTermLabel(term)}</span>
+												<Link
+													scroll={false}
+													aria-label={`Remover filtro ${formatTermLabel(term)}`}
+													className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-[#15803d] transition-colors hover:bg-[#dcfce7]"
+													href={buildFiltersHref(
+														selectedTecTerms,
+														selectedEnvTerms.filter(
+															(selectedTerm) => selectedTerm !== term,
+														),
+														selectedPageSize,
+														selectedSortBy,
+														selectedSortOrder,
+													)}
+												>
+													<svg
+														aria-hidden="true"
+														className="h-3 w-3"
+														fill="none"
+														stroke="currentColor"
+														strokeLinecap="round"
+														strokeWidth="2.5"
+														viewBox="0 0 24 24"
+													>
+														<path d="M6 6l12 12M18 6L6 18" />
+													</svg>
+												</Link>
+											</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						) : null}
+					</section>
+				) : null}
+
 				{totalResults > 0 ? (
-					<section className="mt-12 border-t border-[#e2e8f0] pt-8">
-						<div className="flex flex-wrap items-baseline justify-between gap-3">
+					<section className="mt-6 rounded-[12px] border border-[#cfe0d6] bg-white p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
+						<div className="flex flex-wrap items-center justify-between gap-3">
+							<div>
+								<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#085E2E]">
+									Exportar resultados
+								</h2>
+								<p className="mt-1 text-sm text-[#556070]">
+									Baixe a seleção atual em formato tabular ou relatório.
+								</p>
+							</div>
+							<div className="flex flex-wrap gap-3">
+								<Link
+									className="inline-flex items-center rounded-md border border-[#cfe0d6] bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-[#085E2E] transition-colors hover:border-[#9bc9af] hover:bg-[#f8fbf9]"
+									href={buildDownloadHref("csv", downloadQuery)}
+								>
+									Baixar CSV
+								</Link>
+								<Link
+									className="inline-flex items-center rounded-md bg-[#0C7C3C] px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors hover:bg-[#085E2E]"
+									href={buildDownloadHref("docx", downloadQuery)}
+								>
+									Baixar DOCX
+								</Link>
+							</div>
+						</div>
+					</section>
+				) : null}
+
+				{totalResults > 0 ? (
+					<section className="mt-8 space-y-4">
+						<div className="rounded-[12px] border border-[#cfe0d6] bg-white p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
 							<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
 								Tendências temporais
 							</h2>
-							<p className="text-xs text-[#64748b]">
-								Linhas por termo dentro do conjunto filtrado no grafo.
+							<p className="mt-1 text-sm text-[#556070]">
+								Cada linha representa um termo dentro do conjunto de artigos já
+								filtrado no grafo.
 							</p>
 						</div>
 
-						<div className="mt-8">
-							<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#0f4c81]">
+						<section className="rounded-[12px] border border-[#bfdbfe] bg-[#f8fbff] p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
+							<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#1d4ed8]">
 								Termos de tecnologia
 							</h3>
-							<p className="mt-1 text-xs text-[#64748b]">
+							<p className="mt-1 text-sm text-[#556070]">
 								{selectedTecTerms.length > 0
-									? "Apenas os termos tec selecionados."
-									: "Todos os termos tec dos artigos filtrados."}
+									? "Linhas geradas apenas para os termos tecnológicos selecionados."
+									: "Nenhum termo tecnológico foi selecionado; o gráfico considera todos os termos tecnológicos presentes nos artigos filtrados."}
 							</p>
 							<div className="mt-4">
 								<TermsMultiLineChartClient
@@ -645,16 +577,16 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 									tone="blue"
 								/>
 							</div>
-						</div>
+						</section>
 
-						<div className="mt-10">
-							<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#166534]">
+						<section className="rounded-[12px] border border-[#bbf7d0] bg-[#f8fff9] p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
+							<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#15803d]">
 								Termos ambientais
 							</h3>
-							<p className="mt-1 text-xs text-[#64748b]">
+							<p className="mt-1 text-sm text-[#556070]">
 								{selectedEnvTerms.length > 0
-									? "Apenas os termos ambientais selecionados."
-									: "Todos os termos ambientais dos artigos filtrados."}
+									? "Linhas geradas apenas para os termos ambientais selecionados."
+									: "Nenhum termo ambiental foi selecionado; o gráfico considera todos os termos ambientais presentes nos artigos filtrados."}
 							</p>
 							<div className="mt-4">
 								<TermsMultiLineChartClient
@@ -664,7 +596,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 									tone="green"
 								/>
 							</div>
-						</div>
+						</section>
 					</section>
 				) : null}
 
@@ -678,28 +610,30 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				) : null}
 
 				{totalResults > 0 ? (
-					<section className="mt-12 border-t border-[#e2e8f0] pt-8">
-						<div className="flex flex-wrap items-end justify-between gap-4">
-							<div className="flex flex-wrap items-end gap-4">
-								<TermsPageSizeSelect
-									pageSizeOptions={PAGE_SIZE_OPTIONS}
-									selectedPageSize={selectedPageSize}
-								/>
-								<TermsSortSelect
-									selectedSortBy={selectedSortBy}
-									selectedSortOrder={selectedSortOrder}
-								/>
+					<>
+						<section className="mt-8 rounded-[12px] border border-[#cfe0d6] bg-white p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
+							<div className="flex flex-wrap items-end justify-between gap-4">
+								<div className="flex flex-wrap items-end gap-4">
+									<TermsPageSizeSelect
+										pageSizeOptions={PAGE_SIZE_OPTIONS}
+										selectedPageSize={selectedPageSize}
+									/>
+									<TermsSortSelect
+										selectedSortBy={selectedSortBy}
+										selectedSortOrder={selectedSortOrder}
+									/>
+								</div>
+								<p className="text-sm font-semibold text-[#556070]">
+									Mostrando {currentStartArticle}–{currentEndArticle} de{" "}
+									{totalResults} artigos
+								</p>
 							</div>
-							<p className="text-sm font-semibold text-[#64748b]">
-								Mostrando{" "}
-								<span className="text-[#0f172a]">
-									{currentStartArticle}–{currentEndArticle}
-								</span>{" "}
-								de {totalResults} artigos
-							</p>
-						</div>
+						</section>
 
-						<div className="mt-5 max-h-[70vh] min-h-[260px] space-y-4 overflow-y-auto pr-2">
+						<section
+							aria-label="Lista de artigos filtrados por termos"
+							className="mt-4 max-h-[70vh] min-h-[260px] space-y-4 overflow-y-auto pr-2"
+						>
 							{paginatedArticles.map((article) => (
 								<ArticleCard
 									abstract={article.article.abstract}
@@ -712,8 +646,8 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 									title={article.article.title}
 								/>
 							))}
-						</div>
-					</section>
+						</section>
+					</>
 				) : null}
 
 				{totalResults > 0 ? (
@@ -726,8 +660,8 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 							aria-disabled={currentPage <= 1}
 							className={`inline-flex rounded-md px-3 py-2 text-xs font-bold uppercase tracking-[0.8px] ${
 								currentPage <= 1
-									? "pointer-events-none border border-[#e2e8f0] bg-[#f1f5f9] text-[#94a3b8]"
-									: "border border-[#dbe7df] bg-white text-[#1d4ed8] hover:border-[#bfdbfe]"
+									? "pointer-events-none border border-[#d1d5db] bg-[#f3f4f6] text-[#9ca3af]"
+									: "border border-[#cfe0d6] bg-white text-[#085E2E] hover:border-[#9bc9af]"
 							}`}
 							href={buildPaginationHref(
 								selectedTecTerms,
@@ -740,7 +674,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 						>
 							Anterior
 						</Link>
-						<p className="text-sm font-semibold text-[#64748b]">
+						<p className="text-sm font-semibold text-[#556070]">
 							Página {currentPage} de {totalPages}
 						</p>
 						<Link
@@ -748,8 +682,8 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 							aria-disabled={currentPage >= totalPages}
 							className={`inline-flex rounded-md px-3 py-2 text-xs font-bold uppercase tracking-[0.8px] ${
 								currentPage >= totalPages
-									? "pointer-events-none border border-[#e2e8f0] bg-[#f1f5f9] text-[#94a3b8]"
-									: "border border-[#dbe7df] bg-white text-[#1d4ed8] hover:border-[#bfdbfe]"
+									? "pointer-events-none border border-[#d1d5db] bg-[#f3f4f6] text-[#9ca3af]"
+									: "border border-[#cfe0d6] bg-white text-[#085E2E] hover:border-[#9bc9af]"
 							}`}
 							href={buildPaginationHref(
 								selectedTecTerms,
@@ -766,11 +700,11 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				) : null}
 
 				{totalResults === 0 ? (
-					<section className="mt-8 rounded-[12px] border border-[#e2e8f0] bg-white p-6">
-						<h2 className="text-lg font-bold text-[#0f172a]">
+					<section className="mt-8 rounded-[12px] border border-[#d7e4dc] bg-white p-6 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
+						<h2 className="text-lg font-bold text-[#1f2937]">
 							Nenhum artigo encontrado
 						</h2>
-						<p className="mt-2 text-sm text-[#64748b]">
+						<p className="mt-2 text-sm text-[#556070]">
 							Não encontramos artigos para a combinação de termos selecionada.
 						</p>
 					</section>
