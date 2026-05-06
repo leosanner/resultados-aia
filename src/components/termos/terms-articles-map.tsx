@@ -150,11 +150,11 @@ export function TermsArticlesMap({
 			: undefined;
 
 	return (
-		<section className="mt-12 border-t border-[#e2e8f0] pt-8">
-			<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
+		<section className="mt-8 rounded-[12px] border border-[#cfe0d6] bg-white p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
+			<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#085E2E]">
 				Mapa de afiliações
 			</h2>
-			<p className="mt-1 text-sm text-[#64748b]">
+			<p className="mt-1 text-sm text-[#556070]">
 				Afiliações dos artigos filtrados por termos, coloridas pela tecnologia
 				do artigo.
 			</p>
