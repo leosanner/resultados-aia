@@ -1,3 +1,4 @@
+import { AskAiSection } from "@/components/home/ask-ai-section";
 import { HeroSection } from "@/components/home/hero-section";
 import { LandingTermsGraphClient } from "@/components/home/landing-terms-graph-client";
 import { graphContent } from "@/infra/build-graphs";
@@ -164,6 +165,8 @@ export default async function Home() {
 						</p>
 					</section>
 				) : null}
+
+				<AskAiSection />
 
 				{graphData ? (
 					<section className="relative overflow-hidden rounded-3xl border border-[#d0ddd5] bg-gradient-to-br from-white via-white to-[#f0f7f2] p-6 shadow-[0_20px_50px_-16px_rgba(6,71,34,0.1)] sm:p-10">
