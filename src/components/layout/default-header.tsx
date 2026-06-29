@@ -12,7 +12,9 @@ export function DefaultHeader() {
 			? "metodologia"
 			: pathname.startsWith("/autores")
 				? "autores"
-				: null;
+				: pathname.startsWith("/sumarizacao")
+					? "sumarizacao"
+					: null;
 
 	const showResultsBadge = pathname.startsWith("/termos");
 

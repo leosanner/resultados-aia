@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { RAG_ASSISTANT_URL } from "@/lib/links";
 
-type MainNavbarPage = "contextualizacao" | "metodologia" | "autores" | null;
+type MainNavbarPage =
+	| "contextualizacao"
+	| "metodologia"
+	| "autores"
+	| "sumarizacao"
+	| null;
 
 type MainNavbarProps = {
 	activePage?: MainNavbarPage;
@@ -73,6 +78,12 @@ export function MainNavbar({
 						isActive={activePage === "autores"}
 					>
 						Autores
+					</NavLink>
+					<NavLink
+						href="/sumarizacao"
+						isActive={activePage === "sumarizacao"}
+					>
+						Sumarização
 					</NavLink>
 					<a
 						href={RAG_ASSISTANT_URL}
