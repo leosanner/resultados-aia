@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { RAG_ASSISTANT_URL } from "@/lib/links";
 
-type MainNavbarPage = "contextualizacao" | "metodologia" | "autores" | null;
+type MainNavbarPage =
+	| "contextualizacao"
+	| "metodologia"
+	| "autores"
+	| "sumarizacao"
+	| null;
 
 type MainNavbarProps = {
 	activePage?: MainNavbarPage;
@@ -73,6 +79,23 @@ export function MainNavbar({
 					>
 						Autores
 					</NavLink>
+					<NavLink
+						href="/sumarizacao"
+						isActive={activePage === "sumarizacao"}
+					>
+						Sumarização
+					</NavLink>
+					<a
+						href={RAG_ASSISTANT_URL}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="group inline-flex items-center gap-1.5 rounded-full border border-[#cfe0d6] bg-[#e9f5ed] px-4 py-2 text-sm font-semibold text-[#00261a] transition-colors hover:border-[#0C7C3C] hover:bg-[#0C7C3C] hover:text-white"
+					>
+						<span className="material-symbols-outlined text-[18px] leading-none text-[#0a6b34] transition-colors group-hover:text-[#f6be28]">
+							forum
+						</span>
+						Assistente IA
+					</a>
 					{showResultsBadge ? (
 						<Link
 							href="/termos"
