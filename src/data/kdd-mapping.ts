@@ -28,6 +28,22 @@ export const kddStageLabels: Record<KddStage, string> = {
 	knowledge: "Knowledge",
 };
 
+/** Explicação curta de cada etapa KDD, exibida no tooltip do quadro. */
+export const kddStageDescriptions: Record<KddStage, string> = {
+	selection:
+		"Seleção dos dados relevantes entre as fontes disponíveis, definindo o recorte que será analisado.",
+	preprocessing:
+		"Limpeza e tratamento dos dados: remoção de ruído, correção de inconsistências e valores ausentes.",
+	transformation:
+		"Transformação e redução dos dados para formatos e atributos adequados à mineração.",
+	data_mining:
+		"Aplicação de algoritmos para descobrir padrões, relações e modelos nos dados preparados.",
+	interpretation_evaluation:
+		"Interpretação e avaliação dos padrões encontrados, filtrando o que é de fato útil e válido.",
+	knowledge:
+		"Conhecimento consolidado a partir dos padrões, pronto para apoiar a tomada de decisão.",
+};
+
 /**
  * Mapeamento curado de cada etapa KDD para as tecnologias que nela se aplicam.
  * Transcrito do diagrama de referência. Uma tecnologia pode aparecer em várias

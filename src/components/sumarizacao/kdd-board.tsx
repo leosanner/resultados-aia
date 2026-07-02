@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { kddStageDescriptions } from "@/data/kdd-mapping";
 import type { KddStageHeader, KddTechRow } from "@/lib/kdd-board";
 import { getTechColor } from "@/lib/tech-colors";
 
@@ -77,7 +78,10 @@ export function KddBoard({
 							{stages.map((stage, index) => (
 								<div
 									key={stage.stage}
-									className="relative mb-1 flex min-h-[60px] items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-[#b9cdc1] bg-white px-3 py-3 text-center"
+									tabIndex={0}
+									role="button"
+									aria-label={`${stage.label}: ${kddStageDescriptions[stage.stage]}`}
+									className="group relative mb-1 flex min-h-[60px] cursor-help items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-[#b9cdc1] bg-white px-3 py-3 text-center transition-colors hover:border-[#0a6b34] focus-visible:border-[#0a6b34] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a6b34] focus-visible:ring-offset-2"
 									style={{ gridColumn: index + 1, gridRow: 1 }}
 								>
 									<span className="material-symbols-outlined text-[20px] leading-none text-[#0a6b34]">
@@ -94,6 +98,18 @@ export function KddBoard({
 											chevron_right
 										</span>
 									) : null}
+
+									{/* Tooltip: explicação da etapa (aparece abaixo, no hover/foco) */}
+									<span
+										role="tooltip"
+										className="pointer-events-none absolute left-1/2 top-[calc(100%+10px)] z-30 w-52 -translate-x-1/2 rounded-xl bg-[#00261a] px-3.5 py-2.5 text-left text-xs font-medium leading-relaxed text-white opacity-0 shadow-[0_16px_36px_-12px_rgba(6,71,34,0.5)] transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+									>
+										<span
+											aria-hidden
+											className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-l border-t border-[#00261a] bg-[#00261a]"
+										/>
+										{kddStageDescriptions[stage.stage]}
+									</span>
 								</div>
 							))}
 

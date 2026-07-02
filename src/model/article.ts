@@ -16,6 +16,7 @@ export type ArticleExtend = Article & {
 	}[];
 	affiliation: { name: string; country: string; id: string }[];
 	publish_date: string;
+	publication_year: number;
 	doi_y: string;
 	doi_x: string;
 	id: string;

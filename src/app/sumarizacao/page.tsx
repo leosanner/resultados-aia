@@ -1,18 +1,22 @@
 import { GraphEmbedSection } from "@/components/sumarizacao/graph-embed-section";
 import { KddBoard } from "@/components/sumarizacao/kdd-board";
+import { YearTermsComparison } from "@/components/sumarizacao/year-terms-comparison";
 import {
 	getKddTechRows,
 	kddStageHeaders,
 	type KddTechRow,
 } from "@/lib/kdd-board";
+import { getYearTermRows, YEAR_THRESHOLD, type YearTermRow } from "@/lib/year-terms";
 
 export default async function SumarizacaoPage() {
 	let rows: KddTechRow[] | null = null;
+	let yearRows: YearTermRow[] | null = null;
 
 	try {
-		rows = await getKddTechRows();
+		[rows, yearRows] = await Promise.all([getKddTechRows(), getYearTermRows()]);
 	} catch {
 		rows = null;
+		yearRows = null;
 	}
 
 	return (
@@ -42,6 +46,10 @@ export default async function SumarizacaoPage() {
 						</p>
 					</section>
 				)}
+
+				{yearRows && yearRows.length > 0 ? (
+					<YearTermsComparison rows={yearRows} threshold={YEAR_THRESHOLD} />
+				) : null}
 
 				<GraphEmbedSection />
 			</main>
