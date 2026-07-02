@@ -1,6 +1,30 @@
+"use client";
+
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { getTechColor } from "@/lib/tech-colors";
 import type { YearTermRow } from "@/lib/year-terms";
 import type { TecTerm } from "@/model/article";
+
+/** Desaceleração suave (easeOutQuint-like), boa para o crescimento das barras. */
+const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+
+/** Orquestra a entrada em cascata das linhas quando o gráfico entra em tela. */
+const rowsContainer: Variants = {
+	hidden: {},
+	show: { transition: { staggerChildren: 0.07, delayChildren: 0.08 } },
+};
+
+/** Linha: sobe e revela junto com o crescimento das suas barras. */
+const rowReveal: Variants = {
+	hidden: { opacity: 0, y: 10 },
+	show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE } },
+};
+
+/** Barra: cresce a partir da linha central (origem definida no `style`). */
+const barGrow: Variants = {
+	hidden: { scaleX: 0 },
+	show: { scaleX: 1, transition: { duration: 0.55, ease: EASE } },
+};
 
 /** Ícone (Material Symbols) por tecnologia, exibido ao lado do rótulo. */
 const TERM_ICONS: Record<TecTerm, string> = {
@@ -50,6 +74,7 @@ export function YearTermsComparison({
 	rows: YearTermRow[];
 	threshold: number;
 }) {
+	const reduce = useReducedMotion();
 	const maxSide = Math.max(1, ...rows.flatMap((row) => [row.before, row.after]));
 
 	return (
@@ -105,7 +130,13 @@ export function YearTermsComparison({
 					</div>
 
 					{/* Linhas */}
-					<div className="divide-y divide-[#eef3ef]">
+					<motion.div
+						className="divide-y divide-[#eef3ef]"
+						variants={rowsContainer}
+						initial={reduce ? false : "hidden"}
+						whileInView="show"
+						viewport={{ once: true, amount: 0.2 }}
+					>
 						{rows.map((row) => {
 							const color = getTechColor(row.term);
 							const leftPct = (row.before / maxSide) * 100;
@@ -113,8 +144,9 @@ export function YearTermsComparison({
 							const share = splitPercent(row.before, row.after);
 
 							return (
-								<div
+								<motion.div
 									key={row.term}
+									variants={rowReveal}
 									className="grid grid-cols-[minmax(150px,220px)_56px_minmax(0,1fr)_56px] items-center gap-x-2 py-2.5 sm:gap-x-3"
 								>
 									{/* Rótulo + ícone */}
@@ -148,21 +180,25 @@ export function YearTermsComparison({
 									<div className="relative flex h-6 items-center">
 										{/* Metade esquerda: barra cresce a partir do centro */}
 										<div className="flex flex-1 justify-end">
-											<div
+											<motion.div
+												variants={barGrow}
 												className="h-6 rounded-l-md"
 												style={{
 													width: `${leftPct}%`,
 													backgroundColor: color.base,
+													originX: 1,
 												}}
 											/>
 										</div>
 										{/* Metade direita */}
 										<div className="flex flex-1 justify-start">
-											<div
+											<motion.div
+												variants={barGrow}
 												className="h-6 rounded-r-md"
 												style={{
 													width: `${rightPct}%`,
 													backgroundColor: color.base,
+													originX: 0,
 												}}
 											/>
 										</div>
@@ -185,10 +221,10 @@ export function YearTermsComparison({
 											{share.after}%
 										</span>
 									</span>
-								</div>
+								</motion.div>
 							);
 						})}
-					</div>
+					</motion.div>
 				</div>
 			</div>
 		</section>
