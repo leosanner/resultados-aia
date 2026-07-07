@@ -1,14 +1,14 @@
 import { GraphEmbedSection } from "@/components/sumarizacao/graph-embed-section";
 import { YearTermsComparison } from "@/components/sumarizacao/year-terms-comparison";
-import { getYearTermRows, YEAR_THRESHOLD, type YearTermRow } from "@/lib/year-terms";
+import { getYearTermsData, type YearTermsData } from "@/lib/year-terms";
 
 export default async function SumarizacaoPage() {
-	let yearRows: YearTermRow[] | null = null;
+	let yearData: YearTermsData | null = null;
 
 	try {
-		yearRows = await getYearTermRows();
+		yearData = await getYearTermsData();
 	} catch {
-		yearRows = null;
+		yearData = null;
 	}
 
 	return (
@@ -24,8 +24,12 @@ export default async function SumarizacaoPage() {
 					</p>
 				</header>
 
-				{yearRows && yearRows.length > 0 ? (
-					<YearTermsComparison rows={yearRows} threshold={YEAR_THRESHOLD} />
+				{yearData && yearData.rows.length > 0 ? (
+					<YearTermsComparison
+						rows={yearData.rows}
+						years={yearData.years}
+						defaultThreshold={yearData.defaultThreshold}
+					/>
 				) : null}
 
 				<GraphEmbedSection />
