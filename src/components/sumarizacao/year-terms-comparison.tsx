@@ -153,33 +153,75 @@ export function YearTermsComparison({
 						<h2 className="mt-2 text-3xl font-bold tracking-[-0.5px] text-[#00261a]">
 							Publicações por tecnologia
 						</h2>
-						<p className="mt-2 text-[#446554]">
-							Comparação da quantidade de publicações que aplicam cada tecnologia
-							digital, separando os artigos anteriores a {threshold} dos
-							publicados a partir de {threshold}. A barra à direita da linha
-							central revela o crescimento recente de cada tecnologia no contexto
-							de AIA.
+						<p className="mt-3 text-[15px] leading-relaxed text-[#446554]">
+							Quantas publicações aplicam cada tecnologia digital, separadas por um
+							ano de corte: à esquerda, os trabalhos anteriores; à direita, os
+							publicados a partir dele. O corte padrão é{" "}
+							<span className="font-semibold text-[#00261a]">2021</span> — a linha
+							de base do levantamento global de Fothergill e Murphy sobre a adoção
+							de tecnologias digitais na AIA. Mova o seletor para reposicionar a
+							divisão e ver como cada tecnologia evolui ao redor dela.
 						</p>
 					</div>
 
-					{/* Seletor do ano de corte */}
+					{/* Seletor do ano de corte, com estado relativo à linha de base */}
 					{years.length > 0 ? (
-						<label className="flex shrink-0 flex-col gap-1.5 text-xs font-bold uppercase tracking-[1px] text-[#446554]">
-							Ano de corte
-							<select
-								value={threshold}
-								onChange={(event) => setThreshold(Number(event.target.value))}
-								className="cursor-pointer rounded-xl border border-[#c8d6ce] bg-white px-3.5 py-2.5 text-sm font-bold tracking-normal text-[#00261a] shadow-sm transition-colors hover:border-[#0a6b34] focus-visible:border-[#0a6b34] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a6b34] focus-visible:ring-offset-2"
+						<div className="flex shrink-0 flex-col gap-1.5 sm:w-[184px] sm:items-end">
+							<label className="flex w-full flex-col gap-1.5 text-xs font-bold uppercase tracking-[1px] text-[#446554] sm:items-end">
+								Ano de corte
+								<select
+									value={threshold}
+									onChange={(event) => setThreshold(Number(event.target.value))}
+									className="w-full cursor-pointer rounded-xl border border-[#c8d6ce] bg-white px-3.5 py-2.5 text-sm font-bold tracking-normal text-[#00261a] shadow-sm transition-colors hover:border-[#0a6b34] focus-visible:border-[#0a6b34] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a6b34] focus-visible:ring-offset-2"
+								>
+									{years.map((year) => (
+										<option key={year} value={year}>
+											{year}
+										</option>
+									))}
+								</select>
+							</label>
+							<span
+								className="flex items-center gap-1 text-[11px] font-medium leading-tight text-[#6b7d73] sm:justify-end sm:text-right"
+								aria-live="polite"
 							>
-								{years.map((year) => (
-									<option key={year} value={year}>
-										{year}
-									</option>
-								))}
-							</select>
-						</label>
+								<span
+									aria-hidden
+									className="material-symbols-outlined text-[13px] leading-none text-[#0a6b34]"
+								>
+									{threshold === defaultThreshold ? "verified" : "tune"}
+								</span>
+								{threshold === defaultThreshold
+									? "Linha de base do estudo"
+									: `Ajustado · padrão ${defaultThreshold}`}
+							</span>
+						</div>
 					) : null}
 				</div>
+
+				{/* Referência da linha de base: fundamenta o corte padrão de 2021 */}
+				<figure className="mt-6 flex items-start gap-3 rounded-2xl border border-[#dbe7e0] bg-[#f4f9f5] px-4 py-3.5 sm:px-5 sm:py-4">
+					<span
+						aria-hidden
+						className="material-symbols-outlined mt-0.5 shrink-0 text-[20px] leading-none text-[#0a6b34]"
+					>
+						auto_stories
+					</span>
+					<div className="min-w-0">
+						<figcaption className="text-[11px] font-bold uppercase tracking-[1.2px] text-[#0a6b34]">
+							Referência
+						</figcaption>
+						<p className="mt-1 text-sm leading-relaxed text-[#3f5449]">
+							Fothergill, J.; Murphy, J.{" "}
+							<cite className="font-medium italic text-[#264b3a]">
+								The state of digital impact assessment practice: a global review
+								of the uptake of digital technologies and approaches within impact
+								assessment practice
+							</cite>
+							. Fargo: International Association for Impact Assessment, 2021.
+						</p>
+					</div>
+				</figure>
 			</div>
 
 			{/* Corpo do gráfico */}
