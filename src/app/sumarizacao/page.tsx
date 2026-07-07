@@ -1,22 +1,14 @@
 import { GraphEmbedSection } from "@/components/sumarizacao/graph-embed-section";
-import { KddBoard } from "@/components/sumarizacao/kdd-board";
 import { YearTermsComparison } from "@/components/sumarizacao/year-terms-comparison";
-import {
-	getKddTechRows,
-	kddStageHeaders,
-	type KddTechRow,
-} from "@/lib/kdd-board";
-import { getYearTermRows, YEAR_THRESHOLD, type YearTermRow } from "@/lib/year-terms";
+import { getYearTermsData, type YearTermsData } from "@/lib/year-terms";
 
 export default async function SumarizacaoPage() {
-	let rows: KddTechRow[] | null = null;
-	let yearRows: YearTermRow[] | null = null;
+	let yearData: YearTermsData | null = null;
 
 	try {
-		[rows, yearRows] = await Promise.all([getKddTechRows(), getYearTermRows()]);
+		yearData = await getYearTermsData();
 	} catch {
-		rows = null;
-		yearRows = null;
+		yearData = null;
 	}
 
 	return (
@@ -27,28 +19,17 @@ export default async function SumarizacaoPage() {
 						Sumarização dos resultados
 					</h1>
 					<p className="mt-3 text-base leading-relaxed text-[#446554]">
-						Uma visão consolidada das tecnologias digitais aplicadas à AIA,
-						organizadas pelo fluxo de descoberta de conhecimento (KDD), e o grafo
-						interativo de tecnologias e termos.
+						Uma visão consolidada das tecnologias digitais aplicadas à AIA e o
+						grafo interativo de tecnologias e termos.
 					</p>
 				</header>
 
-				{rows ? (
-					<KddBoard stages={kddStageHeaders} rows={rows} />
-				) : (
-					<section className="rounded-xl border border-[#c0c8c3] bg-white p-8">
-						<h2 className="text-xl font-bold text-[#00261a]">
-							Não foi possível carregar o quadro
-						</h2>
-						<p className="mt-2 text-sm text-[#414944]">
-							Ocorreu um erro ao buscar os dados das tecnologias. Tente novamente
-							em instantes.
-						</p>
-					</section>
-				)}
-
-				{yearRows && yearRows.length > 0 ? (
-					<YearTermsComparison rows={yearRows} threshold={YEAR_THRESHOLD} />
+				{yearData && yearData.rows.length > 0 ? (
+					<YearTermsComparison
+						rows={yearData.rows}
+						years={yearData.years}
+						defaultThreshold={yearData.defaultThreshold}
+					/>
 				) : null}
 
 				<GraphEmbedSection />
