@@ -1,6 +1,8 @@
 "use client";
 
 import { type ChartTone, getTonePalette } from "@/components/charts/chart-palettes";
+import { useLocale } from "@/components/i18n/locale-provider";
+import { sharedUiCopy } from "@/i18n/shared-ui";
 import { BarChart } from "@mui/x-charts/BarChart";
 
 type BarChartItem = {
@@ -14,12 +16,10 @@ type TermsBarChartProps = {
 };
 
 export function TermsBarChart({ items, tone }: TermsBarChartProps) {
+	const copy = sharedUiCopy[useLocale()].charts;
+
 	if (items.length === 0) {
-		return (
-			<p className="text-sm text-[#64748b]">
-				Não há termos com ocorrência para esta área.
-			</p>
-		);
+		return <p className="text-sm text-[#64748b]">{copy.noTermOccurrences}</p>;
 	}
 
 	const palette = getTonePalette(tone);
@@ -42,7 +42,7 @@ export function TermsBarChart({ items, tone }: TermsBarChartProps) {
 				height={Math.max(280, items.length * 42)}
 				layout="horizontal"
 				margin={{ bottom: 20, left: 12, right: 24, top: 12 }}
-				series={[{ dataKey: "value", label: "Ocorrências" }]}
+				series={[{ dataKey: "value", label: copy.occurrences }]}
 				sx={{
 					"& .MuiBarElement-root": {
 						stroke: "#0f172a",

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useLocale } from "@/components/i18n/locale-provider";
 import {
 	Map,
 	MapMarker,
@@ -10,6 +11,8 @@ import {
 	MarkerContent,
 	type MapRef,
 } from "@/components/ui/map";
+import { formatNumber, localeTag, type Locale } from "@/i18n/locale";
+import { sharedUiCopy } from "@/i18n/shared-ui";
 
 export type InstitutionMapPoint = {
 	id: string;
@@ -73,10 +76,55 @@ function normalizeAreaLabel(label: string): string {
 	return label.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-function capitalizeFirstLetter(text: string): string {
+type StatTone = {
+	borderClass: string;
+	bgClass: string;
+	labelClass: string;
+	valueClass: string;
+};
+
+const STAT_TONES = {
+	filtered: {
+		borderClass: "border-[#86efac]",
+		bgClass: "bg-[#f0fdf4]",
+		labelClass: "text-[#166534]",
+		valueClass: "text-[#14532d]",
+	},
+	mapped: {
+		borderClass: "border-[#60a5fa]",
+		bgClass: "bg-[#eff6ff]",
+		labelClass: "text-[#1d4ed8]",
+		valueClass: "text-[#1e3a8a]",
+	},
+	unique: {
+		borderClass: "border-[#fcd34d]",
+		bgClass: "bg-[#fffbeb]",
+		labelClass: "text-[#92400e]",
+		valueClass: "text-[#713f12]",
+	},
+	unmapped: {
+		borderClass: "border-[#cbd5e1]",
+		bgClass: "bg-[#f8fafc]",
+		labelClass: "text-[#64748b]",
+		valueClass: "text-[#0f172a]",
+	},
+} satisfies Record<string, StatTone>;
+
+const toneByLabel: Record<string, StatTone> = {
+	[sharedUiCopy.pt.maps.filteredArticles]: STAT_TONES.filtered,
+	[sharedUiCopy.en.maps.filteredArticles]: STAT_TONES.filtered,
+	[sharedUiCopy.pt.maps.withMappedAffiliation]: STAT_TONES.mapped,
+	[sharedUiCopy.en.maps.withMappedAffiliation]: STAT_TONES.mapped,
+	[sharedUiCopy.pt.maps.uniqueInstitutions]: STAT_TONES.unique,
+	[sharedUiCopy.en.maps.uniqueInstitutions]: STAT_TONES.unique,
+	[sharedUiCopy.pt.maps.withoutGeolocation]: STAT_TONES.unmapped,
+	[sharedUiCopy.en.maps.withoutGeolocation]: STAT_TONES.unmapped,
+};
+
+function capitalizeFirstLetter(text: string, locale: Locale): string {
 	const trimmed = text.trim();
 	if (!trimmed) return text;
-	return `${trimmed.charAt(0).toLocaleUpperCase("pt-BR")}${trimmed.slice(1)}`;
+	return `${trimmed.charAt(0).toLocaleUpperCase(localeTag(locale))}${trimmed.slice(1)}`;
 }
 
 function hexToRgba(hexColor: string, alpha: number): string {
@@ -99,6 +147,8 @@ export function TermsInstitutionsMap({
 	totalArticles,
 	articlesWithMappedInstitutions,
 }: TermsInstitutionsMapProps) {
+	const locale = useLocale();
+	const copy = sharedUiCopy[locale].maps;
 	const mapRef = useRef<MapRef | null>(null);
 	const [mapTheme, setMapTheme] = useState<"light" | "dark">("light");
 	const [mapVisualMode, setMapVisualMode] = useState<"map" | "satellite">("map");
@@ -176,28 +226,27 @@ export function TermsInstitutionsMap({
 	return (
 		<section className="mt-8 rounded-[16px] border border-[#dce9e1] bg-white p-5">
 			<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
-				Mapa de afiliações
+				{copy.title}
 			</h2>
 			<p className="mt-1 text-sm text-[#64748b]">
-				Afiliações dos artigos filtrados por termos, georreferenciadas por
-				instituição.
+				{copy.institutionsDescription}
 			</p>
 
 			<div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-				<StatCard label="Artigos filtrados" value={totalArticles} />
+				<StatCard label={copy.filteredArticles} value={totalArticles} />
 				<StatCard
-					label="Com afiliação mapeada"
+					label={copy.withMappedAffiliation}
 					value={articlesWithMappedInstitutions}
 				/>
-				<StatCard label="Instituições únicas" value={totalInstitutions} />
-				<StatCard label="Sem geolocalização" value={unmappedArticles} />
+				<StatCard label={copy.uniqueInstitutions} value={totalInstitutions} />
+				<StatCard label={copy.withoutGeolocation} value={unmappedArticles} />
 			</div>
 			<div className="mt-4 flex items-center justify-between rounded-lg border border-[#dbe7df] bg-[#f8fafc] px-3 py-2">
 				<p className="text-xs font-semibold uppercase tracking-[0.8px] text-[#475569]">
-					Tema do mapa
+					{copy.mapTheme}
 				</p>
 				<div
-					aria-label="Seletor de tema do mapa"
+					aria-label={copy.themeSelectorAria}
 					className="inline-flex rounded-md border border-[#cbd5e1] bg-white p-0.5"
 					role="group"
 				>
@@ -211,7 +260,7 @@ export function TermsInstitutionsMap({
 						onClick={() => setMapTheme("light")}
 						type="button"
 					>
-						Claro
+						{copy.light}
 					</button>
 					<button
 						aria-pressed={mapTheme === "dark"}
@@ -223,16 +272,16 @@ export function TermsInstitutionsMap({
 						onClick={() => setMapTheme("dark")}
 						type="button"
 					>
-						Escuro
+						{copy.dark}
 					</button>
 				</div>
 			</div>
 			<div className="mt-2 flex items-center justify-between rounded-lg border border-[#dbe7df] bg-[#f8fafc] px-3 py-2">
 				<p className="text-xs font-semibold uppercase tracking-[0.8px] text-[#475569]">
-					Visualização
+					{copy.visualization}
 				</p>
 				<div
-					aria-label="Seletor de visualização do mapa"
+					aria-label={copy.visualizationSelectorAria}
 					className="inline-flex rounded-md border border-[#cbd5e1] bg-white p-0.5"
 					role="group"
 				>
@@ -246,7 +295,7 @@ export function TermsInstitutionsMap({
 						onClick={() => setMapVisualMode("map")}
 						type="button"
 					>
-						Mapa
+						{copy.map}
 					</button>
 					<button
 						aria-pressed={mapVisualMode === "satellite"}
@@ -258,7 +307,7 @@ export function TermsInstitutionsMap({
 						onClick={() => setMapVisualMode("satellite")}
 						type="button"
 					>
-						Satélite
+						{copy.satellite}
 					</button>
 				</div>
 			</div>
@@ -286,7 +335,7 @@ export function TermsInstitutionsMap({
 							>
 								<MarkerContent>
 									<button
-										aria-label={`Instituição ${point.name}`}
+										aria-label={copy.institutionAria(point.name)}
 										className="h-4 w-4 rounded-full border-2 border-white shadow-[0_0_0_2px_rgba(15,23,42,0.16)] transition-transform hover:scale-110"
 										style={{ backgroundColor: point.color }}
 										type="button"
@@ -330,7 +379,7 @@ export function TermsInstitutionsMap({
 															key={article.id}
 														>
 															<p className="font-semibold text-[#0f172a]">
-																{capitalizeFirstLetter(article.title)}
+																{capitalizeFirstLetter(article.title, locale)}
 															</p>
 															<div className="mt-1 flex flex-wrap gap-1">
 																{stageLabels.map((stageLabel) => {
@@ -365,7 +414,7 @@ export function TermsInstitutionsMap({
 																			className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-2 py-0.5 text-[10px] font-semibold text-[#1e3a8a]"
 																			key={`${article.id}-tec-${term}`}
 																		>
-																			Tec: {term}
+																			{copy.techBadge(term)}
 																		</span>
 																	))}
 																</div>
@@ -377,7 +426,7 @@ export function TermsInstitutionsMap({
 																			className="rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-2 py-0.5 text-[10px] font-semibold text-[#166534]"
 																			key={`${article.id}-env-${term}`}
 																		>
-																			Env: {term}
+																			{copy.envBadge(term)}
 																		</span>
 																	))}
 																</div>
@@ -394,15 +443,14 @@ export function TermsInstitutionsMap({
 				</div>
 			) : (
 				<div className="mt-4 rounded-xl border border-dashed border-[#cbd5e1] bg-[#f8fafc] p-4 text-sm text-[#64748b]">
-					Nenhuma afiliação georreferenciável foi encontrada para os artigos
-					filtrados.
+					{copy.noGeoreferenced}
 				</div>
 			)}
 
 			{areas.length > 0 ? (
 				<div className="mt-5">
 					<p className="text-xs font-bold uppercase tracking-[1px] text-[#475569]">
-						Cores por área (mesma paleta do gráfico)
+						{copy.colorsByArea}
 					</p>
 					<div className="mt-2 flex flex-wrap gap-2">
 						{areas.map((area) => (
@@ -415,7 +463,7 @@ export function TermsInstitutionsMap({
 									className="h-2.5 w-2.5 rounded-full"
 									style={{ backgroundColor: area.color }}
 								/>
-								{area.label} ({area.count})
+								{area.label} ({formatNumber(locale, area.count)})
 							</span>
 						))}
 					</div>
@@ -426,49 +474,17 @@ export function TermsInstitutionsMap({
 }
 
 function StatCard({ label, value }: { label: string; value: number }) {
-	const toneByLabel: Record<
-		string,
-		{
-			borderClass: string;
-			bgClass: string;
-			labelClass: string;
-			valueClass: string;
-		}
-	> = {
-		"Artigos filtrados": {
-			borderClass: "border-[#86efac]",
-			bgClass: "bg-[#f0fdf4]",
-			labelClass: "text-[#166534]",
-			valueClass: "text-[#14532d]",
-		},
-		"Com afiliação mapeada": {
-			borderClass: "border-[#60a5fa]",
-			bgClass: "bg-[#eff6ff]",
-			labelClass: "text-[#1d4ed8]",
-			valueClass: "text-[#1e3a8a]",
-		},
-		"Instituições únicas": {
-			borderClass: "border-[#fcd34d]",
-			bgClass: "bg-[#fffbeb]",
-			labelClass: "text-[#92400e]",
-			valueClass: "text-[#713f12]",
-		},
-		"Sem geolocalização": {
-			borderClass: "border-[#cbd5e1]",
-			bgClass: "bg-[#f8fafc]",
-			labelClass: "text-[#64748b]",
-			valueClass: "text-[#0f172a]",
-		},
-	};
-
-	const tone = toneByLabel[label] ?? toneByLabel["Sem geolocalização"];
+	const locale = useLocale();
+	const tone = toneByLabel[label] ?? STAT_TONES.unmapped;
 
 	return (
 		<div className={`rounded-xl border px-4 py-3 ${tone.borderClass} ${tone.bgClass}`}>
 			<p className={`text-[11px] font-bold uppercase tracking-[0.8px] ${tone.labelClass}`}>
 				{label}
 			</p>
-			<p className={`mt-1 text-2xl font-black ${tone.valueClass}`}>{value}</p>
+			<p className={`mt-1 text-2xl font-black ${tone.valueClass}`}>
+				{formatNumber(locale, value)}
+			</p>
 		</div>
 	);
 }

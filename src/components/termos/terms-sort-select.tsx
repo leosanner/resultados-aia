@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale } from "@/components/i18n/locale-provider";
+import { sharedUiCopy } from "@/i18n/shared-ui";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 
@@ -11,20 +13,19 @@ type Props = {
 	selectedSortOrder: TermsSortOrder;
 };
 
-const SORT_BY_OPTIONS: Array<{ label: string; value: TermsSortBy }> = [
-	{ label: "Data de publicação", value: "publicationDate" },
-	{ label: "FWCI", value: "fwci" },
-];
-
-const SORT_ORDER_OPTIONS: Array<{ label: string; value: TermsSortOrder }> = [
-	{ label: "Decrescente", value: "desc" },
-	{ label: "Crescente", value: "asc" },
-];
-
 export function TermsSortSelect({
 	selectedSortBy,
 	selectedSortOrder,
 }: Props) {
+	const copy = sharedUiCopy[useLocale()].sort;
+	const sortByOptions: Array<{ label: string; value: TermsSortBy }> = [
+		{ label: copy.publicationDate, value: "publicationDate" },
+		{ label: copy.fwci, value: "fwci" },
+	];
+	const sortOrderOptions: Array<{ label: string; value: TermsSortOrder }> = [
+		{ label: copy.descending, value: "desc" },
+		{ label: copy.ascending, value: "asc" },
+	];
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [isPending, startTransition] = useTransition();
@@ -41,14 +42,14 @@ export function TermsSortSelect({
 	return (
 		<div className="flex flex-wrap gap-3">
 			<label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.8px] text-[#64748b]">
-				Ordenar por
+				{copy.sortBy}
 				<select
 					className="h-10 min-w-44 rounded-md border border-[#cfe0d6] bg-white px-2.5 text-sm font-semibold text-[#1f2937] outline-none focus:border-[#0C7C3C] disabled:opacity-70"
 					disabled={isPending}
 					onChange={(event) => updateParam("sortBy", event.target.value)}
 					value={selectedSortBy}
 				>
-					{SORT_BY_OPTIONS.map((option) => (
+					{sortByOptions.map((option) => (
 						<option key={option.value} value={option.value}>
 							{option.label}
 						</option>
@@ -57,14 +58,14 @@ export function TermsSortSelect({
 			</label>
 
 			<label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.8px] text-[#64748b]">
-				Ordem
+				{copy.order}
 				<select
 					className="h-10 min-w-36 rounded-md border border-[#cfe0d6] bg-white px-2.5 text-sm font-semibold text-[#1f2937] outline-none focus:border-[#0C7C3C] disabled:opacity-70"
 					disabled={isPending}
 					onChange={(event) => updateParam("sortOrder", event.target.value)}
 					value={selectedSortOrder}
 				>
-					{SORT_ORDER_OPTIONS.map((option) => (
+					{sortOrderOptions.map((option) => (
 						<option key={option.value} value={option.value}>
 							{option.label}
 						</option>

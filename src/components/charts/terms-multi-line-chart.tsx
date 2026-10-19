@@ -7,6 +7,8 @@ import {
 	getToneColorByIndex,
 	type ChartTone,
 } from "@/components/charts/chart-palettes";
+import { useLocale } from "@/components/i18n/locale-provider";
+import { sharedUiCopy } from "@/i18n/shared-ui";
 import type { TermsSearchTrendSeries } from "@/lib/terms-search";
 
 type TermsMultiLineChartProps = {
@@ -20,6 +22,7 @@ export function TermsMultiLineChart({
 	tone,
 	emptyMessage,
 }: TermsMultiLineChartProps) {
+	const copy = sharedUiCopy[useLocale()].charts;
 	const chartWrapperRef = useRef<HTMLDivElement | null>(null);
 	const [visibleKeys, setVisibleKeys] = useState<string[]>(() =>
 		series.map((item) => item.key),
@@ -100,7 +103,7 @@ export function TermsMultiLineChart({
 
 			await new Promise<void>((resolve, reject) => {
 				image.onload = () => resolve();
-				image.onerror = () => reject(new Error("Falha ao carregar o SVG."));
+				image.onerror = () => reject(new Error(copy.svgLoadError));
 				image.src = svgUrl;
 			});
 
@@ -113,7 +116,7 @@ export function TermsMultiLineChart({
 			const context = canvas.getContext("2d");
 			if (!context) {
 				URL.revokeObjectURL(svgUrl);
-				throw new Error("Falha ao criar contexto do canvas.");
+				throw new Error(copy.canvasContextError);
 			}
 
 			context.scale(2, 2);
@@ -124,7 +127,7 @@ export function TermsMultiLineChart({
 
 			context.fillStyle = "#0f172a";
 			context.font = "600 12px sans-serif";
-			context.fillText("Legenda", 16, height + 24);
+			context.fillText(copy.legend, 16, height + 24);
 
 			context.font = "12px sans-serif";
 			filteredSeries.forEach((item, index) => {
@@ -154,7 +157,7 @@ export function TermsMultiLineChart({
 					.replace(/[\u0300-\u036f]/g, "")
 					.replace(/[^a-z0-9]+/g, "-")
 					.replace(/^-+|-+$/g, "")
-					.slice(0, 80) || "grafico";
+					.slice(0, 80) || copy.chartFilenameFallback;
 
 			const pngUrl = canvas.toDataURL("image/png");
 			const link = document.createElement("a");
@@ -203,14 +206,16 @@ export function TermsMultiLineChart({
 				</div>
 
 				<button
-					aria-label={isDownloading ? "Baixando gráfico" : "Baixar gráfico"}
+					aria-label={
+						isDownloading ? copy.downloadingChartAria : copy.downloadChartAria
+					}
 					className="ml-auto inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-full border border-[#334155] bg-[#1e293b] px-3 text-white transition-colors hover:bg-[#0f172a] disabled:cursor-not-allowed disabled:opacity-60"
 					disabled={filteredSeries.length === 0 || isDownloading}
 					onClick={downloadChart}
 					type="button"
 				>
 					<span className="text-xs font-semibold leading-none">
-						{isDownloading ? "Baixando" : "Baixar Gráfico"}
+						{isDownloading ? copy.downloading : copy.downloadChart}
 					</span>
 					<span aria-hidden className="text-base leading-none">
 						{isDownloading ? "..." : "↓"}
@@ -221,7 +226,7 @@ export function TermsMultiLineChart({
 			<div ref={chartWrapperRef}>
 				{filteredSeries.length === 0 ? (
 					<p className="text-sm text-[#64748b]">
-						Selecione ao menos um termo ou área para exibir no gráfico.
+						{copy.selectAtLeastOne}
 					</p>
 				) : (
 					<LineChart
@@ -267,12 +272,12 @@ export function TermsMultiLineChart({
 								data: years,
 								scaleType: "point",
 								tickLabelStyle: { fontSize: 12 },
-								label: "Ano",
+								label: copy.year,
 							},
 						]}
 						yAxis={[
 							{
-								label: "Quantidade de artigos",
+								label: copy.articleQuantity,
 								tickLabelStyle: { fontSize: 12 },
 								width: 56,
 							},
