@@ -2,6 +2,9 @@
 
 import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import { useMemo, useRef, useState } from "react";
+import { useLocale } from "@/components/i18n/locale-provider";
+import { formatNumber } from "@/i18n/locale";
+import { sumarizacaoCopy } from "@/i18n/pages/sumarizacao";
 import { getTechColor } from "@/lib/tech-colors";
 import type { YearTermRow } from "@/lib/year-terms";
 import type { TecTerm } from "@/model/article";
@@ -43,10 +46,6 @@ const TERM_ICONS: Record<TecTerm, string> = {
 	"Digital Transformation": "sync_alt",
 	"Augmented Reality": "view_in_ar",
 };
-
-function formatCount(count: number) {
-	return new Intl.NumberFormat("pt-BR").format(count);
-}
 
 /**
  * Valor numérico que faz um fade curto sempre que muda (a `key` força o remount).
@@ -114,6 +113,8 @@ export function YearTermsComparison({
 	years: number[];
 	defaultThreshold: number;
 }) {
+	const locale = useLocale();
+	const copy = sumarizacaoCopy[locale].yearTerms;
 	const reduce = useReducedMotion();
 	const [threshold, setThreshold] = useState(defaultThreshold);
 	const rowsRef = useRef<HTMLDivElement>(null);
@@ -134,7 +135,7 @@ export function YearTermsComparison({
 
 	return (
 		<section
-			aria-label={`Publicações por tecnologia antes e a partir de ${threshold}`}
+			aria-label={copy.aria(threshold)}
 			className="overflow-hidden rounded-3xl border border-[#d0ddd5] bg-white shadow-[0_20px_50px_-16px_rgba(6,71,34,0.1)]"
 		>
 			{/* Faixa de cabeçalho */}
@@ -148,19 +149,15 @@ export function YearTermsComparison({
 							>
 								balance
 							</span>
-							Evolução temporal
+							{copy.kicker}
 						</p>
 						<h2 className="mt-2 text-3xl font-bold tracking-[-0.5px] text-[#00261a]">
-							Publicações por tecnologia
+							{copy.title}
 						</h2>
 						<p className="mt-3 text-[15px] leading-relaxed text-[#446554]">
-							Quantas publicações aplicam cada tecnologia digital, separadas por um
-							ano de corte: à esquerda, os trabalhos anteriores; à direita, os
-							publicados a partir dele. O corte padrão é{" "}
-							<span className="font-semibold text-[#00261a]">2021</span> — a linha
-							de base do levantamento global de Fothergill e Murphy sobre a adoção
-							de tecnologias digitais na AIA. Mova o seletor para reposicionar a
-							divisão e ver como cada tecnologia evolui ao redor dela.
+							{copy.bodyBefore}
+							<span className="font-semibold text-[#00261a]">{copy.bodyYear}</span>
+							{copy.bodyAfter}
 						</p>
 					</div>
 
@@ -168,7 +165,7 @@ export function YearTermsComparison({
 					{years.length > 0 ? (
 						<div className="flex shrink-0 flex-col gap-1.5 sm:w-[184px] sm:items-end">
 							<label className="flex w-full flex-col gap-1.5 text-xs font-bold uppercase tracking-[1px] text-[#446554] sm:items-end">
-								Ano de corte
+								{copy.cutoffLabel}
 								<select
 									value={threshold}
 									onChange={(event) => setThreshold(Number(event.target.value))}
@@ -192,8 +189,8 @@ export function YearTermsComparison({
 									{threshold === defaultThreshold ? "verified" : "tune"}
 								</span>
 								{threshold === defaultThreshold
-									? "Linha de base do estudo"
-									: `Ajustado · padrão ${defaultThreshold}`}
+									? copy.baseline
+									: copy.adjusted(defaultThreshold)}
 							</span>
 						</div>
 					) : null}
@@ -209,7 +206,7 @@ export function YearTermsComparison({
 					</span>
 					<div className="min-w-0">
 						<figcaption className="text-[11px] font-bold uppercase tracking-[1.2px] text-[#0a6b34]">
-							Referência
+							{copy.reference}
 						</figcaption>
 						<p className="mt-1 text-sm leading-relaxed text-[#3f5449]">
 							Fothergill, J.; Murphy, J.{" "}
@@ -294,7 +291,7 @@ export function YearTermsComparison({
 										<AnimatedValue
 											animate={!reduce}
 											className="text-sm font-bold tabular-nums"
-											value={formatCount(before)}
+											value={formatNumber(locale, before)}
 										/>
 										<AnimatedValue
 											animate={!reduce}
@@ -340,7 +337,7 @@ export function YearTermsComparison({
 										<AnimatedValue
 											animate={!reduce}
 											className="text-sm font-bold tabular-nums"
-											value={formatCount(after)}
+											value={formatNumber(locale, after)}
 										/>
 										<AnimatedValue
 											animate={!reduce}

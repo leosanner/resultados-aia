@@ -2,6 +2,9 @@
 
 import { useMemo, useState } from "react";
 
+import { useLocale } from "@/components/i18n/locale-provider";
+import { autoresCopy } from "@/i18n/pages/autores";
+
 type AuthorByTechnology = {
 	authorId: string;
 	authorName: string;
@@ -16,15 +19,12 @@ type TechnologyAuthorsCardProps = {
 
 const PAGE_SIZE = 12;
 
-function formatTotal(count: number) {
-	return new Intl.NumberFormat("pt-BR").format(count);
-}
-
 export function TechnologyAuthorsCard({
 	technologyKey,
 	technologyLabel,
 	authors,
 }: TechnologyAuthorsCardProps) {
+	const copy = autoresCopy[useLocale()];
 	const [page, setPage] = useState(1);
 	const totalPages = Math.max(1, Math.ceil(authors.length / PAGE_SIZE));
 	const currentPage = Math.min(page, totalPages);
@@ -41,7 +41,7 @@ export function TechnologyAuthorsCard({
 					{technologyLabel}
 				</h2>
 				<span className="rounded-full bg-[#edf7f1] px-3 py-1 text-xs font-bold uppercase tracking-[0.6px] text-[#256f4f]">
-					{formatTotal(authors.length)} autores
+					{copy.authorCount(authors.length)}
 				</span>
 			</div>
 
@@ -55,7 +55,7 @@ export function TechnologyAuthorsCard({
 							{startIndex + index + 1}. {author.authorName}
 						</p>
 						<span className="text-xs font-bold uppercase tracking-[0.6px] text-[#64748b]">
-							{formatTotal(author.publications.length)} publicações
+							{copy.publicationCount(author.publications.length)}
 						</span>
 					</div>
 				))}
@@ -64,7 +64,7 @@ export function TechnologyAuthorsCard({
 			{authors.length > PAGE_SIZE ? (
 				<div className="mt-4 flex items-center justify-between border-t border-[#e2e8f0] pt-3">
 					<p className="text-xs font-semibold uppercase tracking-[0.6px] text-[#64748b]">
-						Página {currentPage} de {totalPages}
+						{copy.pageStatus(currentPage, totalPages)}
 					</p>
 					<div className="flex items-center gap-2">
 						<button
@@ -73,7 +73,7 @@ export function TechnologyAuthorsCard({
 							onClick={() => setPage((prev) => Math.max(1, prev - 1))}
 							type="button"
 						>
-							Anterior
+							{copy.previous}
 						</button>
 						<button
 							className="rounded-full bg-[#0f172a] px-3 py-1 text-xs font-bold uppercase tracking-[0.6px] text-white disabled:cursor-not-allowed disabled:opacity-40"
@@ -83,7 +83,7 @@ export function TechnologyAuthorsCard({
 							}
 							type="button"
 						>
-							Próxima
+							{copy.next}
 						</button>
 					</div>
 				</div>

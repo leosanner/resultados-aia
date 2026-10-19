@@ -3,6 +3,9 @@ import { getToneColorByIndex } from "@/components/charts/chart-palettes";
 import { TermsMultiLineChartClient } from "@/components/charts/terms-multi-line-chart-client";
 import { TermsArticlesMapClient } from "@/components/termos/terms-articles-map-client";
 import institutionInformationData from "@/data/instituition_information.json";
+import { getLocale } from "@/i18n/get-locale";
+import { formatNumber } from "@/i18n/locale";
+import { contextualizacaoCopy } from "@/i18n/pages/contextualizacao";
 import { formatTermLabel, getTermsSearchResults } from "@/lib/terms-search";
 import type {
 	ArticleMapPoint,
@@ -34,10 +37,6 @@ const NO_TECH_COLOR = "#94a3b8";
 const MULTI_TECH_KEY = "__multi__";
 const NO_TECH_KEY = "__none__";
 
-function formatTotal(count: number) {
-	return new Intl.NumberFormat("pt-BR").format(count);
-}
-
 function toStringArray(value: string | string[] | null | undefined) {
 	if (typeof value === "string") return [value];
 	if (Array.isArray(value)) {
@@ -51,6 +50,8 @@ function isValidOpenAlexInstitutionId(value: string) {
 }
 
 export default async function ContextualizacaoGeralPage() {
+	const locale = await getLocale();
+	const copy = contextualizacaoCopy[locale];
 	const termsResults = await getTermsSearchResults({});
 
 	const {
@@ -161,7 +162,7 @@ export default async function ContextualizacaoGeralPage() {
 	if (multiCount > 0) {
 		technologyLegend.push({
 			key: MULTI_TECH_KEY,
-			label: "Múltiplas tecnologias",
+			label: copy.legend.multipleTechnologies,
 			color: MULTI_TECH_COLOR,
 			count: multiCount,
 		});
@@ -170,7 +171,7 @@ export default async function ContextualizacaoGeralPage() {
 	if (noTechCount > 0) {
 		technologyLegend.push({
 			key: NO_TECH_KEY,
-			label: "Sem tecnologia",
+			label: copy.legend.noTechnology,
 			color: NO_TECH_COLOR,
 			count: noTechCount,
 		});
@@ -185,30 +186,34 @@ export default async function ContextualizacaoGeralPage() {
 			<main className="mx-auto w-full max-w-[1280px] px-6 py-8 sm:px-10 lg:px-20">
 				<section className="rounded-3xl border border-[#dbe6df] bg-white/90 p-6 shadow-[0px_12px_28px_-22px_rgba(15,23,42,0.4)]">
 					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#256f4f]">
-						Visão Executiva
+						{copy.kicker}
 					</p>
 					<h1 className="mt-2 text-3xl font-black tracking-[-0.9px] text-[#111111] md:text-4xl">
-						Contextualização Geral dos Resultados
+						{copy.title}
 					</h1>
 					<p className="mt-2 max-w-[820px] text-sm leading-6 text-[#4a5568]">
-						Esta seção resume os principais resultados do experimento, com foco
-						na distribuição espacial dos artigos, evolução temporal das
-						publicações e temas mais frequentes.
+						{copy.description}
 					</p>
 					<div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-						<SummaryCard label="Total de Artigos" value={formatTotal(totalArticles)} />
-						<SummaryCard label="Total de Áreas" value={formatTotal(totalAreas)} />
 						<SummaryCard
-							label="Intervalo Temporal"
+							label={copy.summary.totalArticles}
+							value={formatNumber(locale, totalArticles)}
+						/>
+						<SummaryCard
+							label={copy.summary.totalAreas}
+							value={formatNumber(locale, totalAreas)}
+						/>
+						<SummaryCard
+							label={copy.summary.timeRange}
 							value={
 								minYear && maxYear
 									? `${minYear} - ${maxYear}`
-									: "Não disponível"
+									: copy.summary.unavailable
 							}
 						/>
 						<SummaryCard
-							label="Localizações Mapeadas"
-							value={formatTotal(mappedInstitutionIds.size)}
+							label={copy.summary.mappedLocations}
+							value={formatNumber(locale, mappedInstitutionIds.size)}
 						/>
 					</div>
 				</section>
@@ -224,11 +229,10 @@ export default async function ContextualizacaoGeralPage() {
 
 				<section className="mt-8 rounded-3xl border border-[#dbe6df] bg-white p-6">
 					<h2 className="text-xl font-black tracking-[-0.5px] text-[#111111]">
-						Evolução Temporal das Publicações
+						{copy.timeline.title}
 					</h2>
 					<p className="mt-1 text-sm text-[#64748b]">
-						Visão consolidada do comportamento das publicações ao longo dos
-						anos.
+						{copy.timeline.description}
 					</p>
 					<div className="mt-4">
 						<ArticlesYearLineChart items={yearlyArticlesTrend} />
@@ -238,25 +242,23 @@ export default async function ContextualizacaoGeralPage() {
 				<section className="mt-8 space-y-6">
 					<div className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
 						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
-							Séries temporais por categoria
+							{copy.series.title}
 						</h2>
 						<p className="mt-1 text-sm text-[#64748b]">
-							Cada linha representa um termo dentro do conjunto completo de
-							artigos.
+							{copy.series.description}
 						</p>
 					</div>
 
 					<section className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
 						<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#0f4c81]">
-							Termos de tecnologia
+							{copy.series.technologyTitle}
 						</h3>
 						<p className="mt-1 text-sm text-[#64748b]">
-							Evolução anual dos termos tecnológicos identificados nos
-							artigos.
+							{copy.series.technologyDescription}
 						</p>
 						<div className="mt-4">
 							<TermsMultiLineChartClient
-								emptyMessage="Não há termos tecnológicos com ano de publicação válido nos artigos."
+								emptyMessage={copy.series.technologyEmpty}
 								key={`technology-${technologyTermsTrend.map((item) => item.key).join("|")}`}
 								series={technologyTermsTrend}
 								tone="blue"
@@ -266,14 +268,14 @@ export default async function ContextualizacaoGeralPage() {
 
 					<section className="rounded-[16px] border border-[#dce9e1] bg-white p-5">
 						<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#166534]">
-							Termos ambientais
+							{copy.series.environmentalTitle}
 						</h3>
 						<p className="mt-1 text-sm text-[#64748b]">
-							Evolução anual dos termos ambientais identificados nos artigos.
+							{copy.series.environmentalDescription}
 						</p>
 						<div className="mt-4">
 							<TermsMultiLineChartClient
-								emptyMessage="Não há termos ambientais com ano de publicação válido nos artigos."
+								emptyMessage={copy.series.environmentalEmpty}
 								key={`environmental-${environmentalTermsTrend.map((item) => item.key).join("|")}`}
 								series={environmentalTermsTrend}
 								tone="green"

@@ -1,5 +1,7 @@
-import { ArticleModel } from "@/model/article";
 import { TechnologyAuthorsCard } from "@/components/autores/technology-authors-card";
+import { getLocale } from "@/i18n/get-locale";
+import { autoresCopy } from "@/i18n/pages/autores";
+import { ArticleModel } from "@/model/article";
 
 type AuthorByTechnology = {
 	authorId: string;
@@ -8,6 +10,7 @@ type AuthorByTechnology = {
 };
 
 export default async function AuthorsPage() {
+	const copy = autoresCopy[await getLocale()];
 	const articleModel = new ArticleModel();
 	const authorsByTechnology = await articleModel.getAuthorsByTechnology();
 
@@ -42,15 +45,12 @@ export default async function AuthorsPage() {
 			<main className="mx-auto w-full max-w-[1280px] px-6 py-8 sm:px-10 lg:px-20">
 				<section className="max-w-[760px]">
 					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#256f4f]">
-						Novo Painel
+						{copy.kicker}
 					</p>
 					<h1 className="mt-2 text-4xl font-black tracking-[-1px] text-[#111111] md:text-5xl">
-						Autores por Tecnologia
+						{copy.title}
 					</h1>
-					<p className="mt-3 text-base text-[#4a5568]">
-						Ranking de autores por tecnologia da string de busca, ordenados por
-						total de publicações.
-					</p>
+					<p className="mt-3 text-base text-[#4a5568]">{copy.subtitle}</p>
 				</section>
 
 				<section className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
