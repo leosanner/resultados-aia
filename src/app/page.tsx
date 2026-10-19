@@ -2,6 +2,8 @@ import { AskAiSection } from "@/components/home/ask-ai-section";
 import { HeroSection } from "@/components/home/hero-section";
 import { LandingTermsGraphClient } from "@/components/home/landing-terms-graph-client";
 import { graphContent } from "@/infra/build-graphs";
+import { getLocale } from "@/i18n/get-locale";
+import { landingCopy } from "@/i18n/landing";
 import { getTechArticlesSummary } from "@/lib/tech-summary";
 import { tecTermToSlug } from "@/lib/tech-utils";
 import { TecTerm, tecTerms } from "@/model/article";
@@ -25,11 +27,10 @@ const TECH_ICONS: Record<TecTerm, string> = {
 	"Digital Twins": "hub",
 };
 
-function formatTotal(count: number) {
-	return new Intl.NumberFormat("pt-BR").format(count);
-}
-
 export default async function Home() {
+	const copy = landingCopy[await getLocale()];
+	const technologies = copy.technologies;
+	const graphCopy = copy.graph;
 	let summary: Record<TecTerm, number[]> | null = null;
 	let graphData: Awaited<ReturnType<typeof graphContent>> | null = null;
 	let loadError = false;
@@ -61,29 +62,27 @@ export default async function Home() {
 				{loadError ? (
 					<section className="rounded-xl border border-[#c0c8c3] bg-white p-8">
 						<h2 className="text-xl font-bold text-[#00261a]">
-							Não foi possível carregar os dados
+							{technologies.loadErrorTitle}
 						</h2>
 						<p className="mt-2 text-sm text-[#414944]">
-							Ocorreu um erro ao buscar os artigos. Tente novamente em
-							instantes.
+							{technologies.loadErrorBody}
 						</p>
 					</section>
 				) : (
-					<section aria-label="Artigos por tecnologia">
+					<section aria-label={technologies.aria}>
 						<div className="mb-16 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
 							<div className="max-w-xl">
 								<h2 className="text-3xl font-bold text-[#00261a]">
-									Artigos por Tecnologia
+									{technologies.title}
 								</h2>
 								<p className="mt-2 text-[#446554]">
-									Selecione uma tecnologia para acessar as publicações
-									que a aplicam no contexto de AIA.
+									{technologies.subtitle}
 								</p>
 							</div>
 						</div>
 						<div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 							{techEntries.map(([tecTerm, total], index) => {
-								const description = `Artigos que aplicam ${tecTerm} no contexto de AIA.`;
+								const description = technologies.description(tecTerm);
 								const techSlug = tecTermToSlug(tecTerm);
 								const iconName = TECH_ICONS[tecTerm] ?? "science";
 
@@ -114,7 +113,7 @@ export default async function Home() {
 														aria-hidden
 														className="h-1.5 w-1.5 rounded-full bg-[#0C7C3C]"
 													/>
-													{formatTotal(total)} Artigos
+													{technologies.count(total)}
 												</span>
 											</div>
 											<h3 className="mb-3 text-xl font-bold text-[#00261a] transition-colors duration-300 group-hover:text-[#084a2f]">
@@ -130,7 +129,7 @@ export default async function Home() {
 												className="group/btn relative flex flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-md bg-[#00261a] px-4 py-2.5 text-xs font-bold uppercase tracking-[0.08em] text-white"
 											>
 												<span className="absolute inset-0 origin-left scale-x-0 bg-[#0C7C3C] transition-transform duration-500 ease-out group-hover/btn:scale-x-100" />
-												<span className="relative z-10">Ver artigos</span>
+												<span className="relative z-10">{technologies.viewArticles}</span>
 												<span
 													aria-hidden
 													className="material-symbols-outlined relative z-10 text-base leading-none transition-transform duration-300 group-hover/btn:translate-x-0.5"
@@ -140,7 +139,7 @@ export default async function Home() {
 											</a>
 											<a
 												href={`/tecnologias/${techSlug}/estatisticas`}
-												aria-label={`Estatísticas de ${tecTerm}`}
+												aria-label={technologies.statsAria(tecTerm)}
 												className="group/stats inline-flex items-center justify-center rounded-md border border-[#d3dee2] bg-[#f7faf5] px-3 py-2.5 text-[#1F6F8B] transition-all duration-300 hover:-translate-y-px hover:border-[#1F6F8B] hover:bg-[#eff6ff] hover:shadow-[0_6px_14px_-6px_rgba(31,111,139,0.35)]"
 											>
 												<span className="material-symbols-outlined text-lg leading-none transition-transform duration-300 group-hover/stats:scale-110">
@@ -158,10 +157,10 @@ export default async function Home() {
 				{!loadError && summary && techEntries.length === 0 ? (
 					<section className="rounded-xl border border-[#c0c8c3] bg-white p-8">
 						<h2 className="text-xl font-bold text-[#00261a]">
-							Nenhum resultado encontrado
+							{technologies.emptyTitle}
 						</h2>
 						<p className="mt-2 text-sm text-[#414944]">
-							Ainda não há artigos classificados para estas tecnologias.
+							{technologies.emptyBody}
 						</p>
 					</section>
 				) : null}
@@ -175,13 +174,13 @@ export default async function Home() {
 							<div className="mb-8 flex items-end justify-between">
 								<div>
 									<p className="text-xs font-bold uppercase tracking-[1.5px] text-[#446554]">
-										Visualização interativa
+										{graphCopy.kicker}
 									</p>
 									<h2 className="mt-2 text-3xl font-extrabold tracking-[-0.5px] text-[#00261a]">
-										Grafo de Artigos e Termos
+										{graphCopy.title}
 									</h2>
 									<p className="mt-2 max-w-lg text-sm leading-relaxed text-[#556070]">
-										Selecione tópicos para filtrar conexões. Arraste os nós para reorganizar o layout.
+										{graphCopy.subtitle}
 									</p>
 								</div>
 							</div>

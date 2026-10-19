@@ -2,6 +2,8 @@
 
 import { motion } from "framer-motion";
 
+import { useLandingCopy } from "@/components/i18n/locale-provider";
+
 function AnimatedDotGrid() {
 	return (
 		<div className="absolute inset-0 overflow-hidden">
@@ -47,6 +49,8 @@ function AccentBar() {
 }
 
 export function HeroSection() {
+	const copy = useLandingCopy();
+
 	return (
 		<section className="relative flex min-h-[460px] items-center overflow-hidden bg-[#0f3d2e]">
 			<AnimatedDotGrid />
@@ -61,7 +65,7 @@ export function HeroSection() {
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.6, ease: "easeOut" }}
 					>
-						Tecnologias digitais
+						{copy.hero.titleLine1}
 						<br />
 						<motion.span
 							className="inline-block text-[#f6be28]"
@@ -73,7 +77,7 @@ export function HeroSection() {
 								ease: "easeOut",
 							}}
 						>
-							associadas a AIA
+							{copy.hero.titleLine2}
 						</motion.span>
 					</motion.h1>
 
@@ -92,8 +96,7 @@ export function HeroSection() {
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.5, duration: 0.55, ease: "easeOut" }}
 					>
-						Explore artigos que utilizam tecnologias integradas no contexto de
-						avaliação de impacto ambiental
+						{copy.hero.subtitle}
 					</motion.p>
 				</div>
 			</div>
