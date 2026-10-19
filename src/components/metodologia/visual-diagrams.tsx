@@ -1,10 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
+
+import { useLocale } from "@/components/i18n/locale-provider";
+import { metodologiaCopy } from "@/i18n/pages/metodologia";
+import { formatNumber } from "@/i18n/locale";
+
 import { FlowchartDiagram } from "./flowchart-diagram";
 import { VennDiagram } from "./venn-diagram";
 
 export function VisualDiagrams() {
+	const locale = useLocale();
+	const copy = metodologiaCopy[locale].diagrams;
+
 	return (
 		<section className="px-8 pt-24 pb-14">
 			<div className="mx-auto max-w-screen-2xl">
@@ -15,7 +23,7 @@ export function VisualDiagrams() {
 					viewport={{ once: true }}
 					whileInView={{ opacity: 1, y: 0 }}
 				>
-					Diagramas do processo
+					{copy.title}
 				</motion.h2>
 
 				<div className="grid gap-8 lg:grid-cols-2">
@@ -27,13 +35,10 @@ export function VisualDiagrams() {
 						whileInView={{ opacity: 1, x: 0 }}
 					>
 						<h3 className="mb-4 text-xl font-semibold text-[#00261a]">
-							Intersecção: Scopus vs OpenAlex
+							{copy.vennTitle}
 						</h3>
 						<p className="mb-6 text-sm leading-relaxed text-[#556070]">
-							Diagrama de Venn mostrando a intersecção entre as publicações
-							encontradas nas bases Scopus e OpenAlex. O overlap de 5.880
-							registros representa o conjunto consolidado para análise
-							posterior.
+							{copy.vennBody}
 						</p>
 						<div className="overflow-hidden rounded-lg border border-[#d0ddd5] bg-[#f7fbf8] p-4">
 							<VennDiagram />
@@ -41,21 +46,21 @@ export function VisualDiagrams() {
 						<div className="mt-4 grid grid-cols-3 gap-4 text-center">
 							<div>
 								<div className="font-mono text-2xl font-semibold text-[#1F6F8B]">
-									6.393
+									{formatNumber(locale, 6393)}
 								</div>
-								<div className="text-xs text-[#475569]">Apenas OpenAlex</div>
+								<div className="text-xs text-[#475569]">{copy.openAlexOnly}</div>
 							</div>
 							<div>
 								<div className="font-mono text-2xl font-semibold text-[#b88706]">
-									5.880
+									{formatNumber(locale, 5880)}
 								</div>
-								<div className="text-xs text-[#475569]">Intersecção</div>
+								<div className="text-xs text-[#475569]">{copy.intersection}</div>
 							</div>
 							<div>
 								<div className="font-mono text-2xl font-semibold text-[#16a34a]">
-									4.384
+									{formatNumber(locale, 4384)}
 								</div>
-								<div className="text-xs text-[#475569]">Apenas Scopus</div>
+								<div className="text-xs text-[#475569]">{copy.scopusOnly}</div>
 							</div>
 						</div>
 					</motion.article>
@@ -68,19 +73,16 @@ export function VisualDiagrams() {
 						whileInView={{ opacity: 1, x: 0 }}
 					>
 						<h3 className="mb-4 text-xl font-semibold text-[#00261a]">
-							Fluxograma do pipeline
+							{copy.flowTitle}
 						</h3>
 						<p className="mb-6 text-sm leading-relaxed text-[#556070]">
-							Representação visual completa do fluxo metodológico, desde a busca
-							inicial, passando pelo fluxo de agentes com três LLMs e pela
-							separação entre estudos relacionados e não relacionados, até a
-							filtragem final por termos específicos de AIA.
+							{copy.flowBody}
 						</p>
 						<FlowchartDiagram />
 						<div className="mt-4 rounded-lg border border-[#fde68a] bg-[#fffbeb] p-4">
 							<p className="text-sm leading-relaxed text-[#334155]">
 								<span className="font-semibold text-[#b45309]">
-									String de busca (exemplo):{" "}
+									{copy.searchExampleLabel}{" "}
 								</span>
 								(&quot;machine learning&quot; OR &quot;IA&quot;) AND
 								(&quot;eia&quot; OR &quot;environment&quot;)

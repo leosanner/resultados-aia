@@ -2,6 +2,9 @@
 
 import { motion } from "framer-motion";
 
+import { useLocale } from "@/components/i18n/locale-provider";
+import { metodologiaCopy } from "@/i18n/pages/metodologia";
+
 function AnimatedDotGrid() {
 	return (
 		<div className="absolute inset-0 overflow-hidden">
@@ -45,6 +48,8 @@ function AccentBar() {
 }
 
 export function HeroSection() {
+	const copy = metodologiaCopy[useLocale()].hero;
+
 	return (
 		<section className="relative flex min-h-[460px] items-center overflow-hidden bg-[#0f3d2e]">
 			<AnimatedDotGrid />
@@ -59,7 +64,7 @@ export function HeroSection() {
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.6, ease: "easeOut" }}
 					>
-						Metodologia
+						{copy.title}
 					</motion.h1>
 
 					<motion.div
@@ -77,9 +82,7 @@ export function HeroSection() {
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.5, duration: 0.55, ease: "easeOut" }}
 					>
-						Pipeline em duas macroetapas: filtragem científica de um corpus massivo
-						para um conjunto refinado, seguida de síntese estruturada do conteúdo com
-						agente de IA supervisionado.
+						{copy.subtitle}
 					</motion.p>
 
 					<motion.div
@@ -89,10 +92,10 @@ export function HeroSection() {
 						transition={{ delay: 0.7, duration: 0.5, ease: "easeOut" }}
 					>
 						<span className="rounded-full border border-[#2ECC71]/40 bg-[#0C7C3C]/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[1.5px] text-[#beedd7]">
-							I · Filtragem Científica
+							{copy.filteringBadge}
 						</span>
 						<span className="rounded-full border border-[#f6be28]/50 bg-[#f6be28]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[1.5px] text-[#f6be28]">
-							II · Síntese Assistida por IA
+							{copy.synthesisBadge}
 						</span>
 					</motion.div>
 				</div>

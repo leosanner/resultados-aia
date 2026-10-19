@@ -2,7 +2,14 @@
 
 import { motion } from "framer-motion";
 
+import { useLocale } from "@/components/i18n/locale-provider";
+import { metodologiaCopy } from "@/i18n/pages/metodologia";
+import { formatNumber } from "@/i18n/locale";
+
 export function VennDiagram() {
+	const locale = useLocale();
+	const copy = metodologiaCopy[locale].venn;
+
 	return (
 		<div className="relative h-[400px] w-full">
 			<svg className="h-full w-full" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
@@ -63,7 +70,7 @@ export function VennDiagram() {
 					x="70"
 					y="155"
 				>
-					6.393
+					{formatNumber(locale, 6393)}
 				</text>
 				<text
 					fill="#065f46"
@@ -74,7 +81,7 @@ export function VennDiagram() {
 					x="200"
 					y="155"
 				>
-					5.880
+					{formatNumber(locale, 5880)}
 				</text>
 				<text
 					fill="#14532d"
@@ -85,11 +92,11 @@ export function VennDiagram() {
 					x="330"
 					y="155"
 				>
-					4.384
+					{formatNumber(locale, 4384)}
 				</text>
 
 				<text fill="#475569" fontSize="14" fontWeight="600" textAnchor="middle" x="200" y="280">
-					Total: 16.657 publicações
+					{copy.total(formatNumber(locale, 16657))}
 				</text>
 			</svg>
 		</div>

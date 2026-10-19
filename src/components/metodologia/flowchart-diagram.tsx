@@ -12,7 +12,13 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-const initialNodes: Node[] = [
+import { useLocale } from "@/components/i18n/locale-provider";
+import { metodologiaCopy, type MetodologiaCopy } from "@/i18n/pages/metodologia";
+
+type FlowchartLabels = MetodologiaCopy["flowchart"];
+
+function buildNodes(labels: FlowchartLabels): Node[] {
+	return [
 	{
 		id: "search",
 		position: { x: 50, y: 150 },
@@ -20,7 +26,7 @@ const initialNodes: Node[] = [
 			label: (
 				<div className="text-center">
 					<div className="font-semibold text-[#0f172a]">
-						String de busca (exemplo)
+						{labels.searchTitle}
 					</div>
 					<div className="mt-1 text-xs text-[#475569]">
 						(&quot;machine learning&quot; OR &quot;IA&quot;)
@@ -68,7 +74,7 @@ const initialNodes: Node[] = [
 	{
 		id: "intersection",
 		position: { x: 600, y: 135 },
-		data: { label: "Intersecção" },
+		data: { label: labels.intersection },
 		style: {
 			background: "#ddd6fe",
 			border: "2px solid #8b5cf6",
@@ -81,7 +87,7 @@ const initialNodes: Node[] = [
 	{
 		id: "fwci",
 		position: { x: 600, y: 280 },
-		data: { label: "Filtro FWCI > 1" },
+		data: { label: labels.fwci },
 		style: {
 			background: "#fed7aa",
 			border: "2px solid #f97316",
@@ -94,7 +100,7 @@ const initialNodes: Node[] = [
 	{
 		id: "classifier",
 		position: { x: 600, y: 400 },
-		data: { label: "Classificação (605)" },
+		data: { label: labels.classification },
 		style: {
 			background: "#fbcfe8",
 			border: "2px solid #ec4899",
@@ -110,9 +116,9 @@ const initialNodes: Node[] = [
 		data: {
 			label: (
 				<div className="text-center text-sm">
-					Fluxo de agentes
+					{labels.agentsLine1}
 					<br />
-					(3 LLMs)
+					{labels.agentsLine2}
 				</div>
 			),
 		},
@@ -128,7 +134,7 @@ const initialNodes: Node[] = [
 	{
 		id: "related",
 		position: { x: 1110, y: 325 },
-		data: { label: "Relacionados à AIA (483)" },
+		data: { label: labels.related },
 		style: {
 			background: "#dcfce7",
 			border: "2px solid #22c55e",
@@ -141,7 +147,7 @@ const initialNodes: Node[] = [
 	{
 		id: "not-related",
 		position: { x: 1110, y: 465 },
-		data: { label: "Não relacionados à AIA (122)" },
+		data: { label: labels.notRelated },
 		style: {
 			background: "#fef2f2",
 			border: "2px solid #ef4444",
@@ -157,9 +163,9 @@ const initialNodes: Node[] = [
 		data: {
 			label: (
 				<div className="text-center text-sm">
-					Filtragem adicional por termos
+					{labels.finalLine1}
 					<br />
-					específicos (118)
+					{labels.finalLine2}
 				</div>
 			),
 		},
@@ -172,7 +178,8 @@ const initialNodes: Node[] = [
 			fontWeight: 600,
 		},
 	},
-];
+	];
+}
 
 const initialEdges: Edge[] = [
 	{
@@ -257,8 +264,8 @@ const initialEdges: Edge[] = [
 	},
 ];
 
-export function FlowchartDiagram() {
-	const [nodes, , onNodesChange] = useNodesState(initialNodes);
+function FlowchartCanvas({ labels }: { labels: FlowchartLabels }) {
+	const [nodes, , onNodesChange] = useNodesState(buildNodes(labels));
 	const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
 	return (
@@ -278,5 +285,16 @@ export function FlowchartDiagram() {
 				<Controls className="rounded-lg border border-[#cbd5e1] bg-white shadow-lg" />
 			</ReactFlow>
 		</div>
+	);
+}
+
+export function FlowchartDiagram() {
+	const locale = useLocale();
+
+	return (
+		<FlowchartCanvas
+			key={locale}
+			labels={metodologiaCopy[locale].flowchart}
+		/>
 	);
 }

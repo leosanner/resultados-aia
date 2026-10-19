@@ -1,3 +1,5 @@
+import type { Locale } from "@/i18n/locale";
+
 export type PipelineStage = {
 	id: number;
 	title: string;
@@ -13,7 +15,7 @@ export type PipelineStage = {
 	criteria: string[];
 };
 
-export const PIPELINE_STAGES: PipelineStage[] = [
+const PIPELINE_STAGES_PT: PipelineStage[] = [
 	{
 		id: 1,
 		title: "1. Busca bibliográfica",
@@ -123,3 +125,119 @@ export const PIPELINE_STAGES: PipelineStage[] = [
 		],
 	},
 ];
+
+const PIPELINE_STAGES_EN: PipelineStage[] = [
+	{
+		id: 1,
+		title: "1. Bibliographic search",
+		shortTitle: "Bibliographic search",
+		subtitle: "Initial collection from academic databases",
+		input: null,
+		output: "16,657 records",
+		colorClass: "from-[#3b82f6] to-[#06b6d4]",
+		bgClass: "bg-[#eff6ff]",
+		borderClass: "border-[#93c5fd]",
+		what: "Structured search in the Scopus and OpenAlex databases, combining technology and environmental terms.",
+		why: "Combining databases increases coverage and reduces single-source bias.",
+		criteria: [
+			"Technology terms: machine learning, deep learning, internet of things, artificial intelligence.",
+			"Environmental terms: environmental impact assessment, risk analysis, risk management.",
+			"Boolean strategy for the thematic crossover between technology and environment.",
+		],
+	},
+	{
+		id: 2,
+		title: "2. Intersection between Scopus and OpenAlex",
+		shortTitle: "Intersection",
+		subtitle: "Consolidation and duplicate removal",
+		input: "16,657 records",
+		output: "5,880 records",
+		colorClass: "from-[#8b5cf6] to-[#a855f7]",
+		bgClass: "bg-[#f5f3ff]",
+		borderClass: "border-[#c4b5fd]",
+		what: "Identification of publications present in both databases at the same time.",
+		why: "The intersection provides a more consistent set for the next stages.",
+		criteria: [
+			"Matching by DOI and core metadata.",
+			"Consistency check of title and year.",
+			"Final deduplication into a consolidated set.",
+		],
+	},
+	{
+		id: 3,
+		title: "3. Impact filter (FWCI > 1)",
+		shortTitle: "FWCI > 1",
+		subtitle: "Selection by citation relevance",
+		input: "5,880 records",
+		output: "3,880 records",
+		colorClass: "from-[#f59e0b] to-[#f97316]",
+		bgClass: "bg-[#fffbeb]",
+		borderClass: "border-[#fcd34d]",
+		what: "Citation-impact cutoff applied with an FWCI greater than 1.",
+		why: "FWCI > 1 indicates citation performance above the global average for the field.",
+		criteria: [
+			"Objective criterion: FWCI strictly greater than 1.",
+			"Normalization by field and time window.",
+			"Retention of studies with higher scientific impact.",
+		],
+	},
+	{
+		id: 4,
+		title: "4. Relevance classifier (EIA)",
+		shortTitle: "ML classifier",
+		subtitle: "Automatic screening by machine learning",
+		input: "3,880 records",
+		output: "605 records",
+		colorClass: "from-[#f43f5e] to-[#ec4899]",
+		bgClass: "bg-[#fff1f2]",
+		borderClass: "border-[#fda4af]",
+		what: "Automatic classification to identify thematic fit with Environmental Impact Assessment.",
+		why: "It reduces manual effort and increases consistency in relevance selection.",
+		criteria: [
+			"Binary classification of relevance to the domain.",
+			"Decision threshold used to prioritize precision.",
+			"Retention of studies with stronger semantic alignment to the topic.",
+		],
+	},
+	{
+		id: 5,
+		title: "5. Agent flow with three LLMs",
+		shortTitle: "Agent flow",
+		subtitle: "Consensus-oriented thematic validation",
+		input: "605 records",
+		output: "483 related / 122 not related",
+		colorClass: "from-[#0ea5e9] to-[#14b8a6]",
+		bgClass: "bg-[#ecfeff]",
+		borderClass: "border-[#67e8f9]",
+		what: "The 605 classified articles were submitted to an agent flow that aggregated the opinions of three LLMs to check fit with Environmental Impact Assessment areas.",
+		why: "Aggregating multiple models reduces individual bias and makes the thematic relevance decision more robust.",
+		criteria: [
+			"Independent assessment by three LLMs for each article.",
+			"Aggregator agent to consolidate consensus on thematic relevance.",
+			"Split into two groups: related (483) and not related (122).",
+		],
+	},
+	{
+		id: 6,
+		title: "6. Final domain filtering",
+		shortTitle: "Final filtering",
+		subtitle: "Specific thematic refinement",
+		input: "483 related records",
+		output: "118 records",
+		colorClass: "from-[#10b981] to-[#22c55e]",
+		bgClass: "bg-[#ecfdf5]",
+		borderClass: "border-[#86efac]",
+		what: "Final filtering with EIA domain-specific terms to compose the definitive set.",
+		why: "It ensures a close fit with the analytical scope of the platform.",
+		criteria: [
+			"Set of terms specific to EIA and environmental risk management.",
+			"Context check to avoid superficial mentions.",
+			"Validation of alignment with the research objectives.",
+		],
+	},
+];
+
+export const pipelineStagesByLocale: Record<Locale, PipelineStage[]> = {
+	pt: PIPELINE_STAGES_PT,
+	en: PIPELINE_STAGES_EN,
+};

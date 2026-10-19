@@ -9,17 +9,21 @@ import { StageDetails } from "@/components/metodologia/stage-details";
 import { SynthesisArtifact } from "@/components/metodologia/synthesis-artifact";
 import { TriagemManual } from "@/components/metodologia/triagem-manual";
 import { VisualDiagrams } from "@/components/metodologia/visual-diagrams";
+import { getLocale } from "@/i18n/get-locale";
+import { metodologiaCopy } from "@/i18n/pages/metodologia";
 
-export default function MetodologiaPage() {
+export default async function MetodologiaPage() {
+	const copy = metodologiaCopy[await getLocale()];
+
 	return (
 		<div className="min-h-screen bg-[#f7faf5] text-[#191c1a]">
 			<main>
 				<HeroSection />
 				<MacroDivider
 					accent="green"
-					label="Filtragem Científica"
+					label={copy.macro.filtering.label}
 					numeral="I"
-					subtitle="De 16.657 registros a 118 artigos altamente relevantes, por meio de intersecção de bases, impacto de citação, aprendizado de máquina e consenso entre LLMs."
+					subtitle={copy.macro.filtering.subtitle}
 				/>
 				<MethodologyOverview />
 				<PipelineFlow />
@@ -29,9 +33,9 @@ export default function MetodologiaPage() {
 				<TriagemManual />
 				<MacroDivider
 					accent="amber"
-					label="Síntese Assistida por IA"
+					label={copy.macro.synthesis.label}
 					numeral="II"
-					subtitle="Extração estruturada com a plataforma Manus, guiada por uma cadeia de cinco ações deliberadas e parametrizadas."
+					subtitle={copy.macro.synthesis.subtitle}
 				/>
 				<ManusOverview />
 				<ManusTimeline />
