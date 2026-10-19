@@ -1,3 +1,5 @@
+import type { Locale } from "@/i18n/locale";
+
 export type ManusPhase = {
 	id: 1 | 2 | 3 | 4 | 5;
 	code: "CFG" | "PRM" | "CTX" | "EXE" | "ART";
@@ -13,7 +15,7 @@ export type ManusPhase = {
 	output?: string;
 };
 
-export const MANUS_PHASES: ManusPhase[] = [
+const MANUS_PHASES_PT: ManusPhase[] = [
 	{
 		id: 1,
 		code: "CFG",
@@ -102,3 +104,95 @@ export const MANUS_PHASES: ManusPhase[] = [
 		output: "Matriz de síntese (.docx)",
 	},
 ];
+
+const MANUS_PHASES_EN: ManusPhase[] = [
+	{
+		id: 1,
+		code: "CFG",
+		title: "Project environment setup",
+		subtitle: "Dedicated workspace in Manus",
+		summary:
+			"A dedicated project environment was created inside the Manus platform, serving as a centralized repository for the previously categorized PDF documents and for the operational guidelines that steer the entire subsequent flow.",
+		parametersLabel: "Configured assets",
+		parameters: [
+			"dedicated workspace",
+			"categorized PDFs",
+			"operational guidelines",
+		],
+	},
+	{
+		id: 2,
+		code: "PRM",
+		title: "System prompt definition",
+		subtitle: "Strict formatting and conduct rules imposed on the AI",
+		summary:
+			"Interaction with the AI was conducted through a chain of deliberate, structured, and parameterized actions — not generic prompts. Strict rules were established that bounded the agent's behavior throughout the extraction.",
+		parametersLabel: "Project-level rules",
+		parameters: [
+			"ABNT adherence (NBR 6023:2018)",
+			"Technical report format",
+			"Identify applications for EIA",
+			"Ask the user about important decisions",
+		],
+	},
+	{
+		id: 3,
+		code: "CTX",
+		title: "Contextualization and planning",
+		subtitle: "Autonomous access to the PDF repository",
+		summary:
+			"Before processing, the project's global context and the specific objectives of the task were explained to the AI in detail. Access was granted to Google Drive, which held the 31 articles in PDF, organized into five previously defined thematic categories. From that collection, Manus generated a phased action plan (reading/extraction → enrichment → table structuring), validated before execution.",
+		parametersLabel: "Contextual inputs",
+		parameters: [
+			"Google Drive (31 PDFs)",
+			"Plan validated before execution",
+			"Parallel, autonomous processing",
+		],
+		extras: {
+			heading: "Five thematic categories",
+			items: [
+				"Artificial Intelligence",
+				"Geotechnologies",
+				"Remote Sensing",
+				"Institutional Approaches",
+				"Decision Support Systems",
+			],
+		},
+	},
+	{
+		id: 4,
+		code: "EXE",
+		title: "Iterative execution and refinement",
+		subtitle: "Standardized extraction by major area",
+		summary:
+			"Data extraction was iterative. For each major area, the AI analyzed the technical summaries and extracted a standardized set of structured fields, with continuous refinement of the intermediate results.",
+		parametersLabel: "Execution dynamics",
+		parameters: ["Iteration by major area", "Continuous refinement"],
+		extras: {
+			heading: "Fields extracted per article",
+			items: [
+				"Main technology",
+				"Applied technique",
+				"Application context",
+				"Authors / year",
+				"Potential for EIA",
+			],
+		},
+	},
+	{
+		id: 5,
+		code: "ART",
+		title: "Synthesis artifact generation",
+		subtitle: "Consolidation into a structured matrix",
+		summary:
+			"As the final product of the chain of actions, the AI was instructed to consolidate the extracted data into a structured Microsoft Word document containing a synthesis matrix with the most prominent technologies identified in the 31 articles.",
+		parametersLabel: "Consolidation parameters",
+		parameters: ["Grouping by thematic category", "Tabular view"],
+		output: "Synthesis matrix (.docx)",
+	},
+];
+
+export const manusPhasesByLocale: Record<Locale, ManusPhase[]> = {
+	pt: MANUS_PHASES_PT,
+	en: MANUS_PHASES_EN,
+};

@@ -1,3 +1,5 @@
+import { formatNumber, type Locale } from "@/i18n/locale";
+
 type VennDiagramProps = {
 	total: number;
 	leftLabel: string;
@@ -8,11 +10,10 @@ type VennDiagramProps = {
 	leftColor?: string;
 	rightColor?: string;
 	containerClassName?: string;
+	locale: Locale;
+	totalLabel: string;
+	ariaLabel: string;
 };
-
-function formatCount(value: number) {
-	return new Intl.NumberFormat("pt-BR").format(value);
-}
 
 export function VennDiagram({
 	total,
@@ -24,18 +25,21 @@ export function VennDiagram({
 	leftColor = "#16a34a",
 	rightColor = "#0284c7",
 	containerClassName,
+	locale,
+	totalLabel,
+	ariaLabel,
 }: VennDiagramProps) {
 	return (
 		<div
 			className={`rounded-3xl border border-[#bfdbfe] bg-[linear-gradient(155deg,_#eff6ff_0%,_#ecfeff_40%,_#f0fdf4_100%)] p-5 sm:p-8 ${containerClassName ?? ""}`}
 		>
 			<p className="text-2xl font-black tracking-[-0.6px] text-[#0f172a] sm:text-4xl">
-				Total: {formatCount(total)}
+				{totalLabel}: {formatNumber(locale, total)}
 			</p>
 
 			<div className="mt-4 overflow-x-auto">
 				<svg
-					aria-label="Diagrama de Venn entre duas bases"
+					aria-label={ariaLabel}
 					className="h-auto min-w-[760px] w-full"
 					role="img"
 					viewBox="0 0 980 620"
@@ -97,7 +101,7 @@ export function VennDiagram({
 						x="255"
 						y="368"
 					>
-						{formatCount(leftOnly)}
+						{formatNumber(locale, leftOnly)}
 					</text>
 					<text
 						fill="#334155"
@@ -107,7 +111,7 @@ export function VennDiagram({
 						x="490"
 						y="368"
 					>
-						{formatCount(intersection)}
+						{formatNumber(locale, intersection)}
 					</text>
 					<text
 						fill={rightColor}
@@ -117,7 +121,7 @@ export function VennDiagram({
 						x="725"
 						y="368"
 					>
-						{formatCount(rightOnly)}
+						{formatNumber(locale, rightOnly)}
 					</text>
 				</svg>
 			</div>

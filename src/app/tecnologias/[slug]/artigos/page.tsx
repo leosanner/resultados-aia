@@ -2,6 +2,11 @@ import {
 	ArticleCard,
 	type ArticleMetadata,
 } from "@/components/articles/article-card";
+import { getLocale } from "@/i18n/get-locale";
+import {
+	techArticlesCopy,
+	type TechArticlesCopy,
+} from "@/i18n/pages/tech-articles";
 import { formatTecTermLabel, slugToTecTerm } from "@/lib/tech-utils";
 import { getTechArticlesSummary } from "@/lib/tech-summary";
 import {
@@ -71,12 +76,15 @@ function buildPaginationHref(
 	};
 }
 
-function buildArticleMetadata(record: {
-	publish_date: string;
-	authors: { name: string }[];
-	technologyTerms: string[];
-	environmentalTerms: string[];
-}): ArticleMetadata[] {
+function buildArticleMetadata(
+	record: {
+		publish_date: string;
+		authors: { name: string }[];
+		technologyTerms: string[];
+		environmentalTerms: string[];
+	},
+	labels: TechArticlesCopy["metadata"],
+): ArticleMetadata[] {
 	const publicationDate =
 		typeof record.publish_date === "string" ? record.publish_date.trim() : "";
 	const authors = Array.isArray(record.authors)
@@ -96,11 +104,13 @@ function buildArticleMetadata(record: {
 			: "";
 
 	return [
-		publicationDate ? { label: "Data", value: publicationDate } : null,
-		authorLabel ? { label: "Autores", value: authorLabel } : null,
-		technologyLabel ? { label: "Tecnologia", value: technologyLabel } : null,
+		publicationDate ? { label: labels.date, value: publicationDate } : null,
+		authorLabel ? { label: labels.authors, value: authorLabel } : null,
+		technologyLabel
+			? { label: labels.technology, value: technologyLabel }
+			: null,
 		environmentalLabel
-			? { label: "Ambientais", value: environmentalLabel }
+			? { label: labels.environmental, value: environmentalLabel }
 			: null,
 	].filter((item): item is ArticleMetadata => Boolean(item));
 }
@@ -193,6 +203,7 @@ export default async function TechArticlesPage({
 		notFound();
 	}
 
+	const copy = techArticlesCopy[await getLocale()];
 	const articleModel = new ArticleModel();
 	const [summary, allArticlesMap, articlesFt, articlesExtended] =
 		await Promise.all([
@@ -285,7 +296,7 @@ export default async function TechArticlesPage({
 			<main className="mx-auto w-full max-w-[992px] px-6 py-8 md:px-12">
 				<div className="rounded-2xl border border-[#d7e4dc] bg-white p-6 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
 					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#64748b]">
-						Tecnologia selecionada
+						{copy.selected}
 					</p>
 					<div className="mt-2 flex items-center gap-3">
 						<div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e9f1f5] ring-1 ring-[#b3c8d7]">
@@ -296,10 +307,11 @@ export default async function TechArticlesPage({
 						</h1>
 					</div>
 					<p className="mt-2 text-base font-medium text-[#556070]">
-						Exibindo {articles.length} artigos que mencionam {techName}{" "}
-						{selectedTerms.length > 0
-							? "(com filtros de termos aplicados)"
-							: ""}
+						{copy.showing(
+							articles.length,
+							techName,
+							selectedTerms.length > 0,
+						)}
 					</p>
 				</div>
 
@@ -308,13 +320,13 @@ export default async function TechArticlesPage({
 						<div className="flex items-center justify-between gap-3">
 							<h2 className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[1px] text-[#085E2E]">
 								<SlidersHorizontal aria-hidden className="h-4 w-4" />
-								Filtrar por termos
+								{copy.filterByTerms}
 							</h2>
 							<Link
 								className="text-xs font-bold uppercase tracking-[1px] text-[#0C7C3C] hover:text-[#085E2E]"
 								href={`/tecnologias/${slug}/artigos`}
 							>
-								Limpar filtros
+								{copy.clearFilters}
 							</Link>
 						</div>
 						<input name="page" type="hidden" value="1" />
@@ -322,7 +334,7 @@ export default async function TechArticlesPage({
 						<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 							<article className="rounded-[10px] border border-[#bfdbfe] bg-[#f8fbff] p-4">
 								<h3 className="text-xs font-bold uppercase tracking-[0.9px] text-[#1d4ed8]">
-									Termos de tecnologia
+									{copy.technologyTerms}
 								</h3>
 								<div className="mt-3 flex max-h-48 flex-wrap gap-2 overflow-y-auto pr-1">
 									{availableTechnologyTerms.length > 0 ? (
@@ -347,13 +359,13 @@ export default async function TechArticlesPage({
 													className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.6px] text-[#1d4ed8] hover:bg-[#dbeafe]"
 													href={buildTermHref(slug, termLabel)}
 												>
-													Ver artigos
+													{copy.viewArticles}
 												</Link>
 											</div>
 										))
 									) : (
 										<p className="text-xs text-[#64748b]">
-											Não há termos de tecnologia nesta seleção.
+											{copy.noTechnologyTerms}
 										</p>
 									)}
 								</div>
@@ -361,7 +373,7 @@ export default async function TechArticlesPage({
 
 							<article className="rounded-[10px] border border-[#bbf7d0] bg-[#f8fff9] p-4">
 								<h3 className="text-xs font-bold uppercase tracking-[0.9px] text-[#085E2E]">
-									Termos ambientais
+									{copy.environmentalTerms}
 								</h3>
 								<div className="mt-3 flex max-h-48 flex-wrap gap-2 overflow-y-auto pr-1">
 									{availableEnvironmentalTerms.length > 0 ? (
@@ -386,13 +398,13 @@ export default async function TechArticlesPage({
 													className="rounded-full bg-[#f2c94c] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.6px] text-[#3f320c] hover:bg-[#e4bc45]"
 													href={buildTermHref(slug, termLabel)}
 												>
-													Ver artigos
+													{copy.viewArticles}
 												</Link>
 											</div>
 										))
 									) : (
 										<p className="text-xs text-[#64748b]">
-											Não há termos ambientais nesta seleção.
+											{copy.noEnvironmentalTerms}
 										</p>
 									)}
 								</div>
@@ -400,7 +412,7 @@ export default async function TechArticlesPage({
 						</div>
 						<div className="flex flex-wrap items-end justify-between gap-3">
 							<label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.8px] text-[#64748b]">
-								Artigos por página
+								{copy.articlesPerPage}
 								<select
 									className="h-10 min-w-28 rounded-md border border-[#cfe0d6] bg-white px-2.5 text-sm font-semibold text-[#1f2937] outline-none focus:border-[#0C7C3C]"
 									defaultValue={String(selectedPageSize)}
@@ -418,20 +430,23 @@ export default async function TechArticlesPage({
 								className="inline-flex rounded-md bg-[#0C7C3C] px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors hover:bg-[#085E2E]"
 								type="submit"
 							>
-								Aplicar filtros
+								{copy.applyFilters}
 							</button>
 						</div>
 					</form>
 				</section>
 
 				<section
-					aria-label={`Lista de artigos da tecnologia ${techName}`}
+					aria-label={copy.articleListAria(techName)}
 					className="mt-8 space-y-4"
 				>
 					{articles.length > 0 ? (
 						<p className="text-sm font-semibold text-[#556070]">
-							Mostrando {currentStartArticle}–{currentEndArticle} de{" "}
-							{articles.length} artigos
+							{copy.showingRange(
+								currentStartArticle,
+								currentEndArticle,
+								articles.length,
+							)}
 						</p>
 					) : null}
 					{articles.length > 0 ? (
@@ -441,15 +456,18 @@ export default async function TechArticlesPage({
 								href={`/tecnologias/${slug}/artigos/${article.id}`}
 								key={`${article.id}`}
 								keywords={article.keywords ?? []}
-								metadata={buildArticleMetadata({
-									publish_date:
-										articlesExtended[article.id]?.publish_date ?? "",
-									authors: articlesExtended[article.id]?.authors ?? [],
-									technologyTerms:
-										articleTermsById.get(article.id)?.technology ?? [],
-									environmentalTerms:
-										articleTermsById.get(article.id)?.environmental ?? [],
-								})}
+								metadata={buildArticleMetadata(
+									{
+										publish_date:
+											articlesExtended[article.id]?.publish_date ?? "",
+										authors: articlesExtended[article.id]?.authors ?? [],
+										technologyTerms:
+											articleTermsById.get(article.id)?.technology ?? [],
+										environmentalTerms:
+											articleTermsById.get(article.id)?.environmental ?? [],
+									},
+									copy.metadata,
+								)}
 								showAbstract={false}
 								titleHref={buildPreferredArticleHref(
 									articlesExtended[article.id],
@@ -461,17 +479,17 @@ export default async function TechArticlesPage({
 					) : (
 						<div className="rounded-[12px] border border-[#d7e4dc] bg-white p-6">
 							<h2 className="text-lg font-bold text-[#1f2937]">
-								Nenhum artigo encontrado
+								{copy.emptyTitle}
 							</h2>
 							<p className="mt-2 text-sm text-[#556070]">
-								Não há artigos disponíveis para esta tecnologia no momento.
+								{copy.emptyBody}
 							</p>
 						</div>
 					)}
 				</section>
 				{articles.length > 0 ? (
 					<nav
-						aria-label="Paginação de artigos"
+						aria-label={copy.paginationAria}
 						className="mt-6 flex flex-wrap items-center justify-between gap-3"
 					>
 						<Link
@@ -488,10 +506,10 @@ export default async function TechArticlesPage({
 								selectedPageSize,
 							)}
 						>
-							Anterior
+							{copy.previous}
 						</Link>
 						<p className="text-sm font-semibold text-[#556070]">
-							Página {currentPage} de {totalPages}
+							{copy.pageStatus(currentPage, totalPages)}
 						</p>
 						<Link
 							aria-disabled={currentPage >= totalPages}
@@ -507,7 +525,7 @@ export default async function TechArticlesPage({
 								selectedPageSize,
 							)}
 						>
-							Próxima
+							{copy.next}
 						</Link>
 					</nav>
 				) : null}

@@ -2,6 +2,8 @@ import { ArticlesYearLineChartClient } from "@/components/charts/articles-year-l
 import { TermsBarChartClient } from "@/components/charts/terms-bar-chart-client";
 import { TermsInstitutionsMapClient } from "@/components/termos/terms-institutions-map-client";
 import institutionInformationData from "@/data/instituition_information.json";
+import { getLocale } from "@/i18n/get-locale";
+import { stageStatsCopy } from "@/i18n/pages/stage-stats";
 import { formatStageTitle, slugToStageKey } from "@/lib/area-utils";
 import { ArticleModel } from "@/model/article";
 import { EiaModel } from "@/model/eia-stages";
@@ -79,6 +81,7 @@ function summarizeTerms(terms: string[], maxItems: number = 3) {
 
 export default async function AreaStatisticsPage({ params }: PageProps) {
 	const { areaSlug } = await params;
+	const copy = stageStatsCopy[await getLocale()];
 	const stageKey = slugToStageKey(areaSlug);
 	const eiaModel = new EiaModel();
 	const articleModel = new ArticleModel();
@@ -197,7 +200,8 @@ export default async function AreaStatisticsPage({ params }: PageProps) {
 
 			hasInstitutionForCurrentArticle = true;
 			const current = institutionAccumulator.get(institutionId);
-			const articleTitle = record.title ?? record.json_title ?? `Artigo ${articleId}`;
+			const articleTitle =
+				record.title ?? record.json_title ?? copy.untitledArticle(articleId);
 			const articleTerms = articleTermsById.get(articleId) ?? {
 				technologyTerms: [],
 				environmentalTerms: [],
@@ -272,19 +276,17 @@ export default async function AreaStatisticsPage({ params }: PageProps) {
 			<main className="mx-auto w-full max-w-[1100px] px-6 py-8 md:px-12">
 				<section className="rounded-2xl border border-[#8fbfa5] bg-[linear-gradient(180deg,_#ffffff_0%,_#f7fbf8_100%)] p-6 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
 					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#64748b]">
-						Painel da etapa
+						{copy.kicker}
 					</p>
 					<div className="mt-2 flex items-center gap-3">
 						<div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e9f5ed] ring-1 ring-[#b3d7c1]">
 							<BarChart3 aria-hidden className="h-4 w-4 text-[#0C7C3C]" />
 						</div>
 						<h1 className="text-4xl font-black tracking-[-0.9px] text-[#1f2937]">
-							Estatísticas de {stageName}
+							{copy.title(stageName)}
 						</h1>
 					</div>
-					<p className="mt-2 text-base text-[#556070]">
-						Gráfico de barras com frequência dos termos encontrados na etapa.
-					</p>
+					<p className="mt-2 text-base text-[#556070]">{copy.description}</p>
 				</section>
 
 				<section className="mt-8">
@@ -298,10 +300,10 @@ export default async function AreaStatisticsPage({ params }: PageProps) {
 
 				<section className="mt-8 rounded-[12px] border border-[#81a9ba] bg-[linear-gradient(180deg,_#ffffff_0%,_#f7fbfd_100%)] p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
 					<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#085E2E]">
-						Evolução temporal dos artigos
+						{copy.timelineTitle}
 					</h2>
 					<p className="mt-1 text-sm text-[#556070]">
-						Publicações por ano para esta área de AIA.
+						{copy.timelineDescription}
 					</p>
 					<div className="mt-4">
 						<ArticlesYearLineChartClient items={yearlyArticlesTrend} />
@@ -311,7 +313,7 @@ export default async function AreaStatisticsPage({ params }: PageProps) {
 				<section className="mt-8 space-y-6">
 					<article className="rounded-[12px] border border-[#60a5fa] bg-[#f8fbff] p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
 						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#1d4ed8]">
-							Termos de tecnologia
+							{copy.technologyTerms}
 						</h2>
 						<div className="mt-4">
 							<TermsBarChartClient items={technologyTerms} tone="blue" />
@@ -320,7 +322,7 @@ export default async function AreaStatisticsPage({ params }: PageProps) {
 
 					<article className="rounded-[12px] border border-[#86efac] bg-[#f8fff9] p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
 						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#166534]">
-							Termos ambientais
+							{copy.environmentalTerms}
 						</h2>
 						<div className="mt-4">
 							<TermsBarChartClient items={environmentalTerms} tone="green" />

@@ -1,4 +1,6 @@
 import { KeywordTag } from "@/components/articles/keyword-tag";
+import { getLocale } from "@/i18n/get-locale";
+import { sharedUiCopy } from "@/i18n/shared-ui";
 import { firstCharUpperCase } from "@/utils/format-txt";
 import Link from "next/link";
 
@@ -17,7 +19,7 @@ type ArticleCardProps = {
 	title: string;
 };
 
-export function ArticleCard({
+export async function ArticleCard({
 	abstract,
 	href,
 	keywords,
@@ -26,6 +28,7 @@ export function ArticleCard({
 	titleHref,
 	title,
 }: ArticleCardProps) {
+	const copy = sharedUiCopy[await getLocale()].articleCard;
 	const resolvedTitleHref = titleHref ?? href;
 	const isExternalTitleHref =
 		typeof resolvedTitleHref === "string" &&
@@ -64,8 +67,10 @@ export function ArticleCard({
 			{metadata.length > 0 ? (
 				<div className="mt-2 space-y-1.5 border-l-2 border-[#d7e4dc] pl-3">
 					{metadata.map((item) => {
-						const isTechnology = item.label === "Tecnologia";
-						const isEnvironmental = item.label === "Ambientais";
+						const isTechnology =
+							item.label === "Tecnologia" || item.label === "Technology";
+						const isEnvironmental =
+							item.label === "Ambientais" || item.label === "Environmental";
 						const lineClassName = isTechnology
 							? "text-[13px] leading-5 text-[#1F6F8B]"
 							: isEnvironmental
@@ -97,7 +102,7 @@ export function ArticleCard({
 					))
 				) : (
 					<span className="inline-flex rounded-[4px] bg-[#eef4f0] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.5px] text-[#64748b]">
-						Sem palavras-chave
+						{copy.noKeywords}
 					</span>
 				)}
 			</div>

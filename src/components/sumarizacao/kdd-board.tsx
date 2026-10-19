@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { kddStageDescriptions } from "@/data/kdd-mapping";
+import { getLocale } from "@/i18n/get-locale";
+import { sumarizacaoCopy } from "@/i18n/pages/sumarizacao";
 import type { KddStageHeader, KddTechRow } from "@/lib/kdd-board";
 import { getTechColor } from "@/lib/tech-colors";
 
@@ -13,17 +14,14 @@ const STAGE_ICONS: Record<string, string> = {
 	knowledge: "lightbulb",
 };
 
-function formatTotal(count: number) {
-	return new Intl.NumberFormat("pt-BR").format(count);
-}
-
-export function KddBoard({
+export async function KddBoard({
 	stages,
 	rows,
 }: {
 	stages: KddStageHeader[];
 	rows: KddTechRow[];
 }) {
+	const copy = sumarizacaoCopy[await getLocale()].kdd;
 	// Cabeçalho ocupa a linha 1, tecnologias ocupam `rowIndex + 2`; a faixa de
 	// governança vem logo abaixo da última barra.
 	const lastTechRow = rows.reduce((max, row) => Math.max(max, row.rowIndex), 0);
@@ -31,7 +29,7 @@ export function KddBoard({
 
 	return (
 		<section
-			aria-label="Tecnologias por etapa do fluxo KDD"
+			aria-label={copy.aria}
 			className="overflow-hidden rounded-3xl border border-[#d0ddd5] bg-white shadow-[0_20px_50px_-16px_rgba(6,71,34,0.1)]"
 		>
 			{/* Faixa de cabeçalho: rótulo da seção */}
@@ -44,17 +42,12 @@ export function KddBoard({
 						>
 							schema
 						</span>
-						Síntese dos resultados
+						{copy.kicker}
 					</p>
 					<h2 className="mt-2 text-3xl font-bold tracking-[-0.5px] text-[#00261a]">
-						Tecnologias no fluxo KDD
+						{copy.title}
 					</h2>
-					<p className="mt-2 text-[#446554]">
-						Distribuição das tecnologias digitais ao longo das etapas do processo
-						de Knowledge Discovery in Databases (KDD). Uma barra que cruza etapas
-						indica que a tecnologia atua de forma contínua nessas fases; o número
-						é a quantidade de artigos que a aplicam no contexto de AIA.
-					</p>
+					<p className="mt-2 text-[#446554]">{copy.body}</p>
 				</div>
 			</div>
 
@@ -80,7 +73,7 @@ export function KddBoard({
 									key={stage.stage}
 									tabIndex={0}
 									role="button"
-									aria-label={`${stage.label}: ${kddStageDescriptions[stage.stage]}`}
+									aria-label={`${stage.label}: ${copy.stages[stage.stage]}`}
 									className="group relative mb-1 flex min-h-[60px] cursor-help items-center justify-center gap-2 rounded-[3px] border-[1.5px] border-[#b9cdc1] bg-white px-3 py-3 text-center transition-colors hover:border-[#0a6b34] focus-visible:border-[#0a6b34] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a6b34] focus-visible:ring-offset-2"
 									style={{ gridColumn: index + 1, gridRow: 1 }}
 								>
@@ -108,7 +101,7 @@ export function KddBoard({
 											aria-hidden
 											className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-l border-t border-[#00261a] bg-[#00261a]"
 										/>
-										{kddStageDescriptions[stage.stage]}
+										{copy.stages[stage.stage]}
 									</span>
 								</div>
 							))}
@@ -132,8 +125,7 @@ export function KddBoard({
 											{row.term}
 										</span>
 										<span className="text-xs font-semibold text-[#5b675f]">
-											{formatTotal(row.count)}{" "}
-											{row.count === 1 ? "artigo" : "artigos"}
+											{copy.articles(row.count)}
 										</span>
 									</Link>
 								));
@@ -148,7 +140,7 @@ export function KddBoard({
 									account_balance
 								</span>
 								<span className="text-sm font-bold tracking-[0.2px] text-[#3f2e07]">
-									Governança de dados
+									{copy.governance}
 								</span>
 							</div>
 						</div>

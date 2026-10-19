@@ -2,7 +2,11 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { PIPELINE_STAGES } from "./data";
+
+import { useLocale } from "@/components/i18n/locale-provider";
+import { metodologiaCopy } from "@/i18n/pages/metodologia";
+
+import { pipelineStagesByLocale } from "./data";
 
 function iconLabel(id: number) {
 	switch (id) {
@@ -22,6 +26,9 @@ function iconLabel(id: number) {
 }
 
 export function PipelineFlow() {
+	const locale = useLocale();
+	const copy = metodologiaCopy[locale].pipeline;
+	const stages = pipelineStagesByLocale[locale];
 	const [activeStage, setActiveStage] = useState<number | null>(null);
 
 	return (
@@ -34,7 +41,7 @@ export function PipelineFlow() {
 					viewport={{ once: true }}
 					whileInView={{ opacity: 1, y: 0 }}
 				>
-					Pipeline de filtragem
+					{copy.title}
 				</motion.h2>
 				<motion.p
 					className="mb-12 text-center text-[#414944]"
@@ -43,15 +50,15 @@ export function PipelineFlow() {
 					viewport={{ once: true }}
 					whileInView={{ opacity: 1, y: 0 }}
 				>
-					Processo de redução progressiva de 16.657 para 118 registros
+					{copy.subtitle}
 				</motion.p>
 
 				<div className="hidden md:block">
 					<div className="flex items-center justify-center gap-4">
-						{PIPELINE_STAGES.map((stage, index) => {
+						{stages.map((stage, index) => {
 							const isActive = activeStage === stage.id;
 							const stageValue =
-								stage.id === 5 ? "483/122" : stage.output.split(" ")[0];
+								stage.id === 5 ? copy.stage5Card : stage.output.split(" ")[0];
 
 							return (
 								<div className="flex items-center" key={stage.id}>
@@ -80,7 +87,7 @@ export function PipelineFlow() {
 										</div>
 									</motion.button>
 
-									{index < PIPELINE_STAGES.length - 1 ? (
+									{index < stages.length - 1 ? (
 										<div className="mx-2 text-xl text-[#d4a414]">→</div>
 									) : null}
 								</div>
@@ -91,10 +98,10 @@ export function PipelineFlow() {
 
 				<div className="md:hidden">
 					<div className="mx-auto flex max-w-sm flex-col items-center gap-4">
-						{PIPELINE_STAGES.map((stage, index) => {
+						{stages.map((stage, index) => {
 							const stageValue =
 								stage.id === 5
-									? "483 rel / 122 nao rel"
+									? copy.stage5CardMobile
 									: stage.output.split(" ")[0];
 
 							return (
@@ -123,7 +130,7 @@ export function PipelineFlow() {
 											{stageValue}
 										</div>
 									</motion.div>
-									{index < PIPELINE_STAGES.length - 1 ? (
+									{index < stages.length - 1 ? (
 										<div className="my-2 rotate-90 text-xl text-[#d4a414]">
 											→
 										</div>

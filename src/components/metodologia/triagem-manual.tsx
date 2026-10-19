@@ -2,7 +2,12 @@
 
 import { motion } from "framer-motion";
 
+import { useLocale } from "@/components/i18n/locale-provider";
+import { metodologiaCopy } from "@/i18n/pages/metodologia";
+
 export function TriagemManual() {
+	const copy = metodologiaCopy[useLocale()].triagem;
+
 	return (
 		<section className="px-8 pt-16 pb-8">
 			<motion.div
@@ -18,7 +23,7 @@ export function TriagemManual() {
 							118
 						</div>
 						<div className="mt-3 text-[11px] font-semibold uppercase tracking-[1.4px] text-[#64748b]">
-							Conjunto final da Macroetapa I
+							{copy.finalSet}
 						</div>
 					</div>
 
@@ -62,7 +67,7 @@ export function TriagemManual() {
 							<span className="text-3xl text-[#f6be28]">↓</span>
 						</div>
 						<span className="rounded-full border border-[#f6be28]/50 bg-[#fff8e1] px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[1.6px] text-[#8a6a0f]">
-							Triagem manual
+							{copy.manual}
 						</span>
 					</div>
 
@@ -71,7 +76,7 @@ export function TriagemManual() {
 							31
 						</div>
 						<div className="mt-3 text-[11px] font-semibold uppercase tracking-[1.4px] text-[#64748b]">
-							Selecionados para síntese
+							{copy.selected}
 						</div>
 					</div>
 				</div>

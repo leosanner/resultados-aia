@@ -1,4 +1,6 @@
 import { KeywordTag } from "@/components/articles/keyword-tag";
+import { getLocale } from "@/i18n/get-locale";
+import { articleDetailCopy } from "@/i18n/pages/article-detail";
 import { formatStageTitle, slugToStageKey } from "@/lib/area-utils";
 import { ArticleModel } from "@/model/article";
 import { EiaModel } from "@/model/eia-stages";
@@ -54,6 +56,7 @@ export default async function ArticleDetailsPage({ params }: PageProps) {
 	const technologyTerms = resolvedArticleTerms.technology.map(formatTermName);
 	const environmentalTerms = resolvedArticleTerms.environmental.map(formatTermName);
 	const stageName = formatStageTitle(stageKey);
+	const copy = articleDetailCopy[await getLocale()];
 
 	return (
 		<div className="min-h-screen bg-[#f6f8f6] text-[#0f172a]">
@@ -62,7 +65,7 @@ export default async function ArticleDetailsPage({ params }: PageProps) {
 					className="text-xs font-bold uppercase tracking-[1.2px] text-[#94a3b8] hover:text-[#64748b]"
 					href={`/areas/${areaSlug}/artigos`}
 				>
-					Voltar para artigos da área
+					{copy.backToArticles}
 				</Link>
 
 				<p className="mt-6 text-xs font-bold uppercase tracking-[1.2px] text-[#94a3b8]">
@@ -76,7 +79,7 @@ export default async function ArticleDetailsPage({ params }: PageProps) {
 
 					<section className="mt-6">
 						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#64748b]">
-							Resumo
+							{copy.abstract}
 						</h2>
 						<p className="mt-2 text-[15px] leading-7 text-[#334155]">
 							{article.abstract}
@@ -85,7 +88,7 @@ export default async function ArticleDetailsPage({ params }: PageProps) {
 
 					<section className="mt-6">
 						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#64748b]">
-							Palavras-chave
+							{copy.keywords}
 						</h2>
 						<div className="mt-3 flex flex-wrap gap-2">
 							{keywords.length > 0 ? (
@@ -98,7 +101,7 @@ export default async function ArticleDetailsPage({ params }: PageProps) {
 								))
 							) : (
 								<span className="inline-flex rounded-[4px] bg-[#f1f5f9] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.5px] text-[#64748b]">
-									Sem palavras-chave
+									{copy.noKeywords}
 								</span>
 							)}
 						</div>
@@ -106,7 +109,7 @@ export default async function ArticleDetailsPage({ params }: PageProps) {
 
 					<section className="mt-6 rounded-[10px] border border-[#dcfce7] bg-[#f0fdf4] p-4">
 						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#166534]">
-							Termos de tecnologia
+							{copy.technologyTerms}
 						</h2>
 						<div className="mt-3 flex flex-wrap gap-2">
 							{technologyTerms.length > 0 ? (
@@ -120,7 +123,7 @@ export default async function ArticleDetailsPage({ params }: PageProps) {
 								))
 							) : (
 								<span className="text-xs font-medium text-[#15803d]">
-									Sem termos de tecnologia destacados.
+									{copy.noTechnologyTerms}
 								</span>
 							)}
 						</div>
@@ -128,7 +131,7 @@ export default async function ArticleDetailsPage({ params }: PageProps) {
 
 					<section className="mt-4 rounded-[10px] border border-[#bae6fd] bg-[#ecfeff] p-4">
 						<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#0e7490]">
-							Termos ambientais
+							{copy.environmentalTerms}
 						</h2>
 						<div className="mt-3 flex flex-wrap gap-2">
 							{environmentalTerms.length > 0 ? (
@@ -142,7 +145,7 @@ export default async function ArticleDetailsPage({ params }: PageProps) {
 								))
 							) : (
 								<span className="text-xs font-medium text-[#0e7490]">
-									Sem termos ambientais destacados.
+									{copy.noEnvironmentalTerms}
 								</span>
 							)}
 						</div>

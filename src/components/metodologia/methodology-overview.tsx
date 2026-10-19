@@ -2,7 +2,14 @@
 
 import { motion } from "framer-motion";
 
+import { useLocale } from "@/components/i18n/locale-provider";
+import { metodologiaCopy } from "@/i18n/pages/metodologia";
+import { formatNumber } from "@/i18n/locale";
+
 export function MethodologyOverview() {
+	const locale = useLocale();
+	const copy = metodologiaCopy[locale].overview;
+
 	return (
 		<section className="px-8 pt-24 pb-14">
 			<motion.div
@@ -13,20 +20,18 @@ export function MethodologyOverview() {
 				whileInView={{ opacity: 1, y: 0 }}
 			>
 				<h2 className="mb-8 text-3xl font-bold text-[#00261a]">
-					Visão geral do processo
+					{copy.title}
 				</h2>
 				<p className="text-lg leading-relaxed text-[#414944]">
-					O processo metodológico combinou buscas estruturadas em duas bases
-					acadêmicas (Scopus e OpenAlex) com termos de tecnologia e termos
-					ambientais relacionados ao contexto aplicado. A partir de um conjunto
-					inicial de{" "}
-					<span className="font-mono font-semibold text-[#1F6F8B]">16.657</span>{" "}
-					registros, aplicamos filtros sucessivos de intersecção, impacto de
-					citação (FWCI), classificação por aprendizado de máquina, fluxo de
-					agentes com consenso entre três LLMs e filtragem por domínio
-					específico, resultando em{" "}
-					<span className="font-mono font-semibold text-[#b88706]">118</span>{" "}
-					registros altamente relevantes.
+					{copy.lead}{" "}
+					<span className="font-mono font-semibold text-[#1F6F8B]">
+						{formatNumber(locale, 16657)}
+					</span>{" "}
+					{copy.mid}{" "}
+					<span className="font-mono font-semibold text-[#b88706]">
+						{formatNumber(locale, 118)}
+					</span>{" "}
+					{copy.tail}
 				</p>
 			</motion.div>
 		</section>

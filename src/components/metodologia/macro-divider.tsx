@@ -2,6 +2,9 @@
 
 import { motion } from "framer-motion";
 
+import { useLocale } from "@/components/i18n/locale-provider";
+import { metodologiaCopy } from "@/i18n/pages/metodologia";
+
 type Props = {
 	numeral: "I" | "II";
 	label: string;
@@ -10,6 +13,7 @@ type Props = {
 };
 
 export function MacroDivider({ numeral, label, subtitle, accent }: Props) {
+	const copy = metodologiaCopy[useLocale()].macro;
 	const isAmber = accent === "amber";
 	const accentColor = isAmber ? "#f6be28" : "#0C7C3C";
 	const accentDark = isAmber ? "#8a6a0f" : "#085E2E";
@@ -41,7 +45,7 @@ export function MacroDivider({ numeral, label, subtitle, accent }: Props) {
 							className="hidden text-[10px] font-semibold uppercase tracking-[2.4px] md:inline"
 							style={{ color: accentDark }}
 						>
-							Macroetapa
+							{copy.kicker}
 						</span>
 						<span
 							className="font-black leading-none tracking-tighter"
@@ -59,7 +63,7 @@ export function MacroDivider({ numeral, label, subtitle, accent }: Props) {
 							className="mb-1 text-[10px] font-semibold uppercase tracking-[2px] md:hidden"
 							style={{ color: accentDark }}
 						>
-							Macroetapa {numeral}
+							{copy.kickerWithNumeral(numeral)}
 						</div>
 						<motion.h2
 							className="text-xl font-bold uppercase tracking-[1.2px] text-[#00261a] md:text-3xl md:tracking-[1.8px]"

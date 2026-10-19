@@ -22,6 +22,9 @@ import type {
 	ArticleMapPoint,
 	TechnologyLegendItem,
 } from "@/components/termos/terms-articles-map";
+import { getLocale } from "@/i18n/get-locale";
+import { termosCopy, type TermosCopy } from "@/i18n/pages/termos";
+import { formatNumber, localeTag, type Locale } from "@/i18n/locale";
 import Link from "next/link";
 
 type PageProps = {
@@ -159,6 +162,7 @@ function sortArticles(
 	articles: TermsSearchArticleRecord[],
 	sortBy: TermsSortBy,
 	sortOrder: TermsSortOrder,
+	locale: Locale,
 ) {
 	const direction = sortOrder === "asc" ? 1 : -1;
 
@@ -172,25 +176,37 @@ function sortArticles(
 		if (valueA !== null && valueB === null) return -1;
 		if (valueA === null && valueB !== null) return 1;
 
-		return a.article.title.localeCompare(b.article.title, "pt-BR");
+		return a.article.title.localeCompare(b.article.title, localeTag(locale));
 	});
 }
 
-function buildArticleMetadata(record: TermsSearchArticleRecord): ArticleMetadata[] {
+function buildArticleMetadata(
+	record: TermsSearchArticleRecord,
+	copy: TermosCopy,
+): ArticleMetadata[] {
 	return [
-		record.publicationDate ? { label: "Data", value: record.publicationDate } : null,
-		record.authorsLabel ? { label: "Autores", value: record.authorsLabel } : null,
+		record.publicationDate
+			? { label: copy.metaDate, value: record.publicationDate }
+			: null,
+		record.authorsLabel
+			? { label: copy.metaAuthors, value: record.authorsLabel }
+			: null,
 		record.technologyTerms.length > 0
-			? { label: "Tecnologia", value: record.technologyTerms.join(", ") }
+			? { label: copy.metaTechnology, value: record.technologyTerms.join(", ") }
 			: null,
 		record.environmentalTerms.length > 0
-			? { label: "Ambientais", value: record.environmentalTerms.join(", ") }
+			? {
+					label: copy.metaEnvironmental,
+					value: record.environmentalTerms.join(", "),
+				}
 			: null,
 		record.fwci ? { label: "FWCI", value: record.fwci } : null,
 	].filter((item): item is ArticleMetadata => Boolean(item));
 }
 
 export default async function TermArticlesPage({ searchParams }: PageProps) {
+	const locale = await getLocale();
+	const copy = termosCopy[locale];
 	const currentSearchParams = await searchParams;
 	const {
 		selectedTecTerms,
@@ -223,6 +239,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 		flatArticles,
 		selectedSortBy,
 		selectedSortOrder,
+		locale,
 	);
 	const totalPages = Math.max(1, Math.ceil(totalResults / selectedPageSize));
 	const currentPage =
@@ -239,7 +256,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 
 	const availableTechnologyTerms = Array.from(
 		new Set(flatArticles.flatMap((record) => record.technologyTermsFull)),
-	).sort((a, b) => a.localeCompare(b, "pt-BR"));
+	).sort((a, b) => a.localeCompare(b, localeTag(locale)));
 	const technologyColorByKey = new Map<string, string>();
 	availableTechnologyTerms.forEach((term, index) => {
 		technologyColorByKey.set(term, getToneColorByIndex("blue", index));
@@ -337,7 +354,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 	if (multiCount > 0) {
 		technologyLegend.push({
 			key: MULTI_TECH_KEY,
-			label: "Múltiplas tecnologias",
+			label: copy.multipleTechnologies,
 			color: MULTI_TECH_COLOR,
 			count: multiCount,
 		});
@@ -346,7 +363,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 	if (noTechCount > 0) {
 		technologyLegend.push({
 			key: NO_TECH_KEY,
-			label: "Sem tecnologia",
+			label: copy.noTechnology,
 			color: NO_TECH_COLOR,
 			count: noTechCount,
 		});
@@ -358,47 +375,47 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 			<main className="mx-auto w-full max-w-[992px] px-6 py-8 md:px-12">
 				<section className="rounded-2xl border border-[#d7e4dc] bg-white p-6 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
 					<p className="text-xs font-bold uppercase tracking-[1.2px] text-[#64748b]">
-						Filtro por termos
+						{copy.kicker}
 					</p>
 					<h1 className="mt-2 text-4xl font-black tracking-[-0.9px] text-[#1f2937]">
 						{isShowingAllResults
-							? "Todos os resultados do grafo"
+							? copy.titleAll
 							: hasSelectedTerms
-							? "Resultados por termos selecionados"
-							: "Resultados por termos"}
+							? copy.titleSelected
+							: copy.titleDefault}
 					</h1>
 					<p className="mt-2 text-base font-medium text-[#556070]">
 						{isShowingAllResults
-							? `${totalResults} artigos encontrados sem filtros aplicados.`
+							? copy.subtitleAll(totalResults)
 							: hasSelectedTerms
-							? `${totalResults} artigos encontrados.`
-							: "Resultados carregados."}
+							? copy.subtitleSelected(totalResults)
+							: copy.subtitleDefault}
 					</p>
 
 					{totalResults > 0 ? (
 						<div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
 							<div className="rounded-xl border border-[#cfe0d6] bg-[#f8fbf9] px-4 py-3">
 								<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#556070]">
-									Total
+									{copy.total}
 								</p>
 								<p className="mt-1 text-2xl font-black text-[#1f2937]">
-									{totalResults}
+									{formatNumber(locale, totalResults)}
 								</p>
 							</div>
 							<div className="rounded-xl border border-[#bfdbfe] bg-[#eff6ff] px-4 py-3">
 								<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#1d4ed8]">
-									Termos Tec
+									{copy.techTerms}
 								</p>
 								<p className="mt-1 text-2xl font-black text-[#1e3a8a]">
-									{selectedTecTerms.length}
+									{formatNumber(locale, selectedTecTerms.length)}
 								</p>
 							</div>
 							<div className="rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-3">
 								<p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#15803d]">
-									Termos Env
+									{copy.envTerms}
 								</p>
 								<p className="mt-1 text-2xl font-black text-[#14532d]">
-									{selectedEnvTerms.length}
+									{formatNumber(locale, selectedEnvTerms.length)}
 								</p>
 							</div>
 						</div>
@@ -410,10 +427,10 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 						<div className="flex flex-wrap items-start justify-between gap-3">
 							<div>
 								<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#085E2E]">
-									Termos selecionados
+									{copy.selectedHeading}
 								</h2>
 								<p className="mt-1 text-sm text-[#556070]">
-									{selectedTermsCount} filtros ativos nos resultados do grafo.
+									{copy.activeFilters(selectedTermsCount)}
 								</p>
 							</div>
 							<Link
@@ -427,23 +444,23 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 									selectedSortOrder,
 								)}
 							>
-								Limpar filtros
+								{copy.clearFilters}
 							</Link>
 						</div>
 
 						{selectedTecTerms.length > 0 ? (
 							<div className="mt-4">
 								<h3 className="text-xs font-bold uppercase tracking-[0.9px] text-[#1d4ed8]">
-									Termos de tecnologia
+									{copy.technologyTerms}
 								</h3>
 								<ul className="mt-3 flex flex-wrap gap-2">
 									{selectedTecTerms.map((term) => (
 										<li key={`tec-${term}`}>
 											<span className="inline-flex items-center gap-2 rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1 text-[11px] font-semibold text-[#1e3a8a]">
-												<span>Tec: {formatTermLabel(term)}</span>
+												<span>{copy.techBadge(formatTermLabel(term))}</span>
 												<Link
 													scroll={false}
-													aria-label={`Remover filtro ${formatTermLabel(term)}`}
+													aria-label={copy.removeFilter(formatTermLabel(term))}
 													className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-[#1d4ed8] transition-colors hover:bg-[#dbeafe]"
 													href={buildFiltersHref(
 														selectedTecTerms.filter(
@@ -477,16 +494,16 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 						{selectedEnvTerms.length > 0 ? (
 							<div className="mt-4">
 								<h3 className="text-xs font-bold uppercase tracking-[0.9px] text-[#15803d]">
-									Termos ambientais
+									{copy.environmentalTerms}
 								</h3>
 								<ul className="mt-3 flex flex-wrap gap-2">
 									{selectedEnvTerms.map((term) => (
 										<li key={`env-${term}`}>
 											<span className="inline-flex items-center gap-2 rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-1 text-[11px] font-semibold text-[#166534]">
-												<span>Env: {formatTermLabel(term)}</span>
+												<span>{copy.envBadge(formatTermLabel(term))}</span>
 												<Link
 													scroll={false}
-													aria-label={`Remover filtro ${formatTermLabel(term)}`}
+													aria-label={copy.removeFilter(formatTermLabel(term))}
 													className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-[#15803d] transition-colors hover:bg-[#dcfce7]"
 													href={buildFiltersHref(
 														selectedTecTerms,
@@ -524,10 +541,10 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 						<div className="flex flex-wrap items-center justify-between gap-3">
 							<div>
 								<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#085E2E]">
-									Exportar resultados
+									{copy.exportHeading}
 								</h2>
 								<p className="mt-1 text-sm text-[#556070]">
-									Baixe a seleção atual em formato tabular ou relatório.
+									{copy.exportBody}
 								</p>
 							</div>
 							<div className="flex flex-wrap gap-3">
@@ -535,13 +552,13 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 									className="inline-flex items-center rounded-md border border-[#cfe0d6] bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-[#085E2E] transition-colors hover:border-[#9bc9af] hover:bg-[#f8fbf9]"
 									href={buildDownloadHref("csv", downloadQuery)}
 								>
-									Baixar CSV
+									{copy.downloadCsv}
 								</Link>
 								<Link
 									className="inline-flex items-center rounded-md bg-[#0C7C3C] px-4 py-2 text-xs font-bold uppercase tracking-[0.8px] text-white transition-colors hover:bg-[#085E2E]"
 									href={buildDownloadHref("docx", downloadQuery)}
 								>
-									Baixar DOCX
+									{copy.downloadDocx}
 								</Link>
 							</div>
 						</div>
@@ -552,26 +569,23 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 					<section className="mt-8 space-y-4">
 						<div className="rounded-[12px] border border-[#cfe0d6] bg-white p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
 							<h2 className="text-sm font-bold uppercase tracking-[1px] text-[#334155]">
-								Tendências temporais
+								{copy.trendsHeading}
 							</h2>
-							<p className="mt-1 text-sm text-[#556070]">
-								Cada linha representa um termo dentro do conjunto de artigos já
-								filtrado no grafo.
-							</p>
+							<p className="mt-1 text-sm text-[#556070]">{copy.trendsBody}</p>
 						</div>
 
 						<section className="rounded-[12px] border border-[#bfdbfe] bg-[#f8fbff] p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
 							<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#1d4ed8]">
-								Termos de tecnologia
+								{copy.technologyTerms}
 							</h3>
 							<p className="mt-1 text-sm text-[#556070]">
 								{selectedTecTerms.length > 0
-									? "Linhas geradas apenas para os termos tecnológicos selecionados."
-									: "Nenhum termo tecnológico foi selecionado; o gráfico considera todos os termos tecnológicos presentes nos artigos filtrados."}
+									? copy.technologyLinesSelected
+									: copy.technologyLinesAll}
 							</p>
 							<div className="mt-4">
 								<TermsMultiLineChartClient
-									emptyMessage="Não há termos tecnológicos com ano de publicação válido nos artigos filtrados."
+									emptyMessage={copy.technologyEmpty}
 									key={`technology-${technologyTermsTrend.map((item) => item.key).join("|")}`}
 									series={technologyTermsTrend}
 									tone="blue"
@@ -581,16 +595,16 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 
 						<section className="rounded-[12px] border border-[#bbf7d0] bg-[#f8fff9] p-5 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
 							<h3 className="text-sm font-bold uppercase tracking-[1px] text-[#15803d]">
-								Termos ambientais
+								{copy.environmentalTerms}
 							</h3>
 							<p className="mt-1 text-sm text-[#556070]">
 								{selectedEnvTerms.length > 0
-									? "Linhas geradas apenas para os termos ambientais selecionados."
-									: "Nenhum termo ambiental foi selecionado; o gráfico considera todos os termos ambientais presentes nos artigos filtrados."}
+									? copy.environmentalLinesSelected
+									: copy.environmentalLinesAll}
 							</p>
 							<div className="mt-4">
 								<TermsMultiLineChartClient
-									emptyMessage="Não há termos ambientais com ano de publicação válido nos artigos filtrados."
+									emptyMessage={copy.environmentalEmpty}
 									key={`environmental-${environmentalTermsTrend.map((item) => item.key).join("|")}`}
 									series={environmentalTermsTrend}
 									tone="green"
@@ -624,14 +638,17 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 									/>
 								</div>
 								<p className="text-sm font-semibold text-[#556070]">
-									Mostrando {currentStartArticle}–{currentEndArticle} de{" "}
-									{totalResults} artigos
+									{copy.showing(
+										currentStartArticle,
+										currentEndArticle,
+										totalResults,
+									)}
 								</p>
 							</div>
 						</section>
 
 						<section
-							aria-label="Lista de artigos filtrados por termos"
+							aria-label={copy.articleListAria}
 							className="mt-4 max-h-[70vh] min-h-[260px] space-y-4 overflow-y-auto pr-2"
 						>
 							{paginatedArticles.map((article) => (
@@ -640,7 +657,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 									href={article.articleUrl}
 									key={article.article.id}
 									keywords={article.article.keywords ?? []}
-									metadata={buildArticleMetadata(article)}
+									metadata={buildArticleMetadata(article, copy)}
 									showAbstract={false}
 									titleHref={article.preferredLink}
 									title={article.article.title}
@@ -652,7 +669,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 
 				{totalResults > 0 ? (
 					<nav
-						aria-label="Paginação de artigos"
+						aria-label={copy.paginationAria}
 						className="mt-6 flex flex-wrap items-center justify-between gap-3"
 					>
 						<Link
@@ -672,10 +689,10 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 								selectedSortOrder,
 							)}
 						>
-							Anterior
+							{copy.previous}
 						</Link>
 						<p className="text-sm font-semibold text-[#556070]">
-							Página {currentPage} de {totalPages}
+							{copy.pageOf(currentPage, totalPages)}
 						</p>
 						<Link
 							scroll={false}
@@ -694,7 +711,7 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 								selectedSortOrder,
 							)}
 						>
-							Próxima
+							{copy.next}
 						</Link>
 					</nav>
 				) : null}
@@ -702,11 +719,9 @@ export default async function TermArticlesPage({ searchParams }: PageProps) {
 				{totalResults === 0 ? (
 					<section className="mt-8 rounded-[12px] border border-[#d7e4dc] bg-white p-6 shadow-[0px_14px_30px_-28px_rgba(17,24,39,0.7)]">
 						<h2 className="text-lg font-bold text-[#1f2937]">
-							Nenhum artigo encontrado
+							{copy.emptyTitle}
 						</h2>
-						<p className="mt-2 text-sm text-[#556070]">
-							Não encontramos artigos para a combinação de termos selecionada.
-						</p>
+						<p className="mt-2 text-sm text-[#556070]">{copy.emptyBody}</p>
 					</section>
 				) : null}
 			</main>

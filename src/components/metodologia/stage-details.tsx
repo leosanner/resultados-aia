@@ -2,7 +2,11 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { PIPELINE_STAGES } from "./data";
+
+import { useLocale } from "@/components/i18n/locale-provider";
+import { metodologiaCopy } from "@/i18n/pages/metodologia";
+
+import { pipelineStagesByLocale } from "./data";
 
 function stageIcon(id: number) {
 	switch (id) {
@@ -22,6 +26,9 @@ function stageIcon(id: number) {
 }
 
 export function StageDetails() {
+	const locale = useLocale();
+	const copy = metodologiaCopy[locale].stages;
+	const stages = pipelineStagesByLocale[locale];
 	const [expandedStage, setExpandedStage] = useState<number | null>(null);
 
 	return (
@@ -34,11 +41,11 @@ export function StageDetails() {
 					viewport={{ once: true }}
 					whileInView={{ opacity: 1, y: 0 }}
 				>
-					Detalhamento das etapas
+					{copy.title}
 				</motion.h2>
 
 				<div className="space-y-4">
-					{PIPELINE_STAGES.map((stage) => {
+					{stages.map((stage) => {
 						const expanded = expandedStage === stage.id;
 						return (
 							<motion.article
@@ -67,12 +74,12 @@ export function StageDetails() {
 												<div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
 													{stage.input ? (
 														<div>
-															<span className="text-[#64748b]">Entrada: </span>
+															<span className="text-[#64748b]">{copy.input}</span>
 															<span className="font-mono text-[#414944]">{stage.input}</span>
 														</div>
 													) : null}
 													<div>
-														<span className="text-[#64748b]">Saída: </span>
+														<span className="text-[#64748b]">{copy.output}</span>
 														<span className="font-mono font-semibold text-[#0C7C3C]">
 															{stage.output}
 														</span>
@@ -95,19 +102,19 @@ export function StageDetails() {
 										<div className="space-y-6">
 											<div>
 												<h4 className="mb-2 text-sm font-semibold uppercase tracking-[0.8px] text-[#64748b]">
-													O que foi feito
+													{copy.what}
 												</h4>
 												<p className="leading-relaxed text-[#414944]">{stage.what}</p>
 											</div>
 											<div>
 												<h4 className="mb-2 text-sm font-semibold uppercase tracking-[0.8px] text-[#64748b]">
-													Por que foi feito
+													{copy.why}
 												</h4>
 												<p className="leading-relaxed text-[#414944]">{stage.why}</p>
 											</div>
 											<div>
 												<h4 className="mb-3 text-sm font-semibold uppercase tracking-[0.8px] text-[#64748b]">
-													Critérios de filtragem
+													{copy.criteria}
 												</h4>
 												<ul className="space-y-2">
 													{stage.criteria.map((item) => (

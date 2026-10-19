@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale } from "@/components/i18n/locale-provider";
+import { sharedUiCopy } from "@/i18n/shared-ui";
 import { LineChart } from "@mui/x-charts/LineChart";
 
 type YearlyArticlesItem = {
@@ -12,11 +14,11 @@ type ArticlesYearLineChartProps = {
 };
 
 export function ArticlesYearLineChart({ items }: ArticlesYearLineChartProps) {
+	const copy = sharedUiCopy[useLocale()].charts;
+
 	if (items.length === 0) {
 		return (
-			<p className="text-sm text-[#64748b]">
-				Não há dados de ano de publicação para os artigos filtrados.
-			</p>
+			<p className="text-sm text-[#64748b]">{copy.noPublicationYearData}</p>
 		);
 	}
 
@@ -32,7 +34,7 @@ export function ArticlesYearLineChart({ items }: ArticlesYearLineChartProps) {
 						color: "#0ea5e9",
 						curve: "linear",
 						dataKey: "total",
-						label: "Artigos",
+						label: copy.articles,
 						showMark: true,
 					},
 				]}
@@ -62,7 +64,7 @@ export function ArticlesYearLineChart({ items }: ArticlesYearLineChartProps) {
 				]}
 				yAxis={[
 					{
-						label: "Quantidade de artigos",
+						label: copy.articleQuantity,
 						tickLabelStyle: { fontSize: 12 },
 						width: 54,
 					},

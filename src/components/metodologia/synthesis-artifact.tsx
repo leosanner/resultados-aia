@@ -2,13 +2,8 @@
 
 import { motion } from "framer-motion";
 
-const MATRIX_COLUMNS = [
-	"Tecnologia",
-	"Técnica aplicada",
-	"Contexto de aplicação",
-	"Autores / Ano",
-	"Potencial AIA",
-];
+import { useLocale } from "@/components/i18n/locale-provider";
+import { metodologiaCopy } from "@/i18n/pages/metodologia";
 
 const SKELETON_WIDTHS = [
 	[72, 86, 68, 58, 80],
@@ -17,6 +12,8 @@ const SKELETON_WIDTHS = [
 ];
 
 export function SynthesisArtifact() {
+	const copy = metodologiaCopy[useLocale()].synthesis;
+
 	return (
 		<section className="px-8 pt-8 pb-28">
 			<motion.div
@@ -35,15 +32,13 @@ export function SynthesisArtifact() {
 						</div>
 						<div>
 							<div className="mb-1 text-[10px] font-semibold uppercase tracking-[1.6px] text-[#b88706]">
-								Artefato final
+								{copy.kicker}
 							</div>
 							<h3 className="text-xl font-semibold text-[#00261a] md:text-2xl">
-								Matriz de síntese consolidada
+								{copy.title}
 							</h3>
 							<p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#556070]">
-								Consolidação das tecnologias mais proeminentes identificadas nos
-								31 artigos, categorizadas conforme a estrutura temática e
-								organizadas em formato tabular de leitura direta.
+								{copy.body}
 							</p>
 						</div>
 					</div>
@@ -56,7 +51,7 @@ export function SynthesisArtifact() {
 					<table className="w-full min-w-[720px] border-separate border-spacing-0">
 						<thead>
 							<tr>
-								{MATRIX_COLUMNS.map((col, index) => (
+								{copy.columns.map((col, index) => (
 									<th
 										className="border-b border-[#d0ddd5] px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-[1.4px] text-[#64748b]"
 										key={col}
@@ -90,9 +85,9 @@ export function SynthesisArtifact() {
 							<tr>
 								<td
 									className="px-3 py-4 text-center text-xs italic text-[#94a3b8]"
-									colSpan={MATRIX_COLUMNS.length}
+									colSpan={copy.columns.length}
 								>
-									⋯ demais linhas consolidadas por categoria temática
+									{copy.moreRows}
 								</td>
 							</tr>
 						</tbody>
@@ -100,9 +95,7 @@ export function SynthesisArtifact() {
 				</div>
 
 				<div className="border-t border-[#d0ddd5] bg-[#f7faf5] px-6 py-4 text-xs text-[#556070] md:px-10">
-					Consolidado em documento Microsoft Word, organizado por categoria
-					temática, apresentando de forma clara e ordenada a tecnologia, a
-					técnica aplicada e o contexto de aplicação.
+					{copy.footer}
 				</div>
 			</motion.div>
 		</section>

@@ -1,9 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MANUS_PHASES } from "./manus-data";
+
+import { useLocale } from "@/components/i18n/locale-provider";
+import { metodologiaCopy } from "@/i18n/pages/metodologia";
+
+import { manusPhasesByLocale } from "./manus-data";
 
 export function ManusTimeline() {
+	const locale = useLocale();
+	const copy = metodologiaCopy[locale].manus;
+	const phases = manusPhasesByLocale[locale];
+
 	return (
 		<section className="px-8 pt-10 pb-8">
 			<div className="mx-auto max-w-screen-2xl">
@@ -14,7 +22,7 @@ export function ManusTimeline() {
 					viewport={{ once: true }}
 					whileInView={{ opacity: 1, y: 0 }}
 				>
-					Cadeia de ações na plataforma Manus
+					{copy.timelineTitle}
 				</motion.h2>
 				<motion.p
 					className="mx-auto mb-14 max-w-3xl text-center text-[#414944]"
@@ -23,8 +31,7 @@ export function ManusTimeline() {
 					viewport={{ once: true }}
 					whileInView={{ opacity: 1, y: 0 }}
 				>
-					Cinco fases sequenciais que estruturaram a extração, o enriquecimento e
-					a consolidação dos dados dos 31 artigos.
+					{copy.timelineSubtitle}
 				</motion.p>
 
 				<div className="relative mx-auto max-w-4xl">
@@ -34,7 +41,7 @@ export function ManusTimeline() {
 					/>
 
 					<ol className="space-y-8 md:space-y-10">
-						{MANUS_PHASES.map((phase, index) => (
+						{phases.map((phase, index) => (
 							<motion.li
 								className="relative grid grid-cols-[48px_1fr] gap-5 md:grid-cols-[96px_1fr] md:gap-8"
 								initial={{ opacity: 0, y: 24 }}
@@ -104,7 +111,7 @@ export function ManusTimeline() {
 									{phase.output ? (
 										<div className="mt-5 flex items-center gap-3 rounded-lg border border-[#86efac] bg-[#ecfdf5] px-4 py-3">
 											<span className="text-[10px] font-semibold uppercase tracking-[1.4px] text-[#047857]">
-												Output
+												{copy.outputLabel}
 											</span>
 											<span className="font-mono text-sm font-semibold text-[#065f46]">
 												{phase.output}
